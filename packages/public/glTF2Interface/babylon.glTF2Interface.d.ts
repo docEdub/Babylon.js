@@ -1313,4 +1313,64 @@ declare module BABYLON.GLTF2 {
         mode: "ATTRIBUTES" | "TRIANGLES" | "INDICES";
         filter?: "NONE" | "OCTAHEDRAL" | "QUATERNION" | "EXPONENTIAL";
     }
+
+    /**
+     * Interfaces from the KHR_audio extension
+     */
+
+    /** @internal */
+    const enum IMSFTAudioEmitter_AudioMimeType {
+        WAV = "audio/mpeg",
+    }
+
+    /** @internal */
+    const enum IKHRAudio_DistanceModel {
+        linear = "linear",
+        inverse = "inverse",
+        exponential = "exponential",
+    }
+
+    /** @internal */
+    const enum IKHRAudio_EmitterType {
+        positional = "positional",
+        global = "global",
+    }
+
+    /** @internal */
+    interface IKHRAudio_EmittersReference {
+        emitters: number[];
+    }
+
+    /** @internal */
+    interface IKHRAudio_Emitter extends IProperty {
+        name?: string;
+        type: IKHRAudio_EmitterType;
+        gain?: number;
+        sources: number[];
+        positional?: {
+            coneInnerAngle?: number;
+            coneOuterAngle?: number;
+            coneOuterGain?: number;
+            distanceModel?: IKHRAudio_DistanceModel;
+            maxDistance?: number;
+            refDistance?: number;
+            rolloffFactor?: number;
+        };
+    }
+
+    /** @internal */
+    interface IKHRAudio_Source extends IProperty {
+        name?: string;
+        gain?: number;
+        autoPlay?: boolean;
+        loop?: boolean;
+        audio: number;
+    }
+
+    /** @internal */
+    interface IKHRAudio_Audio extends IProperty {
+        uri?: string;
+        bufferView?: number;
+        mimeType?: IMSFTAudioEmitter_AudioMimeType;
+    }
 }
