@@ -1342,6 +1342,11 @@ declare module BABYLON.GLTF2 {
     }
 
     /** @internal */
+    interface IKHRAudio_EmitterReference {
+        emitter: number;
+    }
+
+    /** @internal */
     interface IKHRAudio_Emitter extends IProperty {
         name?: string;
         type: IKHRAudio_EmitterType;

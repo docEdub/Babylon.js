@@ -56,6 +56,7 @@ export class GlobalState {
         KHR_lights_punctual: { enabled: true },
         KHR_texture_basisu: { enabled: true },
         KHR_texture_transform: { enabled: true },
+        KHR_audio: { enabled: true },
         EXT_lights_image_based: { enabled: true },
         EXT_mesh_gpu_instancing: { enabled: true },
         EXT_texture_webp: { enabled: true },

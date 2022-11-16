@@ -7,7 +7,7 @@ import { SoundTrack } from "core/Audio/soundTrack";
 import type { IArrayItem, IScene, INode } from "../glTFLoaderInterfaces";
 import type { IGLTFLoaderExtension } from "../glTFLoaderExtension";
 import { GLTFLoader, ArrayItem } from "../glTFLoader";
-import type { IKHRAudio_Audio, IKHRAudio_Emitter, IKHRAudio_EmittersReference, IKHRAudio_Source } from "babylonjs-gltf2interface";
+import type { IKHRAudio_Audio, IKHRAudio_Emitter, IKHRAudio_EmittersReference, IKHRAudio_EmitterReference, IKHRAudio_Source } from "babylonjs-gltf2interface";
 import { IKHRAudio_EmitterType } from "babylonjs-gltf2interface";
 
 const NAME = "KHR_audio";
@@ -28,7 +28,7 @@ interface ILoaderEmitter extends IKHRAudio_Emitter, IArrayItem {
 }
 
 interface IKHRAudioEmitter {
-    clips: ILoaderClip[];
+    audio: ILoaderClip[];
     sources: ILoaderSource[];
     emitters: ILoaderEmitter[];
 }
@@ -66,6 +66,7 @@ export class KHR_audio implements IGLTFLoaderExtension {
     public dispose() {
         (this._loader as any) = null;
         (this._clips as any) = null;
+        (this._sources as any) = null;
         (this._emitters as any) = null;
     }
 
@@ -75,7 +76,8 @@ export class KHR_audio implements IGLTFLoaderExtension {
         if (extensions && extensions[this.name]) {
             const extension = extensions[this.name] as IKHRAudioEmitter;
 
-            this._clips = extension.clips;
+            this._clips = extension.audio;
+            this._sources = extension.sources;
             this._emitters = extension.emitters;
 
             ArrayItem.Assign(this._clips);
@@ -109,33 +111,32 @@ export class KHR_audio implements IGLTFLoaderExtension {
      * @internal
      */
     public loadNodeAsync(context: string, node: INode, assign: (babylonTransformNode: TransformNode) => void): Nullable<Promise<TransformNode>> {
-        return GLTFLoader.LoadExtensionAsync<IKHRAudio_EmittersReference, TransformNode>(context, node, this.name, (extensionContext, extension) => {
+        return GLTFLoader.LoadExtensionAsync<IKHRAudio_EmitterReference, TransformNode>(context, node, this.name, (extensionContext, extension) => {
             const promises = new Array<Promise<any>>();
 
             return this._loader
                 .loadNodeAsync(extensionContext, node, (babylonMesh) => {
-                    for (const emitterIndex of extension.emitters) {
-                        const emitter = ArrayItem.Get(`${extensionContext}/emitters`, this._emitters, emitterIndex);
-                        promises.push(
-                            this._loadEmitterAsync(`${extensionContext}/emitters/${emitter.index}`, emitter, false).then(() => {
-                                for (const sound of emitter._babylonSoundTrack.soundCollection) {
-                                    sound.attachToMesh(babylonMesh);
-                                    if (emitter.type == IKHRAudio_EmitterType.positional && emitter.positional != undefined) {
-                                        sound.setLocalDirectionToMesh(Vector3.Forward());
-                                        sound.setDirectionalCone(
-                                            emitter.positional.coneInnerAngle || 2 * Math.PI,
-                                            emitter.positional.coneOuterAngle || 2 * Math.PI,
-                                            emitter.positional.coneOuterGain || 0
-                                        );
-                                        sound.refDistance = emitter.positional.refDistance || 1;
-                                        sound.maxDistance = emitter.positional.maxDistance || 10000;
-                                        sound.rolloffFactor = emitter.positional.rolloffFactor || 1;
-                                        sound.distanceModel = emitter.positional.distanceModel || "inverse";
-                                    }
+                    const emitter = ArrayItem.Get(`${extensionContext}/emitters`, this._emitters, extension.emitter);
+                    promises.push(
+                        this._loadEmitterAsync(`${extensionContext}/emitters/${emitter.index}`, emitter, false).then(() => {
+                            for (const sound of emitter._babylonSoundTrack.soundCollection) {
+                                sound.attachToMesh(babylonMesh);
+                                if (emitter.type == IKHRAudio_EmitterType.positional && emitter.positional != undefined) {
+                                    sound.spatialSound = true;
+                                    sound.setLocalDirectionToMesh(Vector3.Forward());
+                                    sound.setDirectionalCone(
+                                        emitter.positional.coneInnerAngle != undefined ? emitter.positional.coneInnerAngle / 180 * Math.PI : 360,
+                                        emitter.positional.coneOuterAngle != undefined ? emitter.positional.coneOuterAngle / 180 * Math.PI : 360,
+                                        emitter.positional.coneOuterGain || 0
+                                    );
+                                    sound.refDistance = emitter.positional.refDistance || 1;
+                                    sound.maxDistance = emitter.positional.maxDistance || 10000;
+                                    sound.rolloffFactor = emitter.positional.rolloffFactor || 1;
+                                    sound.distanceModel = emitter.positional.distanceModel || "inverse";
                                 }
-                            })
-                        );
-                    }
+                            }
+                        })
+                    );
 
                     assign(babylonMesh);
                 })
@@ -183,7 +184,7 @@ export class KHR_audio implements IGLTFLoaderExtension {
                 clipPromises.push(
                     this._loadClipAsync(`${clipContext}/${source.audio}`, clip).then((objectURL: string) => {
                         const options = {
-                            autoPlay: source.autoPlay || false,
+                            autoplay: source.autoPlay || false,
                             loop: source.loop || false,
                             volume: source.gain || 1
                         };
