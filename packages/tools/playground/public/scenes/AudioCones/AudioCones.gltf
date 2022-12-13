@@ -1,0 +1,563 @@
+{
+  "asset": {
+    "generator": "Khronos glTF Blender I/O v3.3.32",
+    "version": "2.0"
+  },
+  "extensionsUsed": ["KHR_audio"],
+  "extensions": {
+    "KHR_audio": {
+      "emitters": [
+        {
+          "name": "Blue.Audio.Emitter",
+          "type": "positional",
+          "gain": 1,
+          "sources": [0],
+          "positional": {
+            "coneInnerAngle": 0.785398,
+            "coneOuterAngle": 1.570796,
+            "coneOuterGain": 0.25,
+            "distanceModel": "inverse",
+            "maxDistance": 10.0,
+            "refDistance": 1.0,
+            "rolloffFactor": 0.8
+          }
+        },
+        {
+          "name": "Red.Audio.Emitter",
+          "type": "positional",
+          "gain": 1,
+          "sources": [1],
+          "positional": {
+            "coneInnerAngle": 0.785398,
+            "coneOuterAngle": 1.570796,
+            "coneOuterGain": 0.25,
+            "distanceModel": "inverse",
+            "maxDistance": 10.0,
+            "refDistance": 1.0,
+            "rolloffFactor": 0.8
+          }
+        }
+      ],
+      "sources": [
+        {
+          "name": "Square wave @ 220Hz",
+          "gain": 1,
+          "autoPlay": true,
+          "loop": true,
+          "audio": 0
+        },
+        {
+          "name": "Square wave @ 330Hz",
+          "gain": 1,
+          "autoPlay": true,
+          "loop": true,
+          "audio": 1
+        }
+      ],
+      "audio": [
+        {
+          "uri": "square-220.mp3"
+        },
+        {
+          "uri": "square-330.mp3"
+        }
+      ]
+    }
+  },
+  "scene": 0,
+  "scenes": [
+    {
+      "name": "Scene",
+      "nodes": [0, 3, 6]
+    }
+  ],
+  "nodes": [
+    {
+      "mesh": 0,
+      "name": "Plane",
+      "scale": [20, 20, 20]
+    },
+    {
+      "mesh": 1,
+      "name": "Cone.Blue.Inner",
+      "rotation": [0.707106, 0, 0, 0.707106],
+      "scale": [17, 34, 10],
+      "translation": [0, -0.9, 0]
+    },
+    {
+      "mesh": 1,
+      "name": "Cone.Blue.Outer",
+      "rotation": [0.707106, 0, 0, 0.707106],
+      "scale": [34, 34, 10],
+      "translation": [0, -0.9, 0]
+    },
+    {
+      "children": [1, 2],
+      "mesh": 2,
+      "name": "Box.Blue",
+      "translation": [0, 1, -5],
+      "extensions": {
+        "KHR_audio": {
+          "emitter": 0
+        }
+      }
+    },
+    {
+      "mesh": 3,
+      "name": "Cone.Red.Inner",
+      "rotation": [0.707106, 0, 0, 0.707106],
+      "scale": [17, 34, 100],
+      "translation": [0, -0.9, 0]
+    },
+    {
+      "mesh": 3,
+      "name": "Cone.Red.Outer",
+      "rotation": [0.707106, 0, 0, 0.707106],
+      "scale": [34, 34, 100],
+      "translation": [0, -0.9, 0]
+    },
+    {
+      "children": [4, 5],
+      "mesh": 4,
+      "name": "Box.Red",
+      "rotation": [0, -1, 0, 0],
+      "translation": [0, 1, 5],
+      "extensions": {
+        "KHR_audio": {
+          "emitter": 1
+        }
+      }
+    }
+  ],
+  "animations": [
+    {
+      "channels": [
+        {
+          "sampler": 0,
+          "target": {
+            "node": 3,
+            "path": "rotation"
+          }
+        }
+      ],
+      "name": "Box.Blue.Animation",
+      "samplers": [
+        {
+          "input": 18,
+          "interpolation": "LINEAR",
+          "output": 19
+        }
+      ]
+    },
+    {
+      "channels": [
+        {
+          "sampler": 0,
+          "target": {
+            "node": 6,
+            "path": "rotation"
+          }
+        }
+      ],
+      "name": "Box.Red.Animation",
+      "samplers": [
+        {
+          "input": 20,
+          "interpolation": "LINEAR",
+          "output": 21
+        }
+      ]
+    }
+  ],
+  "materials": [
+    {
+      "name": "Cone.Blue.Material",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [0, 0, 0.8, 0.5],
+        "metallicFactor": 0,
+        "roughnessFactor": 0.5
+      },
+      "alphaMode": "BLEND"
+    },
+    {
+      "name": "Box.Blue.Material",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [0, 0, 0.8, 1],
+        "metallicFactor": 0,
+        "roughnessFactor": 0.4
+      }
+    },
+    {
+      "name": "Cone.Red.Material",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [0.8, 0, 0, 0.5],
+        "metallicFactor": 0,
+        "roughnessFactor": 0.5
+      },
+      "alphaMode": "BLEND"
+    },
+    {
+      "name": "Box.Red.Material",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [0.8, 0, 0, 1],
+        "metallicFactor": 0,
+        "roughnessFactor": 0.4
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Plane.Mesh",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0,
+            "NORMAL": 1,
+            "TEXCOORD_0": 2
+          },
+          "indices": 3
+        }
+      ]
+    },
+    {
+      "name": "Cone.Blue.Mesh",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 4,
+            "NORMAL": 5,
+            "TEXCOORD_0": 6
+          },
+          "indices": 7,
+          "material": 0
+        }
+      ]
+    },
+    {
+      "name": "Box.Blue.Mesh",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 8,
+            "NORMAL": 9,
+            "TEXCOORD_0": 10
+          },
+          "indices": 11,
+          "material": 1
+        }
+      ]
+    },
+    {
+      "name": "Cone.Red.Mesh",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 12,
+            "NORMAL": 13,
+            "TEXCOORD_0": 14
+          },
+          "indices": 7,
+          "material": 2
+        }
+      ]
+    },
+    {
+      "name": "Box.Red.Mesh",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 15,
+            "NORMAL": 16,
+            "TEXCOORD_0": 17
+          },
+          "indices": 11,
+          "material": 3
+        }
+      ]
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 4,
+      "max": [1, 0, 1],
+      "min": [-1, 0, -1],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 4,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 4,
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5123,
+      "count": 6,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 4,
+      "componentType": 5126,
+      "count": 3,
+      "max": [1, 0, 0],
+      "min": [-1, -1, 0],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 5,
+      "componentType": 5126,
+      "count": 3,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 6,
+      "componentType": 5126,
+      "count": 3,
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 7,
+      "componentType": 5123,
+      "count": 3,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 8,
+      "componentType": 5126,
+      "count": 24,
+      "max": [1, 1, 1],
+      "min": [-1, -1, -1],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 9,
+      "componentType": 5126,
+      "count": 24,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 10,
+      "componentType": 5126,
+      "count": 24,
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 11,
+      "componentType": 5123,
+      "count": 36,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 12,
+      "componentType": 5126,
+      "count": 3,
+      "max": [1, 0, 0],
+      "min": [-1, -1, 0],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 13,
+      "componentType": 5126,
+      "count": 3,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 14,
+      "componentType": 5126,
+      "count": 3,
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 15,
+      "componentType": 5126,
+      "count": 24,
+      "max": [1, 1, 1],
+      "min": [-1, -1, -1],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 16,
+      "componentType": 5126,
+      "count": 24,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 17,
+      "componentType": 5126,
+      "count": 24,
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 18,
+      "componentType": 5126,
+      "count": 121,
+      "max": [5],
+      "min": [0],
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 19,
+      "componentType": 5126,
+      "count": 121,
+      "type": "VEC4"
+    },
+    {
+      "bufferView": 20,
+      "componentType": 5126,
+      "count": 181,
+      "max": [7.5],
+      "min": [0],
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 21,
+      "componentType": 5126,
+      "count": 181,
+      "type": "VEC4"
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteLength": 48,
+      "byteOffset": 0,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 48,
+      "byteOffset": 48,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 32,
+      "byteOffset": 96,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 12,
+      "byteOffset": 128,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteLength": 36,
+      "byteOffset": 140,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 36,
+      "byteOffset": 176,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 24,
+      "byteOffset": 212,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 6,
+      "byteOffset": 236,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteLength": 288,
+      "byteOffset": 244,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 288,
+      "byteOffset": 532,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 192,
+      "byteOffset": 820,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 72,
+      "byteOffset": 1012,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteLength": 36,
+      "byteOffset": 1084,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 36,
+      "byteOffset": 1120,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 24,
+      "byteOffset": 1156,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 288,
+      "byteOffset": 1180,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 288,
+      "byteOffset": 1468,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 192,
+      "byteOffset": 1756,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 484,
+      "byteOffset": 1948
+    },
+    {
+      "buffer": 0,
+      "byteLength": 1936,
+      "byteOffset": 2432
+    },
+    {
+      "buffer": 0,
+      "byteLength": 724,
+      "byteOffset": 4368
+    },
+    {
+      "buffer": 0,
+      "byteLength": 2896,
+      "byteOffset": 5092
+    }
+  ],
+  "buffers": [
+    {
+      "byteLength": 7988,
+      "uri": "AudioCones.bin"
+    }
+  ]
+}
