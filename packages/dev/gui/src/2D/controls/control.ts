@@ -74,7 +74,7 @@ export class Control implements IAnimatable {
     /** @internal */
     public _prevCurrentMeasureTransformedIntoGlobalSpace = Measure.Empty();
     /** @internal */
-    protected _cachedParentMeasure = Measure.Empty();
+    public _cachedParentMeasure = Measure.Empty();
     private _descendantsOnlyPadding = false;
     private _paddingLeft = new ValueAndUnit(0);
     private _paddingRight = new ValueAndUnit(0);
@@ -1480,6 +1480,10 @@ export class Control implements IAnimatable {
             }
         }
 
+        if (oldLeft === newLeft && oldTop === newTop) {
+            return;
+        }
+
         this.left = newLeft + "px";
         this.top = newTop + "px";
 
@@ -1552,7 +1556,7 @@ export class Control implements IAnimatable {
 
     /** @internal */
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    protected invalidateRect() {
+    public invalidateRect() {
         this._transform();
         if (this.host && this.host.useInvalidateRectOptimization) {
             // Rotate by transform to get the measure transformed to global space
@@ -2321,6 +2325,38 @@ export class Control implements IAnimatable {
 
         //children need to be refreshed
         this.getDescendants().forEach((child) => child._markAllAsDirty());
+    }
+
+    /**
+     * Clones a control and its descendants
+     * @param host the texture where the control will be instantiated. Can be empty, in which case the control will be created on the same texture
+     * @returns the cloned control
+     */
+    public clone(host?: AdvancedDynamicTexture): Control {
+        const serialization: any = {};
+        this.serialize(serialization);
+
+        const controlType = Tools.Instantiate("BABYLON.GUI." + serialization.className);
+        const cloned = new controlType();
+        cloned.parse(serialization, host);
+
+        return cloned;
+    }
+
+    /**
+     * Parses a serialized object into this control
+     * @param serializedObject the object with the serialized properties
+     * @param host the texture where the control will be instantiated. Can be empty, in which case the control will be created on the same texture
+     * @returns this control
+     */
+    public parse(serializedObject: any, host?: AdvancedDynamicTexture): Control {
+        SerializationHelper.Parse(() => this, serializedObject, null);
+
+        this.name = serializedObject.name;
+
+        this._parseFromContent(serializedObject, host ?? this._host);
+
+        return this;
     }
 
     /**
