@@ -345,7 +345,7 @@ export class Effect implements IDisposable {
             fragmentSource = baseName.fragment || baseName;
         }
 
-        this._processingContext = this._engine._getShaderProcessingContext(this._shaderLanguage);
+        this._processingContext = this._engine._getShaderProcessingContext?.(this._shaderLanguage);
 
         let processorOptions: ProcessingOptions = {
             defines: this.defines.split("\n"),
