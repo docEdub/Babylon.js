@@ -28,6 +28,8 @@ let setCurrentEngine = (engine: Engine) => {
 
 export class Engine {
     physicalEngine: Physical.AbstractEngine;
+
+    // TODO: Consider making main bus a separate member.
     mainBusses = new Array<Bus>(); // TODO: Add public `addBus` and `removeBus` (except for first bus).
 
     voices = new Array<VirtualVoice>();
@@ -108,7 +110,7 @@ export class Engine {
         });
 
         this.voices.push(voice);
-        this.inactiveVoiceIndex = this.voices.length;
+        this.inactiveVoiceIndex = this.voices.length; // TODO: Still needed? Why is this being set past the end of the array here?
 
         return voice;
     }

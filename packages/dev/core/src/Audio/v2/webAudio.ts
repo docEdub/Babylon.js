@@ -6,21 +6,23 @@ import { Vector3 } from "../../Maths/math.vector";
 /*
 WebAudio backend.
 
-The core classes in this module will replace our legacy audio engine ...
-    - CoreEngine
-    - CoreBus
-    - CoreSound
-    - CoreSoundStream
+The basic classes in this module will replace our legacy audio engine ...
+    - AudioEngine
+    - AudioBus
+    - Sound
+    - SoundStream
 
 The advanced classes extend the core classes to implement the advanced audio engine's physical interfaces.
 
 TODO: Split file into webAudioCore.ts and webAudio.ts?
 */
 
-export class CoreEngine implements Physical.ICoreEngine {
+// TODO: Consider generics for the member types.
+//  - Consider getting member type constructors programmatically similar to light.ts `GetConstructorFromName`.
+export class WebAudioEngine<TBus extends CoreBus> implements Physical.ICoreEngine {
     audioContext: AudioContext;
 
-    inputs = new Array<CoreBus>();
+    inputs = new Array<TBus>();
 
     get unlocked(): boolean {
         return this.audioContext.state !== "suspended";
@@ -29,6 +31,7 @@ export class CoreEngine implements Physical.ICoreEngine {
     constructor(options?: any) {
         this.audioContext = options?.audioContext ?? new AudioContext();
 
+        // TODO: See WebXR button for an example of how to handle this in the UI.
         if (!this.unlocked) {
             if (options?.autoUnlock !== false) {
                 const onWindowClick = () => {
@@ -38,12 +41,13 @@ export class CoreEngine implements Physical.ICoreEngine {
                 window.addEventListener("click", onWindowClick);
             }
 
-            const onAudioContextStateChange = () => {
-                if (this.unlocked) {
-                    this.audioContext.removeEventListener("statechange", onAudioContextStateChange);
-                }
-            };
-            this.audioContext.addEventListener("statechange", onAudioContextStateChange);
+            // TODO: remove. not needed. was moved to advanced engine.
+            // const onAudioContextStateChange = () => {
+            //     if (this.unlocked) {
+            //         this.audioContext.removeEventListener("statechange", onAudioContextStateChange);
+            //     }
+            // };
+            // this.audioContext.addEventListener("statechange", onAudioContextStateChange);
         }
     }
 
@@ -62,9 +66,9 @@ export class CoreEngine implements Physical.ICoreEngine {
 }
 
 // Advanced
-export class Engine extends CoreEngine implements Physical.IEngine {
+export class AdvancedAudioEngine extends AudioEngine implements Physical.IEngine {
     physicalEngine: Physical.AbstractEngine;
-    startTime: number;
+    startTime: number = 0;
 
     override inputs = new Array<Bus>();
 
@@ -85,6 +89,7 @@ export class Engine extends CoreEngine implements Physical.IEngine {
                     this.audioContext.removeEventListener("statechange", onAudioContextStateChange);
                 }
             };
+            // TODO: Remove event listeners when disposed.
             this.audioContext.addEventListener("statechange", onAudioContextStateChange);
         }
     }
