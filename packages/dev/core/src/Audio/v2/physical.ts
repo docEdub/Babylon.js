@@ -12,21 +12,21 @@ All interfaces in this file must be implemented by the backend, and they should 
 The logical and common layers can use the classes in this file, but not the interfaces.
 */
 
-export interface IAudioEngine {
-    inputs: Array<IAudioBus>;
+export interface IBasicAudioEngine {
+    inputs: Array<IBasicAudioBus>;
 }
 
-export interface IAdvancedAudioEngine extends IAudioEngine {
+export interface IAudioEngine extends IBasicAudioEngine {
     physicalEngine: AbstractPhysicalAudioEngine;
     currentTime: number;
 
-    createBus(options?: any): IAdvancedAudioBus;
-    createSource(options?: any): IAdvancedAudioSource;
-    createVoice(options?: any): IAdvancedAudioVoice;
+    createBus(options?: any): IAudioBus;
+    createSource(options?: any): IAudioSource;
+    createVoice(options?: any): IAudioVoice;
 }
 
 export abstract class AbstractPhysicalAudioEngine {
-    backend: IAdvancedAudioEngine;
+    backend: IAudioEngine;
 
     graphItems = new Map<number, AbstractPhysicalAudioEngineItem>();
     nextItemId: number = 1;
@@ -41,7 +41,7 @@ export abstract class AbstractPhysicalAudioEngine {
 
     lastUpdateTime: number = 0;
 
-    constructor(backend: IAdvancedAudioEngine, options?: any) {
+    constructor(backend: IAudioEngine, options?: any) {
         this.backend = backend;
 
         this.maxSpatialVoices = options?.maxSpatialVoices ?? 64;
@@ -227,16 +227,16 @@ export interface IAudioPositioner {
 }
 
 export interface IAudioGraphItem {
-    outputs: Array<IAudioBus>;
+    outputs: Array<IBasicAudioBus>;
     positioner?: IAudioPositioner;
 }
 
-interface IAudioEngineItem {
-    engine: IAdvancedAudioEngine;
+interface IBasicAudioEngineItem {
+    engine: IAudioEngine;
 }
 
 abstract class AbstractPhysicalAudioEngineItem {
-    abstract backend: IAudioEngineItem;
+    abstract backend: IBasicAudioEngineItem;
 
     get engine(): AbstractPhysicalAudioEngine {
         return this.backend.engine.physicalEngine;
@@ -245,16 +245,16 @@ abstract class AbstractPhysicalAudioEngineItem {
     id: number;
 }
 
-export interface IAudioBus extends IAudioGraphItem {
+export interface IBasicAudioBus extends IAudioGraphItem {
     inputs: Array<IAudioGraphItem>;
 }
 
-export interface IAdvancedAudioBus extends IAudioBus {
-    engine: IAdvancedAudioEngine;
+export interface IAudioBus extends IBasicAudioBus {
+    engine: IAudioEngine;
     physicalBus: PhysicalAudioBus;
 }
 
-type IAudioBusBackend = IAdvancedAudioBus & IAudioEngineItem;
+type IAudioBusBackend = IAudioBus & IBasicAudioEngineItem;
 
 export class PhysicalAudioBus extends AbstractPhysicalAudioEngineItem {
     backend: IAudioBusBackend;
@@ -266,16 +266,16 @@ export class PhysicalAudioBus extends AbstractPhysicalAudioEngineItem {
     }
 }
 
-export interface IAudioSource {
+export interface IBasicAudioSource {
     //
 }
 
-export interface IAdvancedAudioSource extends IAudioSource {
-    engine: IAdvancedAudioEngine;
+export interface IAudioSource extends IBasicAudioSource {
+    engine: IAudioEngine;
     physicalSource: PhysicalAudioSource;
 }
 
-type IAudioSourceBackend = IAdvancedAudioSource & IAudioEngineItem;
+type IAudioSourceBackend = IAudioSource & IBasicAudioEngineItem;
 
 export class PhysicalAudioSource extends AbstractPhysicalAudioEngineItem {
     backend: IAudioSourceBackend;
@@ -287,19 +287,19 @@ export class PhysicalAudioSource extends AbstractPhysicalAudioEngineItem {
     }
 }
 
-export interface IAudioVoice extends IAudioGraphItem {
-    source: IAudioSource;
+export interface IBasicAudioVoice extends IAudioGraphItem {
+    source: IBasicAudioSource;
 
     start(): void;
     stop(): void;
 }
 
-export interface IAdvancedAudioVoice extends IAudioVoice {
-    engine: IAdvancedAudioEngine;
+export interface IAudioVoice extends IBasicAudioVoice {
+    engine: IAudioEngine;
     physicalVoice: PhysicalAudioVoice;
 }
 
-type IAudioVoiceBackend = IAdvancedAudioVoice & IAudioEngineItem;
+type IAudioVoiceBackend = IAudioVoice & IBasicAudioEngineItem;
 
 export class PhysicalAudioVoice extends AbstractPhysicalAudioEngineItem {
     backend: IAudioVoiceBackend;
