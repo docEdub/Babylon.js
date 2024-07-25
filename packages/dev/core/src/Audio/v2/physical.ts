@@ -1,7 +1,6 @@
 /* eslint-disable */
-
+import type { IAudioBusBackend, IAudioEngineBackend, IAudioEngineBackendItem, IAudioSourceBackend, IAudioVoiceBackend } from "./backend";
 import { VirtualAudioVoice, AudioVoiceState } from "./common";
-import { Vector3 } from "../../Maths";
 import { Nullable } from "core/types";
 
 /*
@@ -12,21 +11,8 @@ All interfaces in this file must be implemented by the backend, and they should 
 The logical and common layers can use the classes in this file, but not the interfaces.
 */
 
-export interface IBasicAudioEngine {
-    inputs: Array<IBasicAudioBus>;
-}
-
-export interface IAudioEngine extends IBasicAudioEngine {
-    physicalEngine: AbstractPhysicalAudioEngine;
-    currentTime: number;
-
-    createBus(options?: any): IAudioBus;
-    createSource(options?: any): IAudioSource;
-    createVoice(options?: any): IAudioVoice;
-}
-
 export abstract class AbstractPhysicalAudioEngine {
-    backend: IAudioEngine;
+    backend: IAudioEngineBackend;
 
     graphItems = new Map<number, AbstractPhysicalAudioEngineItem>();
     nextItemId: number = 1;
@@ -41,7 +27,7 @@ export abstract class AbstractPhysicalAudioEngine {
 
     lastUpdateTime: number = 0;
 
-    constructor(backend: IAudioEngine, options?: any) {
+    constructor(backend: IAudioEngineBackend, options?: any) {
         this.backend = backend;
 
         this.maxSpatialVoices = options?.maxSpatialVoices ?? 64;
@@ -222,21 +208,8 @@ export abstract class AbstractPhysicalAudioEngine {
     }
 }
 
-export interface IAudioPositioner {
-    position: Vector3;
-}
-
-export interface IAudioGraphItem {
-    outputs: Array<IBasicAudioBus>;
-    positioner?: IAudioPositioner;
-}
-
-interface IBasicAudioEngineItem {
-    engine: IAudioEngine;
-}
-
 abstract class AbstractPhysicalAudioEngineItem {
-    abstract backend: IBasicAudioEngineItem;
+    abstract backend: IAudioEngineBackendItem;
 
     get engine(): AbstractPhysicalAudioEngine {
         return this.backend.engine.physicalEngine;
@@ -244,17 +217,6 @@ abstract class AbstractPhysicalAudioEngineItem {
 
     id: number;
 }
-
-export interface IBasicAudioBus extends IAudioGraphItem {
-    inputs: Array<IAudioGraphItem>;
-}
-
-export interface IAudioBus extends IBasicAudioBus {
-    engine: IAudioEngine;
-    physicalBus: PhysicalAudioBus;
-}
-
-type IAudioBusBackend = IAudioBus & IBasicAudioEngineItem;
 
 export class PhysicalAudioBus extends AbstractPhysicalAudioEngineItem {
     backend: IAudioBusBackend;
@@ -266,17 +228,6 @@ export class PhysicalAudioBus extends AbstractPhysicalAudioEngineItem {
     }
 }
 
-export interface IBasicAudioSource {
-    //
-}
-
-export interface IAudioSource extends IBasicAudioSource {
-    engine: IAudioEngine;
-    physicalSource: PhysicalAudioSource;
-}
-
-type IAudioSourceBackend = IAudioSource & IBasicAudioEngineItem;
-
 export class PhysicalAudioSource extends AbstractPhysicalAudioEngineItem {
     backend: IAudioSourceBackend;
 
@@ -286,20 +237,6 @@ export class PhysicalAudioSource extends AbstractPhysicalAudioEngineItem {
         this.backend = backend;
     }
 }
-
-export interface IBasicAudioVoice extends IAudioGraphItem {
-    source: IBasicAudioSource;
-
-    start(): void;
-    stop(): void;
-}
-
-export interface IAudioVoice extends IBasicAudioVoice {
-    engine: IAudioEngine;
-    physicalVoice: PhysicalAudioVoice;
-}
-
-type IAudioVoiceBackend = IAudioVoice & IBasicAudioEngineItem;
 
 export class PhysicalAudioVoice extends AbstractPhysicalAudioEngineItem {
     backend: IAudioVoiceBackend;

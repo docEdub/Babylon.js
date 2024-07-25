@@ -1,6 +1,16 @@
 /* eslint-disable */
 
-import type { IAudioBus, IAudioEngine, IAudioPositioner, IAudioSource, IAudioVoice, IBasicAudioBus, IBasicAudioEngine, IBasicAudioSource, IBasicAudioVoice } from "./physical";
+import type {
+    IAudioBusBackend,
+    IAudioEngineBackend,
+    IAudioPositionerBackend,
+    IAudioSourceBackend,
+    IAudioVoiceBackend,
+    IBasicAudioBusBackend,
+    IBasicAudioEngineBackend,
+    IBasicAudioSourceBackend,
+    IBasicAudioVoiceBackend,
+} from "./backend";
 import { AbstractPhysicalAudioEngine, PhysicalAudioBus, PhysicalAudioSource, PhysicalAudioVoice } from "./physical";
 import { Vector3 } from "../../Maths/math.vector";
 
@@ -8,21 +18,19 @@ import { Vector3 } from "../../Maths/math.vector";
 WebAudio backend.
 
 The basic classes in this module will replace our legacy audio engine ...
-    - AudioEngine -> BasicWebAudioEngine
-    - SoundTrack  -> BasicWebAudioBus
-    - Sound       -> BasicWebAudioSound / BasicWebAudioSoundStream
+    - AudioEngine -> AudioEngine
+    - SoundTrack  -> AudioBus
+    - Sound       -> Sound / SoundStream
 
 The advanced classes extend the core classes to implement the advanced audio engine's physical interfaces.
 
 TODO: Split file into webAudioCore.ts and webAudio.ts?
 */
 
-// TODO: Consider generics for the member types.
-//  - Consider getting member type constructors programmatically similar to light.ts `GetConstructorFromName`.
-export class BasicWebAudioEngine implements IBasicAudioEngine {
+export class AudioEngine implements IBasicAudioEngineBackend {
     audioContext: AudioContext;
 
-    inputs = new Array<BasicWebAudioBus>();
+    inputs = new Array<AudioBus>();
 
     get unlocked(): boolean {
         return this.audioContext.state !== "suspended";
@@ -66,7 +74,7 @@ export class BasicWebAudioEngine implements IBasicAudioEngine {
 }
 
 // Advanced
-export class WebAudioEngine extends BasicWebAudioEngine implements IAudioEngine {
+export class WebAudioEngine extends AudioEngine implements IAudioEngineBackend {
     physicalEngine: AbstractPhysicalAudioEngine;
     startTime: number = 0;
 
@@ -94,15 +102,15 @@ export class WebAudioEngine extends BasicWebAudioEngine implements IAudioEngine 
         }
     }
 
-    createBus(options?: any): IAudioBus {
+    createBus(options?: any): IAudioBusBackend {
         return new WebAudioBus(this, options);
     }
 
-    createSource(options?: any): IAudioSource {
+    createSource(options?: any): IAudioSourceBackend {
         return options?.stream ? new WebAudioStreamSource(this, options) : new WebAudioStaticSource(this, options);
     }
 
-    createVoice(options?: any): IAudioVoice {
+    createVoice(options?: any): IAudioVoiceBackend {
         return options?.stream ? new WebAudioStreamVoice(this, options) : new WebAudioStaticVoice(this, options);
     }
 }
@@ -132,7 +140,7 @@ class WebAudioEffectChain extends AbstractWebAudioSubGraph {
     }
 }
 
-class WebAudioPositioner extends AbstractWebAudioSubGraph implements IAudioPositioner {
+class WebAudioPositioner extends AbstractWebAudioSubGraph implements IAudioPositionerBackend {
     nodes: Array<AudioNode>;
 
     get firstNode(): AudioNode {
@@ -150,36 +158,36 @@ class WebAudioPositioner extends AbstractWebAudioSubGraph implements IAudioPosit
 }
 
 abstract class AbstractWebAudioGraphItem {
-    engine: BasicWebAudioEngine;
+    engine: AudioEngine;
     abstract node: AudioNode;
 
     effectChain?: WebAudioEffectChain;
     positioner?: WebAudioPositioner;
 
-    outputs = new Array<BasicWebAudioBus>();
+    outputs = new Array<AudioBus>();
 
     get audioContext(): AudioContext {
         return this.engine.audioContext;
     }
 
-    constructor(engine: BasicWebAudioEngine, options?: any) {
+    constructor(engine: AudioEngine, options?: any) {
         this.engine = engine;
     }
 }
 
-export class BasicWebAudioBus extends AbstractWebAudioGraphItem implements IBasicAudioBus {
+export class AudioBus extends AbstractWebAudioGraphItem implements IBasicAudioBusBackend {
     node: GainNode;
 
     inputs = new Array<AbstractWebAudioGraphItem>();
 
-    constructor(engine: BasicWebAudioEngine, options?: any) {
+    constructor(engine: AudioEngine, options?: any) {
         super(engine, options);
 
         this.node = new GainNode(this.audioContext);
     }
 }
 
-class WebAudioBus extends BasicWebAudioBus implements IAudioBus {
+class WebAudioBus extends AudioBus implements IAudioBusBackend {
     override engine: WebAudioEngine;
     physicalBus: PhysicalAudioBus;
 
@@ -191,8 +199,8 @@ class WebAudioBus extends BasicWebAudioBus implements IAudioBus {
     }
 }
 
-abstract class AbstractWebAudioSource implements IBasicAudioSource {
-    constructor(engine: BasicWebAudioEngine, options?: any) {
+abstract class AbstractWebAudioSource implements IBasicAudioSourceBackend {
+    constructor(engine: AudioEngine, options?: any) {
         //
     }
 }
@@ -200,12 +208,12 @@ abstract class AbstractWebAudioSource implements IBasicAudioSource {
 class BasicWebAudioStaticSource extends AbstractWebAudioSource {
     buffer: AudioBuffer;
 
-    constructor(engine: BasicWebAudioEngine, options?: any) {
+    constructor(engine: AudioEngine, options?: any) {
         super(engine, options);
     }
 }
 
-class WebAudioStaticSource extends BasicWebAudioStaticSource implements IAudioSource {
+class WebAudioStaticSource extends BasicWebAudioStaticSource implements IAudioSourceBackend {
     engine: WebAudioEngine;
     physicalSource: PhysicalAudioSource;
 
@@ -221,7 +229,7 @@ class BasicWebAudioStreamSource extends AbstractWebAudioSource {
     audioElement: HTMLAudioElement;
 }
 
-class WebAudioStreamSource extends BasicWebAudioStreamSource implements IAudioSource {
+class WebAudioStreamSource extends BasicWebAudioStreamSource implements IAudioSourceBackend {
     engine: WebAudioEngine;
     physicalSource: PhysicalAudioSource;
 
@@ -233,14 +241,14 @@ class WebAudioStreamSource extends BasicWebAudioStreamSource implements IAudioSo
     }
 }
 
-abstract class AbstractWebAudioSound extends AbstractWebAudioGraphItem implements IBasicAudioVoice {
+abstract class AbstractWebAudioSound extends AbstractWebAudioGraphItem implements IBasicAudioVoiceBackend {
     abstract source: AbstractWebAudioSource;
 
     abstract start(): void;
     abstract stop(): void;
 }
 
-export class BasicWebAudioSound extends AbstractWebAudioSound {
+export class Sound extends AbstractWebAudioSound {
     node: AudioBufferSourceNode;
     source: BasicWebAudioStaticSource;
 
@@ -248,7 +256,7 @@ export class BasicWebAudioSound extends AbstractWebAudioSound {
     stop(): void {}
 }
 
-class WebAudioStaticVoice extends BasicWebAudioSound implements IAudioVoice {
+class WebAudioStaticVoice extends Sound implements IAudioVoiceBackend {
     override engine: WebAudioEngine;
     override source: WebAudioStaticSource;
     physicalVoice: PhysicalAudioVoice;
@@ -260,7 +268,7 @@ class WebAudioStaticVoice extends BasicWebAudioSound implements IAudioVoice {
     }
 }
 
-export class BasicWebAudioSoundStream extends AbstractWebAudioSound {
+export class SoundStream extends AbstractWebAudioSound {
     node: MediaElementAudioSourceNode;
     source: BasicWebAudioStreamSource;
 
@@ -268,7 +276,7 @@ export class BasicWebAudioSoundStream extends AbstractWebAudioSound {
     stop(): void {}
 }
 
-class WebAudioStreamVoice extends BasicWebAudioSoundStream implements IAudioVoice {
+class WebAudioStreamVoice extends SoundStream implements IAudioVoiceBackend {
     override engine: WebAudioEngine;
     override source: WebAudioStreamSource;
     physicalVoice: PhysicalAudioVoice;
