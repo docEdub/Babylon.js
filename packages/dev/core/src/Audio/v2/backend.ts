@@ -1,10 +1,6 @@
 /* eslint-disable */
+import { IBasicAudioBusBackend, IBasicAudioEngineBackend, IBasicAudioSourceBackend, IBasicAudioVoiceBackend } from "./basicBackend";
 import { AbstractPhysicalAudioEngine, PhysicalAudioBus, PhysicalAudioSource, PhysicalAudioVoice } from "./physical";
-import { Vector3 } from "../../Maths/math.vector";
-
-export interface IBasicAudioEngineBackend {
-    inputs: Array<IBasicAudioBusBackend>;
-}
 
 export interface IAudioEngineBackend extends IBasicAudioEngineBackend {
     physicalEngine: AbstractPhysicalAudioEngine;
@@ -15,21 +11,8 @@ export interface IAudioEngineBackend extends IBasicAudioEngineBackend {
     createVoice(options?: any): IAudioVoiceBackend;
 }
 
-export interface IAudioPositionerBackend {
-    position: Vector3;
-}
-
-export interface IAudioGraphBackendItem {
-    outputs: Array<IBasicAudioBusBackend>;
-    positioner?: IAudioPositionerBackend;
-}
-
 export interface IAudioEngineBackendItem {
     engine: IAudioEngineBackend;
-}
-
-export interface IBasicAudioBusBackend extends IAudioGraphBackendItem {
-    inputs: Array<IAudioGraphBackendItem>;
 }
 
 export interface IAudioBusBackend extends IBasicAudioBusBackend {
@@ -37,20 +20,9 @@ export interface IAudioBusBackend extends IBasicAudioBusBackend {
     physicalBus: PhysicalAudioBus;
 }
 
-export interface IBasicAudioSourceBackend {
-    //
-}
-
 export interface IAudioSourceBackend extends IBasicAudioSourceBackend {
     engine: IAudioEngineBackend;
     physicalSource: PhysicalAudioSource;
-}
-
-export interface IBasicAudioVoiceBackend extends IAudioGraphBackendItem {
-    source: IBasicAudioSourceBackend;
-
-    start(): void;
-    stop(): void;
 }
 
 export interface IAudioVoiceBackend extends IBasicAudioVoiceBackend {

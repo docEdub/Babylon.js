@@ -1,16 +1,7 @@
 /* eslint-disable */
 
-import type {
-    IAudioBusBackend,
-    IAudioEngineBackend,
-    IAudioPositionerBackend,
-    IAudioSourceBackend,
-    IAudioVoiceBackend,
-    IBasicAudioBusBackend,
-    IBasicAudioEngineBackend,
-    IBasicAudioSourceBackend,
-    IBasicAudioVoiceBackend,
-} from "./backend";
+import type { IAudioBusBackend, IAudioEngineBackend, IAudioSourceBackend, IAudioVoiceBackend } from "./backend";
+import type { IBasicAudioBusBackend, IBasicAudioEngineBackend, IBasicAudioPositionerBackend, IBasicAudioSourceBackend, IBasicAudioVoiceBackend } from "./basicBackend";
 import { AbstractPhysicalAudioEngine, PhysicalAudioBus, PhysicalAudioSource, PhysicalAudioVoice } from "./physical";
 import { Vector3 } from "../../Maths/math.vector";
 
@@ -140,7 +131,7 @@ class WebAudioEffectChain extends AbstractWebAudioSubGraph {
     }
 }
 
-class WebAudioPositioner extends AbstractWebAudioSubGraph implements IAudioPositionerBackend {
+class WebAudioPositioner extends AbstractWebAudioSubGraph implements IBasicAudioPositionerBackend {
     nodes: Array<AudioNode>;
 
     get firstNode(): AudioNode {
