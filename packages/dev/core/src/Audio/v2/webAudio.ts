@@ -18,10 +18,9 @@ import { Vector3 } from "../../Maths/math.vector";
 WebAudio backend.
 
 The basic classes in this module will replace our legacy audio engine ...
-    - AudioEngine
-    - AudioBus
-    - Sound
-    - SoundStream
+    - AudioEngine -> WebAudioEngine
+    - SoundTrack  -> WebAudioBus
+    - Sound       -> WebAudioSound / WebAudioSoundStream
 
 The advanced classes extend the core classes to implement the advanced audio engine's physical interfaces.
 

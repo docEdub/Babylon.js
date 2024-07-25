@@ -13,7 +13,7 @@ The logical layer wants to play all the virtual voices it's asked to play, but t
 number of voices that can be played at once. The logical layer sorts the virtual voices by importance, and the physical
 layer mutes the least important virtual voices when there are too many of them trying to play.
 
-See the `Engine.update` function.
+See the `AudioEngine.update` function.
 */
 
 let currentEngine: Nullable<AudioEngine> = null;
