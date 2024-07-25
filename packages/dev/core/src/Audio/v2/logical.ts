@@ -2,7 +2,7 @@
 
 import { AudioVoiceState, VirtualAudioVoice } from "./common";
 import { AbstractPhysicalAudioEngine, PhysicalAudioBus, PhysicalAudioSource } from "./physical";
-import { WebAudioPhysicalEngine } from "./webAudio"; // TODO: Remove this. Doesn't belong here.
+import { WebAudioPhysicalEngine } from "./webAudioBackend"; // TODO: Remove this. Doesn't belong here.
 import { IDisposable } from "../../scene";
 import { Nullable } from "../../types";
 
