@@ -1,9 +1,9 @@
 /* eslint-disable */
 
-import * as Physical from "./physical";
+import { PhysicalAudioSource } from "./physical";
 import { Observable } from "../../Misc/observable";
 
-export enum VoiceState {
+export enum AudioVoiceState {
     Starting,
     Unmuting,
     Resuming,
@@ -17,27 +17,27 @@ export enum VoiceState {
     Stopped,
 }
 
-export class VirtualVoice {
-    physicalSource: Physical.Source;
+export class VirtualAudioVoice {
+    physicalSource: PhysicalAudioSource;
     options: any;
 
-    _state: VoiceState = VoiceState.Starting;
-    onStateChangedObservable = new Observable<VirtualVoice>();
+    _state: AudioVoiceState = AudioVoiceState.Starting;
+    onStateChangedObservable = new Observable<VirtualAudioVoice>();
 
-    init(physicalSource: Physical.Source, options?: any): void {
+    init(physicalSource: PhysicalAudioSource, options?: any): void {
         this.physicalSource = physicalSource;
         this.options = options;
     }
 
-    get state(): VoiceState {
+    get state(): AudioVoiceState {
         return this._state;
     }
 
-    set state(value: VoiceState) {
+    set state(value: AudioVoiceState) {
         this.setState(value);
     }
 
-    setState(value: VoiceState) {
+    setState(value: AudioVoiceState) {
         if (this._state === value) {
             return;
         }
@@ -66,38 +66,40 @@ export class VirtualVoice {
     }
 
     get updated(): boolean {
-        return this._state === VoiceState.Muted || this._state === VoiceState.Paused || this._state === VoiceState.Started || this._state === VoiceState.Stopped;
+        return (
+            this._state === AudioVoiceState.Muted || this._state === AudioVoiceState.Paused || this._state === AudioVoiceState.Started || this._state === AudioVoiceState.Stopped
+        );
     }
 
     get active(): boolean {
-        return this.state < VoiceState.Pausing;
+        return this.state < AudioVoiceState.Pausing;
     }
 
     get waitingToStart(): boolean {
-        return this.state < VoiceState.Started;
+        return this.state < AudioVoiceState.Started;
     }
 
     get started(): boolean {
-        return this.state === VoiceState.Started;
+        return this.state === AudioVoiceState.Started;
     }
 
     get muting(): boolean {
-        return this.state === VoiceState.Muting;
+        return this.state === AudioVoiceState.Muting;
     }
 
     get muted(): boolean {
-        return this.state === VoiceState.Muted;
+        return this.state === AudioVoiceState.Muted;
     }
 
     get pausing(): boolean {
-        return this.state === VoiceState.Pausing;
+        return this.state === AudioVoiceState.Pausing;
     }
 
     get stopping(): boolean {
-        return this.state === VoiceState.Stopping;
+        return this.state === AudioVoiceState.Stopping;
     }
 
-    compare(other: VirtualVoice): number {
+    compare(other: VirtualAudioVoice): number {
         if (this.state !== other.state) {
             return this.state - other.state;
         }
@@ -128,30 +130,30 @@ export class VirtualVoice {
     }
 
     start(): void {
-        if (this._state === VoiceState.Muted) {
-            this.state = VoiceState.Unmuting;
-        } else if (this._state === VoiceState.Paused) {
-            this.state = VoiceState.Resuming;
-        } else if (this._state === VoiceState.Stopped) {
-            this.state = VoiceState.Restarting;
-        } else if (this._state === VoiceState.Muting || this._state === VoiceState.Pausing) {
-            this.state = VoiceState.Started;
+        if (this._state === AudioVoiceState.Muted) {
+            this.state = AudioVoiceState.Unmuting;
+        } else if (this._state === AudioVoiceState.Paused) {
+            this.state = AudioVoiceState.Resuming;
+        } else if (this._state === AudioVoiceState.Stopped) {
+            this.state = AudioVoiceState.Restarting;
+        } else if (this._state === AudioVoiceState.Muting || this._state === AudioVoiceState.Pausing) {
+            this.state = AudioVoiceState.Started;
         }
     }
 
     mute(): void {
-        this.state = VoiceState.Muting;
+        this.state = AudioVoiceState.Muting;
     }
 
     pause(): void {
-        this.state = VoiceState.Pausing;
+        this.state = AudioVoiceState.Pausing;
     }
 
     resume(): void {
-        this.state = VoiceState.Resuming;
+        this.state = AudioVoiceState.Resuming;
     }
 
     stop(): void {
-        this.state = VoiceState.Stopping;
+        this.state = AudioVoiceState.Stopping;
     }
 }

@@ -1,6 +1,6 @@
 /* eslint-disable */
 
-import { VirtualVoice, VoiceState } from "./common";
+import { VirtualAudioVoice, AudioVoiceState } from "./common";
 import { Vector3 } from "../../Maths";
 import { Nullable } from "core/types";
 
@@ -12,28 +12,28 @@ All interfaces in this file must be implemented by the backend, and they should 
 The logical and common layers can use the classes in this file, but not the interfaces.
 */
 
-export interface IEngine {
-    inputs: Array<IBus>;
+export interface IAudioEngine {
+    inputs: Array<IAudioBus>;
 }
 
-export interface IAdvancedEngine extends IEngine {
-    physicalEngine: AbstractEngine;
+export interface IAdvancedAudioEngine extends IAudioEngine {
+    physicalEngine: AbstractPhysicalAudioEngine;
     currentTime: number;
 
-    createBus(options?: any): IAdvancedBus;
-    createSource(options?: any): IAdvancedSource;
-    createVoice(options?: any): IAdvancedVoice;
+    createBus(options?: any): IAdvancedAudioBus;
+    createSource(options?: any): IAdvancedAudioSource;
+    createVoice(options?: any): IAdvancedAudioVoice;
 }
 
-export abstract class AbstractEngine {
-    backend: IAdvancedEngine;
+export abstract class AbstractPhysicalAudioEngine {
+    backend: IAdvancedAudioEngine;
 
-    graphItems = new Map<number, AbstractEngineItem>();
+    graphItems = new Map<number, AbstractPhysicalAudioEngineItem>();
     nextItemId: number = 1;
 
     maxSpatialVoices: number = 0;
-    staticVoices: Array<Voice>;
-    streamVoices: Array<Voice>;
+    staticVoices: Array<PhysicalAudioVoice>;
+    streamVoices: Array<PhysicalAudioVoice>;
 
     get currentTime(): number {
         return this.backend.currentTime;
@@ -41,12 +41,12 @@ export abstract class AbstractEngine {
 
     lastUpdateTime: number = 0;
 
-    constructor(backend: IAdvancedEngine, options?: any) {
+    constructor(backend: IAdvancedAudioEngine, options?: any) {
         this.backend = backend;
 
         this.maxSpatialVoices = options?.maxSpatialVoices ?? 64;
-        this.staticVoices = new Array<Voice>(options?.maxStaticVoices ?? 128);
-        this.streamVoices = new Array<Voice>(options?.maxStreamVoices ?? 8);
+        this.staticVoices = new Array<PhysicalAudioVoice>(options?.maxStaticVoices ?? 128);
+        this.streamVoices = new Array<PhysicalAudioVoice>(options?.maxStreamVoices ?? 8);
 
         for (let i = 0; i < this.staticVoices.length; i++) {
             this.staticVoices[i] = this.createVoice();
@@ -56,25 +56,25 @@ export abstract class AbstractEngine {
         }
     }
 
-    createBus(options?: any): Bus {
+    createBus(options?: any): PhysicalAudioBus {
         const bus = this.backend.createBus(options).physicalBus;
         this._addItem(bus, options);
         return bus;
     }
 
-    createSource(options?: any): Source {
+    createSource(options?: any): PhysicalAudioSource {
         const source = this.backend.createSource(options).physicalSource;
         this._addItem(source, options);
         return source;
     }
 
-    createVoice(options?: any): Voice {
+    createVoice(options?: any): PhysicalAudioVoice {
         const voice = this.backend.createVoice(options).physicalVoice;
         this._addItem(voice, options);
         return voice;
     }
 
-    _addItem(item: AbstractEngineItem, options?: any): void {
+    _addItem(item: AbstractPhysicalAudioEngineItem, options?: any): void {
         if (options?.id) {
             item.id = options.id;
             this.nextItemId = Math.max(this.nextItemId, options.id + 1);
@@ -84,7 +84,7 @@ export abstract class AbstractEngine {
         this.graphItems.set(item.id, item);
     }
 
-    update(virtualVoices: Array<VirtualVoice>): void {
+    update(virtualVoices: Array<VirtualAudioVoice>): void {
         const currentTime = this.currentTime;
         if (this.lastUpdateTime == currentTime) {
             return;
@@ -222,101 +222,101 @@ export abstract class AbstractEngine {
     }
 }
 
-export interface IPositioner {
+export interface IAudioPositioner {
     position: Vector3;
 }
 
-export interface IGraphItem {
-    outputs: Array<IBus>;
-    positioner?: IPositioner;
+export interface IAudioGraphItem {
+    outputs: Array<IAudioBus>;
+    positioner?: IAudioPositioner;
 }
 
-interface IEngineItem {
-    engine: IAdvancedEngine;
+interface IAudioEngineItem {
+    engine: IAdvancedAudioEngine;
 }
 
-abstract class AbstractEngineItem {
-    abstract backend: IEngineItem;
+abstract class AbstractPhysicalAudioEngineItem {
+    abstract backend: IAudioEngineItem;
 
-    get engine(): AbstractEngine {
+    get engine(): AbstractPhysicalAudioEngine {
         return this.backend.engine.physicalEngine;
     }
 
     id: number;
 }
 
-export interface IBus extends IGraphItem {
-    inputs: Array<IGraphItem>;
+export interface IAudioBus extends IAudioGraphItem {
+    inputs: Array<IAudioGraphItem>;
 }
 
-export interface IAdvancedBus extends IBus {
-    engine: IAdvancedEngine;
-    physicalBus: Bus;
+export interface IAdvancedAudioBus extends IAudioBus {
+    engine: IAdvancedAudioEngine;
+    physicalBus: PhysicalAudioBus;
 }
 
-type IBusBackend = IAdvancedBus & IEngineItem;
+type IAudioBusBackend = IAdvancedAudioBus & IAudioEngineItem;
 
-export class Bus extends AbstractEngineItem {
-    backend: IBusBackend;
+export class PhysicalAudioBus extends AbstractPhysicalAudioEngineItem {
+    backend: IAudioBusBackend;
 
-    constructor(backend: IBusBackend, options?: any) {
+    constructor(backend: IAudioBusBackend, options?: any) {
         super();
 
         this.backend = backend;
     }
 }
 
-export interface ISource {
+export interface IAudioSource {
     //
 }
 
-export interface IAdvancedSource extends ISource {
-    engine: IAdvancedEngine;
-    physicalSource: Source;
+export interface IAdvancedAudioSource extends IAudioSource {
+    engine: IAdvancedAudioEngine;
+    physicalSource: PhysicalAudioSource;
 }
 
-type ISourceBackend = IAdvancedSource & IEngineItem;
+type IAudioSourceBackend = IAdvancedAudioSource & IAudioEngineItem;
 
-export class Source extends AbstractEngineItem {
-    backend: ISourceBackend;
+export class PhysicalAudioSource extends AbstractPhysicalAudioEngineItem {
+    backend: IAudioSourceBackend;
 
-    constructor(backend: ISourceBackend, options?: any) {
+    constructor(backend: IAudioSourceBackend, options?: any) {
         super();
 
         this.backend = backend;
     }
 }
 
-export interface IVoice extends IGraphItem {
-    source: ISource;
+export interface IAudioVoice extends IAudioGraphItem {
+    source: IAudioSource;
 
     start(): void;
     stop(): void;
 }
 
-export interface IAdvancedVoice extends IVoice {
-    engine: IAdvancedEngine;
-    physicalVoice: Voice;
+export interface IAdvancedAudioVoice extends IAudioVoice {
+    engine: IAdvancedAudioEngine;
+    physicalVoice: PhysicalAudioVoice;
 }
 
-type IVoiceBackend = IAdvancedVoice & IEngineItem;
+type IAudioVoiceBackend = IAdvancedAudioVoice & IAudioEngineItem;
 
-export class Voice extends AbstractEngineItem {
-    backend: IVoiceBackend;
+export class PhysicalAudioVoice extends AbstractPhysicalAudioEngineItem {
+    backend: IAudioVoiceBackend;
 
-    virtualVoice: Nullable<VirtualVoice> = null;
+    virtualVoice: Nullable<VirtualAudioVoice> = null;
 
     get available(): boolean {
         return this.virtualVoice === null;
     }
 
-    constructor(backend: IVoiceBackend, options?: any) {
+    constructor(backend: IAudioVoiceBackend, options?: any) {
         super();
 
         this.backend = backend;
     }
 
-    init(virtualVoice: VirtualVoice): void {
+    init(virtualVoice: VirtualAudioVoice): void {
         if (!this.available) {
             throw new Error("Voice is not available.");
             return;
@@ -324,7 +324,7 @@ export class Voice extends AbstractEngineItem {
         this.virtualVoice = virtualVoice;
     }
 
-    copyFrom(voice: Voice): void {
+    copyFrom(voice: PhysicalAudioVoice): void {
         this.virtualVoice = voice.virtualVoice;
     }
 
@@ -336,7 +336,7 @@ export class Voice extends AbstractEngineItem {
         if (!this.virtualVoice || this.virtualVoice?.updated) {
             return;
         }
-        this.virtualVoice?.setState(VoiceState.Started);
+        this.virtualVoice?.setState(AudioVoiceState.Started);
         console.log("Voice.start()");
     }
 
@@ -344,7 +344,7 @@ export class Voice extends AbstractEngineItem {
         if (!this.virtualVoice || this.virtualVoice?.updated) {
             return;
         }
-        this.virtualVoice?.setState(VoiceState.Muted);
+        this.virtualVoice?.setState(AudioVoiceState.Muted);
         console.log("Voice.mute()");
     }
 
@@ -352,7 +352,7 @@ export class Voice extends AbstractEngineItem {
         if (!this.virtualVoice || this.virtualVoice?.updated) {
             return;
         }
-        this.virtualVoice?.setState(VoiceState.Paused);
+        this.virtualVoice?.setState(AudioVoiceState.Paused);
         console.log("Voice.pause()");
     }
 
@@ -360,7 +360,7 @@ export class Voice extends AbstractEngineItem {
         if (!this.virtualVoice || this.virtualVoice?.updated) {
             return;
         }
-        this.virtualVoice?.setState(VoiceState.Stopped);
+        this.virtualVoice?.setState(AudioVoiceState.Stopped);
         console.log("Voice.stop()");
     }
 }

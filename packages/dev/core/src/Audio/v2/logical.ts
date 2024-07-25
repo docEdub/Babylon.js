@@ -1,7 +1,7 @@
 /* eslint-disable */
 
-import { VoiceState, VirtualVoice } from "./common";
-import * as Physical from "./physical";
+import { AudioVoiceState, VirtualAudioVoice } from "./common";
+import { AbstractPhysicalAudioEngine, PhysicalAudioBus, PhysicalAudioSource } from "./physical";
 import { WebAudioPhysicalEngine } from "./webAudio"; // TODO: Remove this. Doesn't belong here.
 import { IDisposable } from "../../scene";
 import { Nullable } from "../../types";
@@ -16,39 +16,39 @@ layer mutes the least important virtual voices when there are too many of them t
 See the `Engine.update` function.
 */
 
-let currentEngine: Nullable<Engine> = null;
+let currentEngine: Nullable<AudioEngine> = null;
 
-function getCurrentEngine(): Engine {
+function getCurrentEngine(): AudioEngine {
     return currentEngine ?? createDefaultEngine();
 }
 
-let setCurrentEngine = (engine: Engine) => {
+let setCurrentEngine = (engine: AudioEngine) => {
     currentEngine = engine;
 };
 
-export class Engine {
-    physicalEngine: Physical.AbstractEngine;
+export class AudioEngine {
+    physicalEngine: AbstractPhysicalAudioEngine;
 
     // TODO: Consider making main bus a separate member.
-    mainBusses = new Array<Bus>(); // TODO: Add public `addBus` and `removeBus` (except for first bus).
+    mainBusses = new Array<AudioBus>(); // TODO: Add public `addBus` and `removeBus` (except for first bus).
 
-    voices = new Array<VirtualVoice>();
+    voices = new Array<VirtualAudioVoice>();
     voicesDirty: boolean = false;
     inactiveVoiceIndex: number = 1;
 
-    get mainBus(): Bus {
+    get mainBus(): AudioBus {
         return this.mainBusses[0];
     }
 
-    constructor(physicalEngine: Physical.AbstractEngine, options?: any) {
+    constructor(physicalEngine: AbstractPhysicalAudioEngine, options?: any) {
         this.physicalEngine = physicalEngine;
-        this.mainBusses.push(new Bus(this));
+        this.mainBusses.push(new AudioBus(this));
 
         setCurrentEngine(this);
     }
 
-    getVoices(count: number, physicalSource: Physical.Source, options?: any): Array<VirtualVoice> {
-        const voices = new Array<VirtualVoice>(count);
+    getVoices(count: number, physicalSource: PhysicalAudioSource, options?: any): Array<VirtualAudioVoice> {
+        const voices = new Array<VirtualAudioVoice>(count);
         if (count === 0) {
             return voices;
         }
@@ -56,7 +56,7 @@ export class Engine {
         this.inactiveVoiceIndex = 0;
 
         for (let i = 0; i < count; i++) {
-            while (this.inactiveVoiceIndex < this.voices.length && this.voices[this.inactiveVoiceIndex].state !== VoiceState.Stopped) {
+            while (this.inactiveVoiceIndex < this.voices.length && this.voices[this.inactiveVoiceIndex].state !== AudioVoiceState.Stopped) {
                 this.inactiveVoiceIndex++;
             }
 
@@ -71,7 +71,7 @@ export class Engine {
         return voices;
     }
 
-    freeVoices(voices: Array<VirtualVoice>): void {
+    freeVoices(voices: Array<VirtualAudioVoice>): void {
         for (const voice of voices) {
             voice.stop();
         }
@@ -102,8 +102,8 @@ export class Engine {
         this.physicalEngine.update(this.voices);
     }
 
-    _createVoice(): VirtualVoice {
-        const voice = new VirtualVoice();
+    _createVoice(): VirtualAudioVoice {
+        const voice = new VirtualAudioVoice();
 
         voice.onStateChangedObservable.add(() => {
             this.voicesDirty = true;
@@ -116,38 +116,38 @@ export class Engine {
     }
 }
 
-abstract class EngineObject {
-    engine: Engine;
+abstract class AudioEngineItem {
+    engine: AudioEngine;
 
-    get physicalEngine(): Physical.AbstractEngine {
+    get physicalEngine(): AbstractPhysicalAudioEngine {
         return this.engine.physicalEngine;
     }
 
-    constructor(engine?: Engine, options?: any) {
+    constructor(engine?: AudioEngine, options?: any) {
         this.engine = engine ?? getCurrentEngine();
     }
 }
 
-export class Bus extends EngineObject {
-    physicalBus: Physical.Bus;
+export class AudioBus extends AudioEngineItem {
+    physicalBus: PhysicalAudioBus;
 
-    constructor(engine?: Engine, options?: any) {
+    constructor(engine?: AudioEngine, options?: any) {
         super(engine);
 
         this.physicalBus = this.physicalEngine.createBus(options);
     }
 }
 
-export class Sound extends EngineObject implements IDisposable {
-    outputBus: Bus;
-    physicalSource: Physical.Source;
+export class Sound extends AudioEngineItem implements IDisposable {
+    outputBus: AudioBus;
+    physicalSource: PhysicalAudioSource;
 
-    voices: Array<VirtualVoice>;
+    voices: Array<VirtualAudioVoice>;
     nextVoiceIndex: number = 0;
 
     paused: boolean = false;
 
-    constructor(name: string, options?: any, engine?: Engine) {
+    constructor(name: string, options?: any, engine?: AudioEngine) {
         super(engine);
 
         this.outputBus = options?.outputBus ?? this.engine.mainBus;
@@ -160,7 +160,7 @@ export class Sound extends EngineObject implements IDisposable {
         this.engine.freeVoices(this.voices);
     }
 
-    play(): VirtualVoice {
+    play(): VirtualAudioVoice {
         this.resume();
 
         const voice = this.voices[this.nextVoiceIndex];
@@ -203,12 +203,12 @@ export class Sound extends EngineObject implements IDisposable {
 }
 
 // TODO: Move this. It doesn't belong in the logical layer.
-export class WebAudioEngine extends Engine {
+export class WebAudioEngine extends AudioEngine {
     constructor(options?: any) {
         super(new WebAudioPhysicalEngine(), options);
     }
 }
 
-export let createDefaultEngine = (): Engine => {
+export let createDefaultEngine = (): AudioEngine => {
     return new WebAudioEngine();
 };

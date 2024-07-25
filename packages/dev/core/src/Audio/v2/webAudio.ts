@@ -1,6 +1,17 @@
 /* eslint-disable */
 
-import * as Physical from "./physical";
+import type {
+    IAdvancedAudioBus,
+    IAdvancedAudioEngine,
+    IAdvancedAudioSource,
+    IAdvancedAudioVoice,
+    IAudioBus,
+    IAudioEngine,
+    IAudioPositioner,
+    IAudioSource,
+    IAudioVoice,
+} from "./physical";
+import { AbstractPhysicalAudioEngine, PhysicalAudioBus, PhysicalAudioSource, PhysicalAudioVoice } from "./physical";
 import { Vector3 } from "../../Maths/math.vector";
 
 /*
@@ -19,7 +30,7 @@ TODO: Split file into webAudioCore.ts and webAudio.ts?
 
 // TODO: Consider generics for the member types.
 //  - Consider getting member type constructors programmatically similar to light.ts `GetConstructorFromName`.
-export class WebAudioEngine implements Physical.IEngine {
+export class WebAudioEngine implements IAudioEngine {
     audioContext: AudioContext;
 
     inputs = new Array<WebAudioBus>();
@@ -66,8 +77,8 @@ export class WebAudioEngine implements Physical.IEngine {
 }
 
 // Advanced
-export class AdvancedWebAudioEngine extends WebAudioEngine implements Physical.IAdvancedEngine {
-    physicalEngine: Physical.AbstractEngine;
+export class AdvancedWebAudioEngine extends WebAudioEngine implements IAdvancedAudioEngine {
+    physicalEngine: AbstractPhysicalAudioEngine;
     startTime: number = 0;
 
     override inputs = new Array<AdvancedWebAudioBus>();
@@ -94,20 +105,20 @@ export class AdvancedWebAudioEngine extends WebAudioEngine implements Physical.I
         }
     }
 
-    createBus(options?: any): Physical.IAdvancedBus {
+    createBus(options?: any): IAdvancedAudioBus {
         return new AdvancedWebAudioBus(this, options);
     }
 
-    createSource(options?: any): Physical.IAdvancedSource {
+    createSource(options?: any): IAdvancedAudioSource {
         return options?.stream ? new AdvancedWebAudioStreamSource(this, options) : new AdvancedWebAudioStaticSource(this, options);
     }
 
-    createVoice(options?: any): Physical.IAdvancedVoice {
+    createVoice(options?: any): IAdvancedAudioVoice {
         return options?.stream ? new AdvancedWebAudioStreamVoice(this, options) : new AdvancedWebAudioStaticVoice(this, options);
     }
 }
 
-export class WebAudioPhysicalEngine extends Physical.AbstractEngine {
+export class WebAudioPhysicalEngine extends AbstractPhysicalAudioEngine {
     constructor(options?: any) {
         super(new AdvancedWebAudioEngine(options), options);
 
@@ -132,7 +143,7 @@ class WebAudioEffectChain extends AbstractWebAudioSubGraph {
     }
 }
 
-class WebAudioPositioner extends AbstractWebAudioSubGraph implements Physical.IPositioner {
+class WebAudioPositioner extends AbstractWebAudioSubGraph implements IAudioPositioner {
     nodes: Array<AudioNode>;
 
     get firstNode(): AudioNode {
@@ -167,7 +178,7 @@ abstract class AbstractWebAudioGraphItem {
     }
 }
 
-export class WebAudioBus extends AbstractWebAudioGraphItem implements Physical.IBus {
+export class WebAudioBus extends AbstractWebAudioGraphItem implements IAudioBus {
     node: GainNode;
 
     inputs = new Array<AbstractWebAudioGraphItem>();
@@ -179,19 +190,19 @@ export class WebAudioBus extends AbstractWebAudioGraphItem implements Physical.I
     }
 }
 
-class AdvancedWebAudioBus extends WebAudioBus implements Physical.IAdvancedBus {
+class AdvancedWebAudioBus extends WebAudioBus implements IAdvancedAudioBus {
     override engine: AdvancedWebAudioEngine;
-    physicalBus: Physical.Bus;
+    physicalBus: PhysicalAudioBus;
 
     constructor(engine: AdvancedWebAudioEngine, options?: any) {
         super(engine, options);
 
         this.engine = engine;
-        this.physicalBus = new Physical.Bus(this);
+        this.physicalBus = new PhysicalAudioBus(this);
     }
 }
 
-abstract class AbstractWebAudioSource implements Physical.ISource {
+abstract class AbstractWebAudioSource implements IAudioSource {
     constructor(engine: WebAudioEngine, options?: any) {
         //
     }
@@ -205,15 +216,15 @@ class WebAudioStaticSource extends AbstractWebAudioSource {
     }
 }
 
-class AdvancedWebAudioStaticSource extends WebAudioStaticSource implements Physical.IAdvancedSource {
+class AdvancedWebAudioStaticSource extends WebAudioStaticSource implements IAdvancedAudioSource {
     engine: AdvancedWebAudioEngine;
-    physicalSource: Physical.Source;
+    physicalSource: PhysicalAudioSource;
 
     constructor(engine: AdvancedWebAudioEngine, options?: any) {
         super(engine, options);
 
         this.engine = engine;
-        this.physicalSource = new Physical.Source(this, options);
+        this.physicalSource = new PhysicalAudioSource(this, options);
     }
 }
 
@@ -221,19 +232,19 @@ class WebAudioStreamSource extends AbstractWebAudioSource {
     audioElement: HTMLAudioElement;
 }
 
-class AdvancedWebAudioStreamSource extends WebAudioStreamSource implements Physical.IAdvancedSource {
+class AdvancedWebAudioStreamSource extends WebAudioStreamSource implements IAdvancedAudioSource {
     engine: AdvancedWebAudioEngine;
-    physicalSource: Physical.Source;
+    physicalSource: PhysicalAudioSource;
 
     constructor(engine: AdvancedWebAudioEngine, options?: any) {
         super(engine, options);
 
         this.engine = engine;
-        this.physicalSource = new Physical.Source(this, options);
+        this.physicalSource = new PhysicalAudioSource(this, options);
     }
 }
 
-abstract class AbstractWebAudioSound extends AbstractWebAudioGraphItem implements Physical.IVoice {
+abstract class AbstractWebAudioSound extends AbstractWebAudioGraphItem implements IAudioVoice {
     abstract source: AbstractWebAudioSource;
 
     abstract start(): void;
@@ -248,15 +259,15 @@ export class WebAudioSound extends AbstractWebAudioSound {
     stop(): void {}
 }
 
-class AdvancedWebAudioStaticVoice extends WebAudioSound implements Physical.IAdvancedVoice {
+class AdvancedWebAudioStaticVoice extends WebAudioSound implements IAdvancedAudioVoice {
     override engine: AdvancedWebAudioEngine;
     override source: AdvancedWebAudioStaticSource;
-    physicalVoice: Physical.Voice;
+    physicalVoice: PhysicalAudioVoice;
 
     constructor(engine: AdvancedWebAudioEngine, options?: any) {
         super(engine, options);
         this.engine = engine;
-        this.physicalVoice = new Physical.Voice(this, options);
+        this.physicalVoice = new PhysicalAudioVoice(this, options);
     }
 }
 
@@ -268,14 +279,14 @@ export class WebAudioSoundStream extends AbstractWebAudioSound {
     stop(): void {}
 }
 
-class AdvancedWebAudioStreamVoice extends WebAudioSoundStream implements Physical.IAdvancedVoice {
+class AdvancedWebAudioStreamVoice extends WebAudioSoundStream implements IAdvancedAudioVoice {
     override engine: AdvancedWebAudioEngine;
     override source: AdvancedWebAudioStreamSource;
-    physicalVoice: Physical.Voice;
+    physicalVoice: PhysicalAudioVoice;
 
     constructor(engine: AdvancedWebAudioEngine, options?: any) {
         super(engine, options);
         this.engine = engine;
-        this.physicalVoice = new Physical.Voice(this, options);
+        this.physicalVoice = new PhysicalAudioVoice(this, options);
     }
 }
