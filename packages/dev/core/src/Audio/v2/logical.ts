@@ -2,7 +2,7 @@
 
 import { VoiceState, VirtualVoice } from "./common";
 import * as Physical from "./physical";
-import * as WebAudio from "./webAudio"; // TODO: Remove this. Doesn't belong here.
+import { WebAudioPhysicalEngine } from "./webAudio"; // TODO: Remove this. Doesn't belong here.
 import { IDisposable } from "../../scene";
 import { Nullable } from "../../types";
 
@@ -205,7 +205,7 @@ export class Sound extends EngineObject implements IDisposable {
 // TODO: Move this. It doesn't belong in the logical layer.
 export class WebAudioEngine extends Engine {
     constructor(options?: any) {
-        super(new WebAudio.PhysicalEngine(), options);
+        super(new WebAudioPhysicalEngine(), options);
     }
 }
 

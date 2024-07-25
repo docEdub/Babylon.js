@@ -12,21 +12,21 @@ All interfaces in this file must be implemented by the backend, and they should 
 The logical and common layers can use the classes in this file, but not the interfaces.
 */
 
-export interface ICoreEngine {
-    inputs: Array<ICoreBus>;
+export interface IEngine {
+    inputs: Array<IBus>;
 }
 
-export interface IEngine extends ICoreEngine {
+export interface IAdvancedEngine extends IEngine {
     physicalEngine: AbstractEngine;
     currentTime: number;
 
-    createBus(options?: any): IBus;
-    createSource(options?: any): ISource;
-    createVoice(options?: any): IVoice;
+    createBus(options?: any): IAdvancedBus;
+    createSource(options?: any): IAdvancedSource;
+    createVoice(options?: any): IAdvancedVoice;
 }
 
 export abstract class AbstractEngine {
-    backend: IEngine;
+    backend: IAdvancedEngine;
 
     graphItems = new Map<number, AbstractEngineItem>();
     nextItemId: number = 1;
@@ -41,7 +41,7 @@ export abstract class AbstractEngine {
 
     lastUpdateTime: number = 0;
 
-    constructor(backend: IEngine, options?: any) {
+    constructor(backend: IAdvancedEngine, options?: any) {
         this.backend = backend;
 
         this.maxSpatialVoices = options?.maxSpatialVoices ?? 64;
@@ -227,12 +227,12 @@ export interface IPositioner {
 }
 
 export interface IGraphItem {
-    outputs: Array<ICoreBus>;
+    outputs: Array<IBus>;
     positioner?: IPositioner;
 }
 
 interface IEngineItem {
-    engine: IEngine;
+    engine: IAdvancedEngine;
 }
 
 abstract class AbstractEngineItem {
@@ -245,16 +245,16 @@ abstract class AbstractEngineItem {
     id: number;
 }
 
-export interface ICoreBus extends IGraphItem {
+export interface IBus extends IGraphItem {
     inputs: Array<IGraphItem>;
 }
 
-export interface IBus extends ICoreBus {
-    engine: IEngine;
+export interface IAdvancedBus extends IBus {
+    engine: IAdvancedEngine;
     physicalBus: Bus;
 }
 
-type IBusBackend = IBus & IEngineItem;
+type IBusBackend = IAdvancedBus & IEngineItem;
 
 export class Bus extends AbstractEngineItem {
     backend: IBusBackend;
@@ -266,16 +266,16 @@ export class Bus extends AbstractEngineItem {
     }
 }
 
-export interface ICoreSource {
+export interface ISource {
     //
 }
 
-export interface ISource extends ICoreSource {
-    engine: IEngine;
+export interface IAdvancedSource extends ISource {
+    engine: IAdvancedEngine;
     physicalSource: Source;
 }
 
-type ISourceBackend = ISource & IEngineItem;
+type ISourceBackend = IAdvancedSource & IEngineItem;
 
 export class Source extends AbstractEngineItem {
     backend: ISourceBackend;
@@ -287,19 +287,19 @@ export class Source extends AbstractEngineItem {
     }
 }
 
-export interface ICoreVoice extends IGraphItem {
-    source: ICoreSource;
+export interface IVoice extends IGraphItem {
+    source: ISource;
 
     start(): void;
     stop(): void;
 }
 
-export interface IVoice extends ICoreVoice {
-    engine: IEngine;
+export interface IAdvancedVoice extends IVoice {
+    engine: IAdvancedEngine;
     physicalVoice: Voice;
 }
 
-type IVoiceBackend = IVoice & IEngineItem;
+type IVoiceBackend = IAdvancedVoice & IEngineItem;
 
 export class Voice extends AbstractEngineItem {
     backend: IVoiceBackend;
