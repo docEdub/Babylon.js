@@ -1,7 +1,14 @@
 /* eslint-disable */
 
 import type { IAudioBusBackend, IAudioEngineBackend, IAudioSourceBackend, IAudioVoiceBackend } from "./backend";
-import { AudioBus, AudioEngine, Sound, SoundSource, SoundStream, SoundStreamSource } from "./basicWebAudioBackend";
+import {
+    BasicWebAudioBus,
+    BasicWebAudioEngine,
+    BasicWebAudioStaticSource,
+    BasicWebAudioStaticVoice,
+    BasicWebAudioStreamSource,
+    BasicWebAudioStreamVoice,
+} from "./basicWebAudioBackend";
 import { AbstractPhysicalAudioEngine, PhysicalAudioBus, PhysicalAudioSource, PhysicalAudioVoice } from "./physical";
 
 /*
@@ -17,11 +24,11 @@ The advanced classes extend the core classes to implement the advanced audio eng
 TODO: Split file into webAudioCore.ts and webAudio.ts?
 */
 
-export class WebAudioEngine extends AudioEngine implements IAudioEngineBackend {
+export class WebAudioEngine extends BasicWebAudioEngine implements IAudioEngineBackend {
     physicalEngine: AbstractPhysicalAudioEngine;
     startTime: number = 0;
 
-    override inputs = new Array<WebAudioBus>();
+    override mainOutput: WebAudioBus;
 
     get currentTime(): number {
         return this.unlocked ? this.startTime + this.audioContext.currentTime : (performance.now() - this.startTime) / 1000;
@@ -66,7 +73,7 @@ export class WebAudioPhysicalEngine extends AbstractPhysicalAudioEngine {
     }
 }
 
-class WebAudioBus extends AudioBus implements IAudioBusBackend {
+class WebAudioBus extends BasicWebAudioBus implements IAudioBusBackend {
     override engine: WebAudioEngine;
     physicalBus: PhysicalAudioBus;
 
@@ -78,7 +85,7 @@ class WebAudioBus extends AudioBus implements IAudioBusBackend {
     }
 }
 
-class WebAudioStaticSource extends SoundSource implements IAudioSourceBackend {
+class WebAudioStaticSource extends BasicWebAudioStaticSource implements IAudioSourceBackend {
     engine: WebAudioEngine;
     physicalSource: PhysicalAudioSource;
 
@@ -90,7 +97,7 @@ class WebAudioStaticSource extends SoundSource implements IAudioSourceBackend {
     }
 }
 
-class WebAudioStreamSource extends SoundStreamSource implements IAudioSourceBackend {
+class WebAudioStreamSource extends BasicWebAudioStreamSource implements IAudioSourceBackend {
     engine: WebAudioEngine;
     physicalSource: PhysicalAudioSource;
 
@@ -102,7 +109,7 @@ class WebAudioStreamSource extends SoundStreamSource implements IAudioSourceBack
     }
 }
 
-class WebAudioStaticVoice extends Sound implements IAudioVoiceBackend {
+class WebAudioStaticVoice extends BasicWebAudioStaticVoice implements IAudioVoiceBackend {
     override engine: WebAudioEngine;
     override source: WebAudioStaticSource;
     physicalVoice: PhysicalAudioVoice;
@@ -114,7 +121,7 @@ class WebAudioStaticVoice extends Sound implements IAudioVoiceBackend {
     }
 }
 
-class WebAudioStreamVoice extends SoundStream implements IAudioVoiceBackend {
+class WebAudioStreamVoice extends BasicWebAudioStreamVoice implements IAudioVoiceBackend {
     override engine: WebAudioEngine;
     override source: WebAudioStreamSource;
     physicalVoice: PhysicalAudioVoice;

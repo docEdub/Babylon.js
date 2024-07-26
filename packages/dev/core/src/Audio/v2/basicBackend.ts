@@ -1,5 +1,6 @@
 /* eslint-disable */
 import { Vector3 } from "../../Maths/math.vector";
+import { Nullable } from "../../types";
 
 export interface IAudioGraphBackendItem {
     outputs: Array<IBasicAudioBusBackend>;
@@ -7,7 +8,7 @@ export interface IAudioGraphBackendItem {
 }
 
 export interface IBasicAudioEngineBackend {
-    inputs: Array<IBasicAudioBusBackend>;
+    mainOutput: IBasicAudioBusBackend;
 }
 
 export interface IBasicAudioPositionerBackend {
@@ -15,7 +16,9 @@ export interface IBasicAudioPositionerBackend {
 }
 
 export interface IBasicAudioBusBackend extends IAudioGraphBackendItem {
-    inputs: Array<IAudioGraphBackendItem>;
+    outputBus: Nullable<IBasicAudioBusBackend>;
+    auxSendBusses: Nullable<Array<IBasicAudioBusBackend>>;
+    inputBusses: Nullable<Array<IBasicAudioBusBackend>>;
 }
 
 export interface IBasicAudioSourceBackend {
