@@ -2,6 +2,7 @@
 
 import type { IBasicAudioBusBackend, IBasicAudioEngineBackend, IBasicAudioPositionerBackend, IBasicAudioSourceBackend, IBasicAudioVoiceBackend } from "./basicBackend";
 import { IBasicCommonSoundOptions, IBasicSoundSourceOptions, IBasicStaticSoundOptions, IBasicStreamSoundOptions } from "./basicOptions";
+import { AudioVoiceState } from "./common";
 import { Vector3 } from "../../Maths/math.vector";
 import { Logger } from "../../Misc/logger";
 import { Observable } from "../../Misc/observable";
@@ -179,11 +180,11 @@ export class BasicWebAudioStaticSource extends AbstractWebAudioSource {
         }
         if (options.sourceUrl) {
             if (!(await this._createBufferFromUrl(audioContext, options.sourceUrl))) {
-                Logger.Warn(`Decoding audio data failed for URL: ${options.sourceUrl}` + "\n\tThe audio format may not be supported by this browser.");
+                Logger.Log(`Decoding audio data failed for URL: ${options.sourceUrl}` + "\n\tThe audio format may not be supported by this browser.");
             }
         } else if (options.sourceUrls) {
             if (!(await this._createBufferFromUrls(audioContext, options.sourceUrls))) {
-                Logger.Warn(`Decoding audio data failed for URLs: [ ${options.sourceUrls.join(", ")} ]` + "\n\tThe audio formats may not be supported by this browser.");
+                Logger.Log(`Decoding audio data failed for URLs: [ ${options.sourceUrls.join(", ")} ]` + "\n\tThe audio formats may not be supported by this browser.");
             }
         }
     }
@@ -240,11 +241,20 @@ export abstract class AbstractWebAudioVoice extends AbstractWebAudioGraphItem im
     abstract stop(): void;
 }
 
-export class BasicWebAudioStaticVoice extends AbstractWebAudioVoice {
+export class BasicWebAudioStaticVoice extends AbstractWebAudioVoice implements IDisposable {
     _sourceNode: AudioBufferSourceNode;
     _gainNode: GainNode;
+    _state: AudioVoiceState = AudioVoiceState.Stopped;
 
     source: BasicWebAudioStaticSource;
+
+    get started(): boolean {
+        return this._state === AudioVoiceState.Started;
+    }
+
+    get stopped(): boolean {
+        return this._state === AudioVoiceState.Stopped;
+    }
 
     get outputNode(): Nullable<AudioNode> {
         return this._gainNode;
@@ -263,6 +273,43 @@ export class BasicWebAudioStaticVoice extends AbstractWebAudioVoice {
             this.source = new BasicWebAudioStaticSource(engine, options);
         }
 
+        this._gainNode = new GainNode(this._getAudioContext());
+
+        this.setMainOutputBus(this.engine.mainOutputBus);
+    }
+
+    dispose(): void {
+        this._disposeSourceNode();
+    }
+
+    start(): void {
+        if (this.started) {
+            return;
+        }
+
+        console.log("BasicWebAudioStaticVoice.start ...");
+
+        this._initSourceNode();
+        this._sourceNode.start();
+
+        this._state = AudioVoiceState.Started;
+    }
+
+    stop(): void {
+        if (this.stopped) {
+            return;
+        }
+
+        console.log("BasicWebAudioStaticVoice.stop ...");
+
+        this._sourceNode.stop();
+
+        this._state = AudioVoiceState.Stopped;
+    }
+
+    private _initSourceNode(): void {
+        this._disposeSourceNode();
+
         this._sourceNode = new AudioBufferSourceNode(this._getAudioContext());
         if (this.source.loaded) {
             this._sourceNode.buffer = this.source.buffer;
@@ -272,20 +319,20 @@ export class BasicWebAudioStaticVoice extends AbstractWebAudioVoice {
             });
         }
 
-        this._gainNode = new GainNode(this._getAudioContext());
-
         this._sourceNode.connect(this._gainNode);
-
-        this.setMainOutputBus(this.engine.mainOutputBus);
+        this._sourceNode.addEventListener("ended", this._onSourceNodeEnded.bind(this));
     }
 
-    start(): void {
-        console.log("BasicWebAudioStaticVoice.start ...");
-        this._sourceNode.start();
+    private _disposeSourceNode(): void {
+        if (this._sourceNode) {
+            this._sourceNode.stop();
+            this._sourceNode.disconnect();
+            this._sourceNode.removeEventListener("ended", this._onSourceNodeEnded);
+        }
     }
 
-    stop(): void {
-        this._sourceNode.stop();
+    private _onSourceNodeEnded(): void {
+        this._state = AudioVoiceState.Stopped;
     }
 }
 
