@@ -5,19 +5,6 @@ import { IBasicCommonSoundOptions, IBasicSoundOptions, IBasicSoundStreamOptions 
 import { Vector3 } from "../../Maths/math.vector";
 import { Nullable } from "core/types";
 
-/*
-WebAudio backend.
-
-The basic classes in this module will replace our legacy audio engine ...
-    - BasicWebAudioEngine -> BasicWebAudioEngine
-    - SoundTrack  -> AudioBus
-    - Sound       -> Sound / SoundStream
-
-The advanced classes extend the core classes to implement the advanced audio engine's physical interfaces.
-
-TODO: Split file into webAudioCore.ts and webAudio.ts?
-*/
-
 export class BasicWebAudioEngine implements IBasicAudioEngineBackend {
     audioContext: AudioContext;
 
@@ -180,6 +167,16 @@ export class BasicWebAudioStaticVoice extends AbstractWebAudioSound {
     constructor(engine: BasicWebAudioEngine, options?: IBasicSoundOptions) {
         super(engine, options);
 
+        if (options?.source) {
+            if (options.source instanceof BasicWebAudioStaticSource) {
+                this.source = options.source;
+            } else {
+                throw new Error("Wrong source type.");
+            }
+        } else {
+            this.source = new BasicWebAudioStaticSource(engine, options);
+        }
+
         this._sourceNode = new AudioBufferSourceNode(this.audioContext);
         this._gainNode = new GainNode(this.audioContext);
 
@@ -203,12 +200,17 @@ export class BasicWebAudioStreamVoice extends AbstractWebAudioSound {
     constructor(engine: BasicWebAudioEngine, options?: IBasicSoundStreamOptions) {
         super(engine, options);
 
-        if (options?.source instanceof BasicWebAudioStreamSource) {
-            this.source = options.source;
+        if (options?.source) {
+            if (options.source instanceof BasicWebAudioStreamSource) {
+                this.source = options.source;
+            } else {
+                throw new Error("Wrong source type.");
+            }
         } else {
             this.source = new BasicWebAudioStreamSource(engine, options);
         }
 
+        this._sourceNode = new MediaElementAudioSourceNode(this.audioContext, { mediaElement: this.source.audioElement });
         this._gainNode = new GainNode(this.audioContext);
 
         this._sourceNode.connect(this._gainNode);
