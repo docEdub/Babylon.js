@@ -1,7 +1,7 @@
 /* eslint-disable */
 
 import {
-    AbstractWebAudioSound,
+    AbstractWebAudioVoice,
     BasicWebAudioBus,
     BasicWebAudioEngine,
     BasicWebAudioStaticSource,
@@ -57,10 +57,18 @@ export class SoundStreamSource extends BasicWebAudioStreamSource {
 
 export class Sound {
     name: string;
-    voice: AbstractWebAudioSound;
+    voice: AbstractWebAudioVoice;
 
     constructor(name: string, options?: any, engine?: AudioEngine) {
         this.name = name;
         this.voice = options?.stream ? new BasicWebAudioStreamVoice(engine ?? getCurrentEngine(), options) : new BasicWebAudioStaticVoice(engine ?? getCurrentEngine(), options);
+    }
+
+    start() {
+        this.voice.start();
+    }
+
+    stop() {
+        this.voice.stop();
     }
 }

@@ -3,12 +3,11 @@ import { Vector3 } from "../../Maths/math.vector";
 import { Nullable } from "../../types";
 
 export interface IAudioGraphBackendItem {
-    outputs: Array<IBasicAudioBusBackend>;
-    positioner?: IBasicAudioPositionerBackend;
+    setMainOutputBus(bus: IBasicAudioBusBackend): void;
 }
 
 export interface IBasicAudioEngineBackend {
-    mainOutput: IBasicAudioBusBackend;
+    mainOutputBus: IBasicAudioBusBackend;
 }
 
 export interface IBasicAudioPositionerBackend {
@@ -18,7 +17,6 @@ export interface IBasicAudioPositionerBackend {
 export interface IBasicAudioBusBackend extends IAudioGraphBackendItem {
     outputBus: Nullable<IBasicAudioBusBackend>;
     auxSendBusses: Nullable<Array<IBasicAudioBusBackend>>;
-    inputBusses: Nullable<Array<IBasicAudioBusBackend>>;
 }
 
 export interface IBasicAudioSourceBackend {

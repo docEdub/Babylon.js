@@ -1,14 +1,19 @@
 /* eslint-disable */
 
 import type { IBasicAudioBusBackend, IBasicAudioEngineBackend, IBasicAudioPositionerBackend, IBasicAudioSourceBackend, IBasicAudioVoiceBackend } from "./basicBackend";
-import { IBasicCommonSoundOptions, IBasicSoundOptions, IBasicSoundStreamOptions } from "./basicOptions";
+import { IBasicCommonSoundOptions, IBasicSoundSourceOptions, IBasicStaticSoundOptions, IBasicStreamSoundOptions } from "./basicOptions";
 import { Vector3 } from "../../Maths/math.vector";
-import { Nullable } from "core/types";
+import { Logger } from "../../Misc/logger";
+import { Observable } from "../../Misc/observable";
+import { IDisposable } from "../../scene";
+import { Nullable } from "../../types";
 
-export class BasicWebAudioEngine implements IBasicAudioEngineBackend {
+export class BasicWebAudioEngine implements IBasicAudioEngineBackend, IDisposable {
     audioContext: AudioContext;
 
-    mainOutput: BasicWebAudioBus;
+    mainOutputBus: BasicWebAudioBus;
+
+    onUnlockObservable = new Observable<BasicWebAudioEngine>();
 
     get unlocked(): boolean {
         return this.audioContext.state !== "suspended";
@@ -16,7 +21,9 @@ export class BasicWebAudioEngine implements IBasicAudioEngineBackend {
 
     constructor(options?: any) {
         this.audioContext = options?.audioContext ?? new AudioContext();
-        this.mainOutput = new BasicWebAudioBus(options, this);
+        this.mainOutputBus = new BasicWebAudioBus(this, options);
+
+        this.mainOutputBus.outputNode?.connect(this.audioContext.destination);
 
         // TODO: See WebXR button for an example of how to handle this in the UI.
         if (!this.unlocked) {
@@ -30,6 +37,11 @@ export class BasicWebAudioEngine implements IBasicAudioEngineBackend {
         }
     }
 
+    dispose(): void {
+        this.audioContext.removeEventListener("statechange", this._onAudioContextStateChange);
+        this.audioContext.close();
+    }
+
     /**
      * Sends an audio context unlock request.
      *
@@ -40,13 +52,47 @@ export class BasicWebAudioEngine implements IBasicAudioEngineBackend {
      * the audio context lifetime.
      */
     public unlock(): void {
+        this.audioContext.addEventListener("statechange", this._onAudioContextStateChange.bind(this));
         this.audioContext.resume();
+    }
+
+    private _onAudioContextStateChange(): void {
+        if (this.unlocked) {
+            console.log("Audio context unlocked.");
+            this.onUnlockObservable.notifyObservers(this);
+            this.audioContext.removeEventListener("statechange", this._onAudioContextStateChange);
+        }
     }
 }
 
 abstract class AbstractWebAudioSubGraph {
     abstract inputNode: Nullable<AudioNode>;
     abstract outputNode: Nullable<AudioNode>;
+}
+
+abstract class AbstractWebAudioGraphItem extends AbstractWebAudioSubGraph {
+    engine: BasicWebAudioEngine;
+
+    effectChain?: BasicWebAudioEffectChain;
+    positioner?: BasicWebAudioPositioner;
+
+    outputBus: Nullable<BasicWebAudioBus>;
+    auxSendBusses: Nullable<Array<BasicWebAudioBus>>;
+
+    constructor(engine: BasicWebAudioEngine, options?: any) {
+        super();
+        this.engine = engine;
+    }
+
+    setMainOutputBus(bus: BasicWebAudioBus): void {
+        bus.addInputItem(this);
+        this.outputBus = bus;
+        this.outputNode?.connect(bus.inputNode!);
+    }
+
+    protected _getAudioContext(): AudioContext {
+        return this.engine.audioContext;
+    }
 }
 
 export class BasicWebAudioEffectChain extends AbstractWebAudioSubGraph {
@@ -78,30 +124,9 @@ export class BasicWebAudioPositioner extends AbstractWebAudioSubGraph implements
     set position(position: Vector3) {}
 }
 
-abstract class AbstractWebAudioGraphItem extends AbstractWebAudioSubGraph {
-    engine: BasicWebAudioEngine;
-
-    effectChain?: BasicWebAudioEffectChain;
-    positioner?: BasicWebAudioPositioner;
-
-    outputs = new Array<BasicWebAudioBus>();
-
-    get audioContext(): AudioContext {
-        return this.engine.audioContext;
-    }
-
-    constructor(engine: BasicWebAudioEngine, options?: any) {
-        super();
-        this.engine = engine;
-    }
-}
-
 export class BasicWebAudioBus extends AbstractWebAudioGraphItem implements IBasicAudioBusBackend {
+    _inputItems = new Array<AbstractWebAudioGraphItem>();
     _outputGainNode: GainNode;
-
-    outputBus: Nullable<BasicWebAudioBus>;
-    auxSendBusses: Nullable<Array<BasicWebAudioBus>>;
-    inputBusses: Nullable<Array<BasicWebAudioBus>>;
 
     get inputNode(): Nullable<AudioNode> {
         return this._outputGainNode;
@@ -113,7 +138,11 @@ export class BasicWebAudioBus extends AbstractWebAudioGraphItem implements IBasi
 
     constructor(engine: BasicWebAudioEngine, options?: any) {
         super(engine, options);
-        this._outputGainNode = new GainNode(this.audioContext);
+        this._outputGainNode = new GainNode(this._getAudioContext());
+    }
+
+    addInputItem(item: AbstractWebAudioGraphItem): void {
+        this._inputItems.push(item);
     }
 }
 
@@ -123,11 +152,68 @@ abstract class AbstractWebAudioSource implements IBasicAudioSourceBackend {
     }
 }
 
+// TODO: Rename to `BasicWebAudioStaticSoundSource`, and others.
 export class BasicWebAudioStaticSource extends AbstractWebAudioSource {
-    buffer: AudioBuffer;
+    _buffer: Nullable<AudioBuffer> = null;
 
-    constructor(engine: BasicWebAudioEngine, options?: any) {
+    readonly onLoadObservable = new Observable<BasicWebAudioStaticSource>();
+
+    get buffer(): Nullable<AudioBuffer> {
+        return this._buffer;
+    }
+
+    get loaded(): boolean {
+        return this._buffer !== null;
+    }
+
+    constructor(engine: BasicWebAudioEngine, options?: IBasicSoundSourceOptions) {
         super(engine, options);
+
+        this._createBuffer(engine.audioContext, options);
+    }
+
+    private async _createBuffer(audioContext: AudioContext, options?: IBasicSoundSourceOptions): Promise<void> {
+        if (options === undefined) {
+            this._buffer = new AudioBuffer({ length: 1, sampleRate: audioContext.sampleRate });
+            return Promise.resolve();
+        }
+        if (options.sourceUrl) {
+            if (!(await this._createBufferFromUrl(audioContext, options.sourceUrl))) {
+                Logger.Warn(`Decoding audio data failed for URL: ${options.sourceUrl}` + "\n\tThe audio format may not be supported by this browser.");
+            }
+        } else if (options.sourceUrls) {
+            if (!(await this._createBufferFromUrls(audioContext, options.sourceUrls))) {
+                Logger.Warn(`Decoding audio data failed for URLs: [ ${options.sourceUrls.join(", ")} ]` + "\n\tThe audio formats may not be supported by this browser.");
+            }
+        }
+    }
+
+    private async _createBufferFromUrl(audioContext: AudioContext, url: string): Promise<boolean> {
+        const response = await fetch(url);
+        const arrayBuffer = await response.arrayBuffer();
+
+        return new Promise<boolean>((resolve) => {
+            audioContext
+                .decodeAudioData(arrayBuffer)
+                .then((buffer) => {
+                    this._buffer = buffer;
+                    this.onLoadObservable.notifyObservers(this);
+                    resolve(true);
+                })
+                .catch(() => {
+                    resolve(false);
+                });
+        });
+    }
+
+    private async _createBufferFromUrls(audioContext: AudioContext, urls: string[]): Promise<boolean> {
+        for (const url of urls) {
+            if (await this._createBufferFromUrl(audioContext, url)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
 
@@ -139,7 +225,7 @@ export class BasicWebAudioStreamSource extends AbstractWebAudioSource {
     }
 }
 
-export abstract class AbstractWebAudioSound extends AbstractWebAudioGraphItem implements IBasicAudioVoiceBackend {
+export abstract class AbstractWebAudioVoice extends AbstractWebAudioGraphItem implements IBasicAudioVoiceBackend {
     abstract source: AbstractWebAudioSource;
 
     get inputNode(): Nullable<AudioNode> {
@@ -154,7 +240,7 @@ export abstract class AbstractWebAudioSound extends AbstractWebAudioGraphItem im
     abstract stop(): void;
 }
 
-export class BasicWebAudioStaticVoice extends AbstractWebAudioSound {
+export class BasicWebAudioStaticVoice extends AbstractWebAudioVoice {
     _sourceNode: AudioBufferSourceNode;
     _gainNode: GainNode;
 
@@ -164,7 +250,7 @@ export class BasicWebAudioStaticVoice extends AbstractWebAudioSound {
         return this._gainNode;
     }
 
-    constructor(engine: BasicWebAudioEngine, options?: IBasicSoundOptions) {
+    constructor(engine: BasicWebAudioEngine, options?: IBasicStaticSoundOptions) {
         super(engine, options);
 
         if (options?.source) {
@@ -177,17 +263,33 @@ export class BasicWebAudioStaticVoice extends AbstractWebAudioSound {
             this.source = new BasicWebAudioStaticSource(engine, options);
         }
 
-        this._sourceNode = new AudioBufferSourceNode(this.audioContext);
-        this._gainNode = new GainNode(this.audioContext);
+        this._sourceNode = new AudioBufferSourceNode(this._getAudioContext());
+        if (this.source.loaded) {
+            this._sourceNode.buffer = this.source.buffer;
+        } else {
+            this.source.onLoadObservable.addOnce((source) => {
+                this._sourceNode.buffer = source.buffer;
+            });
+        }
+
+        this._gainNode = new GainNode(this._getAudioContext());
 
         this._sourceNode.connect(this._gainNode);
+
+        this.setMainOutputBus(this.engine.mainOutputBus);
     }
 
-    start(): void {}
-    stop(): void {}
+    start(): void {
+        console.log("BasicWebAudioStaticVoice.start ...");
+        this._sourceNode.start();
+    }
+
+    stop(): void {
+        this._sourceNode.stop();
+    }
 }
 
-export class BasicWebAudioStreamVoice extends AbstractWebAudioSound {
+export class BasicWebAudioStreamVoice extends AbstractWebAudioVoice {
     _sourceNode: MediaElementAudioSourceNode;
     _gainNode: GainNode;
 
@@ -197,7 +299,7 @@ export class BasicWebAudioStreamVoice extends AbstractWebAudioSound {
         return this._gainNode;
     }
 
-    constructor(engine: BasicWebAudioEngine, options?: IBasicSoundStreamOptions) {
+    constructor(engine: BasicWebAudioEngine, options?: IBasicStreamSoundOptions) {
         super(engine, options);
 
         if (options?.source) {
@@ -210,8 +312,8 @@ export class BasicWebAudioStreamVoice extends AbstractWebAudioSound {
             this.source = new BasicWebAudioStreamSource(engine, options);
         }
 
-        this._sourceNode = new MediaElementAudioSourceNode(this.audioContext, { mediaElement: this.source.audioElement });
-        this._gainNode = new GainNode(this.audioContext);
+        this._sourceNode = new MediaElementAudioSourceNode(this._getAudioContext(), { mediaElement: this.source.audioElement });
+        this._gainNode = new GainNode(this._getAudioContext());
 
         this._sourceNode.connect(this._gainNode);
     }

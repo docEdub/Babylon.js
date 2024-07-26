@@ -1,10 +1,13 @@
 /* eslint-disable */
 import { IBasicAudioSourceBackend } from "./basicBackend";
 
-export interface IBasicCommonSoundOptions {
-    source?: IBasicAudioSourceBackend;
+export interface IBasicSoundSourceOptions {
     sourceUrl?: string;
     sourceUrls?: Array<string>;
+}
+
+export interface IBasicCommonSoundOptions extends IBasicSoundSourceOptions {
+    source?: IBasicAudioSourceBackend;
 
     autoplay?: boolean;
     loop?: boolean;
@@ -12,10 +15,10 @@ export interface IBasicCommonSoundOptions {
     volume?: number;
 }
 
-export interface IBasicSoundOptions extends IBasicCommonSoundOptions {
+export interface IBasicStaticSoundOptions extends IBasicCommonSoundOptions {
     //
 }
 
-export interface IBasicSoundStreamOptions extends IBasicCommonSoundOptions {
+export interface IBasicStreamSoundOptions extends IBasicCommonSoundOptions {
     //
 }

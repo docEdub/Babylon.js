@@ -28,7 +28,7 @@ export class WebAudioEngine extends BasicWebAudioEngine implements IAudioEngineB
     physicalEngine: AbstractPhysicalAudioEngine;
     startTime: number = 0;
 
-    override mainOutput: WebAudioBus;
+    override mainOutputBus: WebAudioBus;
 
     get currentTime(): number {
         return this.unlocked ? this.startTime + this.audioContext.currentTime : (performance.now() - this.startTime) / 1000;
