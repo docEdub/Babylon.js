@@ -16,6 +16,10 @@ export class BasicWebAudioEngine implements IBasicAudioEngineBackend, IDisposabl
 
     onUnlockObservable = new Observable<BasicWebAudioEngine>();
 
+    get currentTime(): number {
+        return this.audioContext.currentTime;
+    }
+
     get unlocked(): boolean {
         return this.audioContext.state !== "suspended";
     }
@@ -241,12 +245,95 @@ export abstract class AbstractWebAudioVoice extends AbstractWebAudioGraphItem im
     abstract stop(): void;
 }
 
+class StaticVoiceInstance implements IDispose {
+    buffer: AudioBuffer;
+    context: AudioContext;
+    fadeTime: number = 0.1;
+    gainNode: GainNode;
+    sourceNode: Nullable<AudioBufferSourceNode>;
+    state: AudioVoiceState = AudioVoiceState.Stopped;
+    stopTimerId: Nullable<number> = null;
+
+    constructor(audioContext: AudioContext) {
+        this.gainNode = new GainNode(audioContext);
+    }
+
+    dispose(): void {
+        this.gainNode.disconnect();
+        this.sourceNode.removeEventListener("ended", this._onSourceNodeEnded);
+
+        if (this.stopTimerId) {
+            clearTimeout(this.stopTimerId);
+        }
+    }
+
+    start(): void {
+        if (this.state !== AudioVoiceState.Stopped) {
+            return;
+        }
+
+        this._initSourceNode();
+        this.sourceNode.start();
+        this.state = AudioVoiceState.Started;
+    }
+
+    stop(): void {
+        if (this.state !== AudioVoiceState.Started) {
+            return;
+        }
+
+        const targetTime = this.engine.currentTime + this.fadeTime;
+        this.sourceNode.stop(targetTime + 0.01);
+        this.gainNode.gain.exponentialRampToValueAtTime(0, targetTime);
+        this.setState(AudioVoiceState.Stopping);
+
+        this.stopTimerId = setTimeout(() => {
+            this.stopTimerId = null;
+            this.state = AudioVoiceState.Stopped;
+            this._disposeSourceNode();
+        }, this.fadeTime * 1000);
+    }
+
+    private _initSourceNode(): void {
+        if (this._sourceNode) {
+            return;
+        }
+
+        this._sourceNode = new AudioBufferSourceNode(this.context, { buffer: this.buffer });
+        this._sourceNode.connect(this.gainNode);
+        this._sourceNode.addEventListener("ended", this._onSourceNodeEnded);
+    }
+
+    private _disposeSourceNode(): void {
+        if (!this.sourceNode) {
+            return;
+        }
+
+        this.sourceNode.stop();
+        this.sourceNode.disconnect();
+        this.sourceNode.removeEventListener("ended", this._onSourceNodeEnded);
+        this.sourceNode = null;
+    }
+
+    private _onSourceNodeEnded(): void {
+        this.state = AudioVoiceState.Stopped;
+    }
+}
+
 export class BasicWebAudioStaticVoice extends AbstractWebAudioVoice implements IDisposable {
-    _sourceNode: AudioBufferSourceNode;
+    _currentInstance: Nullable<StaticVoiceInstance>;
+    _instances = new Array<StaticVoiceInstance>();
     _gainNode: GainNode;
     _state: AudioVoiceState = AudioVoiceState.Stopped;
 
+    fadeTime: number = 0.1;
     source: BasicWebAudioStaticSource;
+
+    onStateChangedObservable = new Observable<BasicWebAudioStaticVoice>();
+
+    get outputNode(): Nullable<AudioNode> {
+        return this._gainNode;
+    }
 
     get started(): boolean {
         return this._state === AudioVoiceState.Started;
@@ -254,10 +341,6 @@ export class BasicWebAudioStaticVoice extends AbstractWebAudioVoice implements I
 
     get stopped(): boolean {
         return this._state === AudioVoiceState.Stopped;
-    }
-
-    get outputNode(): Nullable<AudioNode> {
-        return this._gainNode;
     }
 
     constructor(engine: BasicWebAudioEngine, options?: IBasicStaticSoundOptions) {
@@ -279,20 +362,32 @@ export class BasicWebAudioStaticVoice extends AbstractWebAudioVoice implements I
     }
 
     dispose(): void {
-        this._disposeSourceNode();
+        for (const instance of this._instances) {
+            instance.dispose();
+        }
+        this._gainNode.disconnect();
+    }
+
+    setState(value: AudioVoiceState): void {
+        if (this._state === value) {
+            return;
+        }
+
+        this._state = value;
+        this.onStateChangedObservable.notifyObservers(this);
     }
 
     start(): void {
-        if (this.started) {
+        if (this.started || !this.source.buffer) {
             return;
         }
 
         console.log("BasicWebAudioStaticVoice.start ...");
 
-        this._initSourceNode();
-        this._sourceNode.start();
+        const instance = this._getNextInstance();
+        instance.start();
 
-        this._state = AudioVoiceState.Started;
+        this.setState(AudioVoiceState.Started);
     }
 
     stop(): void {
@@ -300,39 +395,27 @@ export class BasicWebAudioStaticVoice extends AbstractWebAudioVoice implements I
             return;
         }
 
+        this._currentInstance?.stop();
+        this.setState(AudioVoiceState.Stopped);
+
         console.log("BasicWebAudioStaticVoice.stop ...");
-
-        this._sourceNode.stop();
-
-        this._state = AudioVoiceState.Stopped;
     }
 
-    private _initSourceNode(): void {
-        this._disposeSourceNode();
+    // TODO: Use a static instance pool for all classes.
+    _getNextInstance(): StaticVoiceInstance {
+        let instance = this._instances.find((i) => i.state === AudioVoiceState.Stopped);
 
-        this._sourceNode = new AudioBufferSourceNode(this._getAudioContext());
-        if (this.source.loaded) {
-            this._sourceNode.buffer = this.source.buffer;
-        } else {
-            this.source.onLoadObservable.addOnce((source) => {
-                this._sourceNode.buffer = source.buffer;
-            });
+        if (!instance) {
+            instance = new StaticVoiceInstance(this._getAudioContext());
         }
 
-        this._sourceNode.connect(this._gainNode);
-        this._sourceNode.addEventListener("ended", this._onSourceNodeEnded.bind(this));
-    }
+        instance.buffer = this.source.buffer;
+        instance.fadeTime = this.fadeTime;
+        instance.gainNode.connect(this._gainNode);
+        this._currentInstance = instance;
+        this._instances.push(instance);
 
-    private _disposeSourceNode(): void {
-        if (this._sourceNode) {
-            this._sourceNode.stop();
-            this._sourceNode.disconnect();
-            this._sourceNode.removeEventListener("ended", this._onSourceNodeEnded);
-        }
-    }
-
-    private _onSourceNodeEnded(): void {
-        this._state = AudioVoiceState.Stopped;
+        return instance;
     }
 }
 
