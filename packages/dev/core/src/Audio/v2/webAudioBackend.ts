@@ -30,10 +30,6 @@ export class WebAudioEngine extends BasicWebAudioEngine implements IAudioEngineB
 
     override mainOutputBus: WebAudioBus;
 
-    get currentTime(): number {
-        return this.unlocked ? this.startTime + this.audioContext.currentTime : (performance.now() - this.startTime) / 1000;
-    }
-
     constructor(options?: any) {
         super(options);
 

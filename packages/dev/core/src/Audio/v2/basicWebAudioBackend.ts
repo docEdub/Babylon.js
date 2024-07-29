@@ -245,14 +245,14 @@ export abstract class AbstractWebAudioVoice extends AbstractWebAudioGraphItem im
     abstract stop(): void;
 }
 
-class StaticVoiceInstance implements IDispose {
-    buffer: AudioBuffer;
+class StaticVoiceInstance implements IDisposable {
+    buffer: Nullable<AudioBuffer>;
     context: AudioContext;
     fadeTime: number = 0.1;
     gainNode: GainNode;
     sourceNode: Nullable<AudioBufferSourceNode>;
     state: AudioVoiceState = AudioVoiceState.Stopped;
-    stopTimerId: Nullable<number> = null;
+    stopTimerId: Nullable<NodeJS.Timeout> = null;
 
     constructor(audioContext: AudioContext) {
         this.gainNode = new GainNode(audioContext);
@@ -260,7 +260,7 @@ class StaticVoiceInstance implements IDispose {
 
     dispose(): void {
         this.gainNode.disconnect();
-        this.sourceNode.removeEventListener("ended", this._onSourceNodeEnded);
+        this.sourceNode?.removeEventListener("ended", this._onSourceNodeEnded);
 
         if (this.stopTimerId) {
             clearTimeout(this.stopTimerId);
@@ -273,7 +273,7 @@ class StaticVoiceInstance implements IDispose {
         }
 
         this._initSourceNode();
-        this.sourceNode.start();
+        this.sourceNode?.start();
         this.state = AudioVoiceState.Started;
     }
 
@@ -282,10 +282,10 @@ class StaticVoiceInstance implements IDispose {
             return;
         }
 
-        const targetTime = this.engine.currentTime + this.fadeTime;
-        this.sourceNode.stop(targetTime + 0.01);
+        const targetTime = this.context.currentTime + this.fadeTime;
+        this.sourceNode?.stop(targetTime + 0.01);
         this.gainNode.gain.exponentialRampToValueAtTime(0, targetTime);
-        this.setState(AudioVoiceState.Stopping);
+        this.state = AudioVoiceState.Stopping;
 
         this.stopTimerId = setTimeout(() => {
             this.stopTimerId = null;
@@ -295,13 +295,13 @@ class StaticVoiceInstance implements IDispose {
     }
 
     private _initSourceNode(): void {
-        if (this._sourceNode) {
+        if (this.sourceNode) {
             return;
         }
 
-        this._sourceNode = new AudioBufferSourceNode(this.context, { buffer: this.buffer });
-        this._sourceNode.connect(this.gainNode);
-        this._sourceNode.addEventListener("ended", this._onSourceNodeEnded);
+        this.sourceNode = new AudioBufferSourceNode(this.context, { buffer: this.buffer });
+        this.sourceNode.connect(this.gainNode);
+        this.sourceNode.addEventListener("ended", this._onSourceNodeEnded);
     }
 
     private _disposeSourceNode(): void {
