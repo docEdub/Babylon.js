@@ -9,6 +9,12 @@ import { Observable } from "../../Misc/observable";
 import { IDisposable } from "../../scene";
 import { Nullable } from "../../types";
 
+export class WebAudioConstants {
+    static readonly DECLICK_FADE_TIME = 0.2;
+    static readonly DECLICK_STOP_TIME = 1;
+    static readonly DECLICK_STOP_TIME_IN_MS = this.DECLICK_STOP_TIME * 1000;
+}
+
 export class BasicWebAudioEngine implements IBasicAudioEngineBackend, IDisposable {
     audioContext: AudioContext;
 
@@ -245,22 +251,23 @@ export abstract class AbstractWebAudioVoice extends AbstractWebAudioGraphItem im
     abstract stop(): void;
 }
 
-class StaticVoiceInstance implements IDisposable {
+class DeclickedStaticVoiceInstance implements IDisposable {
     buffer: Nullable<AudioBuffer>;
     context: AudioContext;
-    fadeTime: number = 0.1;
     gainNode: GainNode;
-    sourceNode: Nullable<AudioBufferSourceNode>;
+    sourceNode: Nullable<AudioBufferSourceNode> = null;
     state: AudioVoiceState = AudioVoiceState.Stopped;
     stopTimerId: Nullable<NodeJS.Timeout> = null;
 
-    constructor(audioContext: AudioContext) {
-        this.gainNode = new GainNode(audioContext);
+    constructor(context: AudioContext) {
+        this.context = context;
+        this.gainNode = new GainNode(context);
     }
 
     dispose(): void {
+        this._disposeSourceNode();
+
         this.gainNode.disconnect();
-        this.sourceNode?.removeEventListener("ended", this._onSourceNodeEnded);
 
         if (this.stopTimerId) {
             clearTimeout(this.stopTimerId);
@@ -272,6 +279,8 @@ class StaticVoiceInstance implements IDisposable {
             return;
         }
 
+        this.gainNode.gain.value = 1;
+
         this._initSourceNode();
         this.sourceNode?.start();
         this.state = AudioVoiceState.Started;
@@ -282,16 +291,21 @@ class StaticVoiceInstance implements IDisposable {
             return;
         }
 
-        const targetTime = this.context.currentTime + this.fadeTime;
-        this.sourceNode?.stop(targetTime + 0.01);
-        this.gainNode.gain.exponentialRampToValueAtTime(0, targetTime);
-        this.state = AudioVoiceState.Stopping;
+        const currentTime = this.context.currentTime;
+        const targetTime = currentTime + WebAudioConstants.DECLICK_FADE_TIME;
 
+        // Note that using an exponential ramp here causes clicks, probably because it can't be set to absolute 0.
+        this.gainNode.gain.linearRampToValueAtTime(0, targetTime);
+        // this.state = AudioVoiceState.Stopping;
+
+        console.log("stop() called");
         this.stopTimerId = setTimeout(() => {
+            console.log("gain = ", this.gainNode.gain.value);
+            this.sourceNode?.stop();
             this.stopTimerId = null;
-            this.state = AudioVoiceState.Stopped;
             this._disposeSourceNode();
-        }, this.fadeTime * 1000);
+            this.state = AudioVoiceState.Stopped;
+        }, WebAudioConstants.DECLICK_STOP_TIME_IN_MS);
     }
 
     private _initSourceNode(): void {
@@ -301,7 +315,7 @@ class StaticVoiceInstance implements IDisposable {
 
         this.sourceNode = new AudioBufferSourceNode(this.context, { buffer: this.buffer });
         this.sourceNode.connect(this.gainNode);
-        this.sourceNode.addEventListener("ended", this._onSourceNodeEnded);
+        this.sourceNode.addEventListener("ended", this._onSourceNodeEnded.bind(this));
     }
 
     private _disposeSourceNode(): void {
@@ -316,17 +330,18 @@ class StaticVoiceInstance implements IDisposable {
     }
 
     private _onSourceNodeEnded(): void {
+        this._disposeSourceNode();
         this.state = AudioVoiceState.Stopped;
+        this.gainNode.gain.value = 0;
     }
 }
 
 export class BasicWebAudioStaticVoice extends AbstractWebAudioVoice implements IDisposable {
-    _currentInstance: Nullable<StaticVoiceInstance>;
-    _instances = new Array<StaticVoiceInstance>();
+    _currentInstance: Nullable<DeclickedStaticVoiceInstance>;
+    _instances = new Array<DeclickedStaticVoiceInstance>();
     _gainNode: GainNode;
     _state: AudioVoiceState = AudioVoiceState.Stopped;
 
-    fadeTime: number = 0.1;
     source: BasicWebAudioStaticSource;
 
     onStateChangedObservable = new Observable<BasicWebAudioStaticVoice>();
@@ -382,40 +397,33 @@ export class BasicWebAudioStaticVoice extends AbstractWebAudioVoice implements I
             return;
         }
 
-        console.log("BasicWebAudioStaticVoice.start ...");
-
-        const instance = this._getNextInstance();
-        instance.start();
-
-        this.setState(AudioVoiceState.Started);
+        this._startNextInstance();
     }
 
     stop(): void {
-        if (this.stopped) {
+        if (this.stopped || !this._currentInstance) {
             return;
         }
 
-        this._currentInstance?.stop();
+        this._currentInstance.stop();
         this.setState(AudioVoiceState.Stopped);
-
-        console.log("BasicWebAudioStaticVoice.stop ...");
     }
 
-    // TODO: Use a static instance pool for all classes.
-    _getNextInstance(): StaticVoiceInstance {
+    _startNextInstance(): void {
         let instance = this._instances.find((i) => i.state === AudioVoiceState.Stopped);
 
         if (!instance) {
-            instance = new StaticVoiceInstance(this._getAudioContext());
+            instance = new DeclickedStaticVoiceInstance(this._getAudioContext());
+            instance.gainNode.connect(this._gainNode);
         }
 
         instance.buffer = this.source.buffer;
-        instance.fadeTime = this.fadeTime;
-        instance.gainNode.connect(this._gainNode);
+
         this._currentInstance = instance;
         this._instances.push(instance);
 
-        return instance;
+        this.setState(AudioVoiceState.Started);
+        instance.start();
     }
 }
 
