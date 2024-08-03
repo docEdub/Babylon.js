@@ -76,49 +76,28 @@ export class BasicWebAudioEngine implements IBasicAudioEngineBackend, IDisposabl
     }
 }
 
-abstract class AbstractWebAudioSubGraph {
+abstract class AbstractWebAudioNodeChain {
     abstract inputNode: Nullable<AudioNode>;
     abstract outputNode: Nullable<AudioNode>;
+
+    inputNodeChangedObservable = new Observable<AbstractWebAudioNodeChain>();
+    outputNodeChangedObservable = new Observable<AbstractWebAudioNodeChain>();
 }
 
-abstract class AbstractWebAudioGraphItem extends AbstractWebAudioSubGraph {
-    engine: BasicWebAudioEngine;
-
-    effectChain?: BasicWebAudioEffectChain;
-    positioner?: BasicWebAudioPositioner;
-
-    outputBus: Nullable<BasicWebAudioBus>;
-    auxSendBusses: Nullable<Array<BasicWebAudioBus>>;
-
-    constructor(engine: BasicWebAudioEngine, options?: any) {
-        super();
-        this.engine = engine;
-    }
-
-    setMainOutputBus(bus: BasicWebAudioBus): void {
-        bus.addInputItem(this);
-        this.outputBus = bus;
-        this.outputNode?.connect(bus.inputNode!);
-    }
-
-    protected _getAudioContext(): AudioContext {
-        return this.engine.audioContext;
-    }
-}
-
-export class BasicWebAudioEffectChain extends AbstractWebAudioSubGraph {
-    nodes: Array<AudioNode>;
+export class BasicWebAudioEffectsChain extends AbstractWebAudioNodeChain {
+    _parent: AbstractWebAudioBusInput;
+    _nodes: Array<AudioNode>;
 
     get inputNode(): Nullable<AudioNode> {
-        return this.nodes[0];
+        return this._nodes[0];
     }
 
     get outputNode(): Nullable<AudioNode> {
-        return this.nodes[this.nodes.length - 1];
+        return this._nodes[this.nodes.length - 1];
     }
 }
 
-export class BasicWebAudioPositioner extends AbstractWebAudioSubGraph implements IBasicAudioPositionerBackend {
+export class BasicWebAudioPositioner extends AbstractWebAudioNodeChain implements IBasicAudioPositionerBackend {
     nodes: Array<AudioNode>;
 
     get inputNode(): Nullable<AudioNode> {
@@ -132,32 +111,71 @@ export class BasicWebAudioPositioner extends AbstractWebAudioSubGraph implements
     get position(): Vector3 {
         return new Vector3();
     }
+
     set position(position: Vector3) {}
 }
 
-export class BasicWebAudioBus extends AbstractWebAudioGraphItem implements IBasicAudioBusBackend {
-    _inputItems = new Array<AbstractWebAudioGraphItem>();
-    _outputGainNode: GainNode;
+abstract class AbstractWebAudioBusInput {
+    engine: BasicWebAudioEngine;
 
-    get inputNode(): Nullable<AudioNode> {
-        return this._outputGainNode;
+    effects = new BasicWebAudioEffectsChain();
+    positioner = new BasicWebAudioPositioner();
+
+    _outputBus: Nullable<BasicWebAudioBus>;
+
+    get outputBus(): Nullable<BasicWebAudioBus> {
+        return this._outputBus;
     }
 
-    get outputNode(): Nullable<AudioNode> {
-        return this._outputGainNode;
+    _auxSendBusses: Nullable<Array<BasicWebAudioBus>>;
+
+    readonly outputNode: GainNode;
+
+    constructor(engine: BasicWebAudioEngine, options?: any) {
+        super();
+        this.engine = engine;
+        this.outputNode = new GainNode(this._audioContext);
     }
+
+    setOutputBus(bus: BasicWebAudioBus): void {
+        if (this._outputBus == bus) {
+            return;
+        }
+
+        this._outputBus?.removeInput(this);
+        this._outputBus = bus;
+
+        bus.addInput(this);
+    }
+
+    protected get _audioContext(): AudioContext {
+        return this.engine.audioContext;
+    }
+}
+
+export class BasicWebAudioBus extends AbstractWebAudioBusInput implements IBasicAudioBusBackend {
+    _inputs = new Array<AbstractWebAudioBusInput>();
 
     constructor(engine: BasicWebAudioEngine, options?: any) {
         super(engine, options);
         this._outputGainNode = new GainNode(this._getAudioContext());
     }
 
-    addInputItem(item: AbstractWebAudioGraphItem): void {
-        this._inputItems.push(item);
+    addInput(input: AbstractWebAudioBusInput): void {
+        if (this._inputs.includes(input)) {
+            return;
+        }
+
+        this._inputs.push(input);
+        input.outputNode.connect(this._outputGainNode);
+    }
+
+    private _onEffectsChainInputNodeChanged(): void {
+        //
     }
 }
 
-abstract class AbstractWebAudioSource implements IBasicAudioSourceBackend {
+abstract class AbstractWebAudioSource extends AbstractWebAudioBusInput implements IBasicAudioSourceBackend {
     constructor(engine: BasicWebAudioEngine, options?: any) {
         //
     }
@@ -236,12 +254,8 @@ export class BasicWebAudioStreamSource extends AbstractWebAudioSource {
     }
 }
 
-export abstract class AbstractWebAudioVoice extends AbstractWebAudioGraphItem implements IBasicAudioVoiceBackend {
+export abstract class AbstractWebAudioVoice extends AbstractWebAudioBusInput implements IBasicAudioVoiceBackend {
     abstract source: AbstractWebAudioSource;
-
-    get inputNode(): Nullable<AudioNode> {
-        return null;
-    }
 
     constructor(engine: BasicWebAudioEngine, options?: IBasicCommonSoundOptions) {
         super(engine);
