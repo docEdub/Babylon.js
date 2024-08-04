@@ -24,7 +24,7 @@ export interface ISendPin {
     connections: IMixPin[];
 }
 
-export interface IMixPin {
+export interface IMixPin extends IInputPin {
     parent: IMixNode;
 }
 
@@ -36,7 +36,7 @@ export interface IOutputNode {
     output: IOutputPin;
 }
 
-export interface IMixNode {
+export interface IMixNode extends IInputNode {
     input: IMixPin;
 }
 

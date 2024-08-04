@@ -66,6 +66,16 @@ export class Bus implements _.IMixNode, _.IOutputNode, _.ISendNode {
     fader: Effect;
 
     sends: Send[];
+
+    constructor() {
+        this.output = new OutputPin();
+
+        const mixPin = new MixPin();
+        mixPin.parent = this;
+
+        this.output.connection = mixPin;
+        this.output.connection.parent = this;
+    }
 }
 
 export class AuxBus extends Bus {
