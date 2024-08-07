@@ -17,30 +17,28 @@ export interface IAudioInPin extends IAudioPin {
     //
 }
 
-export interface IAudioConnection {
-    input: IAudioInPin;
-    output: IAudioOutPin;
+export interface IAudioConnection extends IAudioProcessor {
+    gainParam: IAudioParam;
 }
 
 export interface IAudioSend extends IAudioConnection {
     parent: IAudioSender;
-    gain: IAudioParam;
+    type: "pre-effects" | "pre-fader" | "post-fader";
 }
 
 export interface IAudioSource {
     output: IAudioOutPin;
 }
 
-export interface IAudioProcessor {
-    input: IAudioInPin;
-    output: IAudioOutPin;
+export interface IAudioProcessor extends IAudioSource, IAudioDestination {
+    optimize: boolean;
 }
 
 export interface IAudioDestination {
     input: IAudioInPin;
 }
 
-export interface IAudioSender {
+export interface IAudioSender extends IAudioSource {
     preEffectsOutput: IAudioOutPin;
     preFaderOutput: IAudioOutPin;
     postFaderOutput: IAudioOutPin;
