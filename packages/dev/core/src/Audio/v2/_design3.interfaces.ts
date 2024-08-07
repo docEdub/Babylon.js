@@ -1,54 +1,47 @@
 /* eslint-disable */
 
-/*
-- To simplify the design, input and mix pins don't know about their upstream connections. This means pin connections
-  are only updated by the upstream pin, and the following rules apply:
-    - The upstream pin makes direct function calls to update the downstream connection when needed.
-    - The downstream pin notifies the upstream pin to update the downstream connection.
-    - Downstream pins do not make direct calls to update connections.
-    - Upstream pins do not need to notify downstream pins of connection changes.
-    - Downstream pins do not need to observe upstream pins.
-*/
-
-export interface IOutputPin {
-    parent: IOutputNode;
-    connection: IInputPin;
+export interface IAudioParam {
+    input: IAudioInPin;
+    value: number;
 }
 
-export interface IInputPin {
-    parent: IInputNode;
+export interface IAudioPin {
+    connections: Array<IAudioConnection>;
 }
 
-export interface ISendPin {
-    parent: ISendNode;
-    connections: IMixPin[];
+export interface IAudioOutPin extends IAudioPin {
+    //
 }
 
-export interface IMixPin extends IInputPin {
-    parent: IMixNode;
+export interface IAudioInPin extends IAudioPin {
+    //
 }
 
-export interface IInputNode {
-    input: IInputPin;
+export interface IAudioConnection {
+    input: IAudioInPin;
+    output: IAudioOutPin;
 }
 
-export interface IOutputNode {
-    output: IOutputPin;
+export interface IAudioSend extends IAudioConnection {
+    parent: IAudioSender;
+    gain: IAudioParam;
 }
 
-export interface IMixNode extends IInputNode {
-    input: IMixPin;
+export interface IAudioSource {
+    output: IAudioOutPin;
 }
 
-export interface ISendNode {
-    preEffectsOutput: ISendPin;
-    preFaderOutput: ISendPin;
-    postFaderOutput: ISendPin;
+export interface IAudioProcessor {
+    input: IAudioInPin;
+    output: IAudioOutPin;
 }
 
-export interface ISend {
-    parent: ISendNode;
-    output: IMixNode;
-    type: "pre-effects" | "pre-fader" | "post-fader";
-    gain: number;
+export interface IAudioDestination {
+    input: IAudioInPin;
+}
+
+export interface IAudioSender {
+    preEffectsOutput: IAudioOutPin;
+    preFaderOutput: IAudioOutPin;
+    postFaderOutput: IAudioOutPin;
 }

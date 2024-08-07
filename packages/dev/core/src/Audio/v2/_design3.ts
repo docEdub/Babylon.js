@@ -1,101 +1,100 @@
 /* eslint-disable */
 
 import * as _ from "./_design3.interfaces";
+// import { Observable } from "../../Misc/observable";
+// import { Nullable } from "../../types";
 
-export class OutputPin implements _.IOutputPin {
-    parent: _.IOutputNode;
-    connection: InputPin;
+export abstract class AudioOutPin implements _.IAudioOutPin {
+    connections: AudioConnection[] = [];
 }
 
-export class InputPin implements _.IInputPin {
-    parent: _.IInputNode;
+export abstract class AudioInPin implements _.IAudioInPin {
+    connections: AudioConnection[] = [];
 }
 
-export class SendPin implements _.ISendPin {
-    parent: _.ISendNode;
-    connections: MixPin[];
+export abstract class AudioParam implements _.IAudioParam {
+    input: AudioInPin;
+    value: number;
 }
 
-export class MixPin implements _.IMixPin {
-    parent: _.IMixNode;
+export class AudioEffect implements _.IAudioProcessor {
+    input: AudioInPin;
+    output: AudioOutPin;
 }
 
-export class Effect implements _.IInputNode, _.IOutputNode {
-    input: InputPin;
-    output: OutputPin;
+export class AudioEffectsChain implements _.IAudioProcessor {
+    input: AudioInPin;
+    output: AudioOutPin;
+
+    chain: AudioEffect[];
 }
 
-export class EffectsChain implements _.IInputNode, _.IOutputNode {
-    input: InputPin;
-    output: OutputPin;
-
-    chain: Effect[];
+export class AudioPositioner implements _.IAudioProcessor {
+    input: AudioInPin;
+    output: AudioOutPin;
 }
 
-export class Positioner implements _.IInputNode, _.IOutputNode {
-    input: InputPin;
-    output: OutputPin;
+export class AudioConnection implements _.IAudioConnection {
+    input: AudioInPin;
+    output: AudioOutPin;
 }
 
-export class Send implements _.ISend {
-    parent: _.ISendNode;
-    output: _.IMixNode;
+export class AudioSend implements _.IAudioSend {
+    parent: _.IAudioSender;
+    input: AudioInPin;
+    output: AudioOutPin;
     type: "pre-effects" | "pre-fader" | "post-fader" = "post-fader";
-    gain: number;
+    gain: AudioParam;
+
+    params = new Array<AudioParam>();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export class Engine {
-    devices: Device[];
+export class AudioEngine {
+    devices: AudioDevice[];
 }
 
-export class Device implements _.IMixNode {
-    input: MixPin;
+export class AudioDevice implements _.IAudioDestination {
+    input: AudioInPin;
 }
 
-export class Bus implements _.IMixNode, _.IOutputNode, _.ISendNode {
-    input: MixPin;
-    output: OutputPin;
+export class AudioBus implements _.IAudioProcessor, _.IAudioSender {
+    input: AudioInPin;
+    output: AudioOutPin;
 
-    preEffectsOutput: SendPin;
-    preFaderOutput: SendPin;
-    postFaderOutput: SendPin;
+    preEffectsOutput: AudioOutPin;
+    preFaderOutput: AudioOutPin;
+    postFaderOutput: AudioOutPin;
 
-    effects: EffectsChain;
-    fader: Effect;
+    effects: AudioEffectsChain;
+    fader: AudioEffect;
 
-    sends: Send[];
-
-    constructor() {
-        this.output = new OutputPin();
-
-        const mixPin = new MixPin();
-        mixPin.parent = this;
-
-        this.output.connection = mixPin;
-        this.output.connection.parent = this;
-    }
+    sends: AudioSend[];
 }
 
-export class AuxBus extends Bus {
-    positioner: Positioner;
+export class AudioOutputBus extends AudioBus {
+    device: AudioDevice;
 }
 
-export class Source implements _.IOutputNode, _.ISendNode {
-    output: OutputPin;
-
-    preEffectsOutput: SendPin;
-    preFaderOutput: SendPin;
-    postFaderOutput: SendPin;
-
-    effects: EffectsChain;
-    positioner: Positioner;
-    fader: Effect;
-
-    sends: Send[];
+export class AudioAuxBus extends AudioBus {
+    positioner: AudioPositioner;
 }
 
-export class Analyzer implements _.IMixNode {
-    input: MixPin;
+export class Sound implements _.IAudioSource, _.IAudioSender {
+    output: AudioOutPin;
+
+    preEffectsOutput: AudioOutPin;
+    preFaderOutput: AudioOutPin;
+    postFaderOutput: AudioOutPin;
+
+    effects: AudioEffectsChain;
+    positioner: AudioPositioner;
+    fader: AudioEffect;
+
+    sends: AudioSend[];
+}
+
+export class AudioAnalyzer implements _.IAudioDestination {
+    input: AudioInPin;
 }
