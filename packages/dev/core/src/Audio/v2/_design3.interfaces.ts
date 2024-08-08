@@ -19,9 +19,6 @@ export interface IAudioParam extends IAudioInput {
 
 export interface IAudioNode {
     params: Array<IAudioParam>;
-
-    updateConnectionsPending: boolean;
-    updateConnections(): void;
 }
 
 export interface IAudioSend extends IAudioNode, IAudioConnection {
@@ -45,5 +42,4 @@ export interface IAudioProcessor extends IAudioSource, IAudioDestination {
 export interface IAudioSender extends IAudioSource {
     preEffectsOutput: IAudioPin;
     preFaderOutput: IAudioPin;
-    postFaderOutput: IAudioPin;
 }

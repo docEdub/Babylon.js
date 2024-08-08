@@ -4,13 +4,30 @@ import * as _ from "./_design3.interfaces";
 import { Observable, Observer } from "../../Misc/observable";
 import { Nullable } from "../../types";
 
-function deferUpdateConnections(node: _.IAudioNode) {
-    if (node.updateConnectionsPending) {
+interface IAudioPinOwner {
+    _onPinConnectionsChangedObserver: Nullable<Observer<AudioPin>>;
+    _updateConnectionsPending: boolean;
+    _updateConnections(): void;
+}
+
+function initPin(owner: IAudioPinOwner, pin: AudioPin) {
+    owner._onPinConnectionsChangedObserver = pin.onConnectionsChangedObservable.add(() => {
+        deferUpdateConnections(owner);
+    });
+}
+
+function disposePin(owner: IAudioPinOwner, pin: AudioPin) {
+    pin.onConnectionsChangedObservable.remove(owner._onPinConnectionsChangedObserver);
+    pin.dispose();
+}
+
+function deferUpdateConnections(owner: IAudioPinOwner) {
+    if (owner._updateConnectionsPending) {
         return;
     }
     setTimeout(() => {
-        node.updateConnections();
-        node.updateConnectionsPending = false;
+        owner._updateConnections();
+        owner._updateConnectionsPending = false;
     }, 0);
 }
 
@@ -21,6 +38,8 @@ export class AudioPin implements _.IAudioPin {
         return this._connections;
     }
 
+    onConnectionsChangedObservable = new Observable<AudioPin>();
+
     _onConnectionDisposeObserver: Nullable<Observer<AudioConnection>> = null;
 
     dispose() {
@@ -30,6 +49,7 @@ export class AudioPin implements _.IAudioPin {
     addConnection(connection: AudioConnection) {
         this._connections.push(connection);
         this._onConnectionDisposeObserver = connection.onDisposeObservable.add(this.removeConnection.bind(this));
+        this.onConnectionsChangedObservable.notifyObservers(this);
     }
 
     removeConnection(connection: AudioConnection) {
@@ -37,6 +57,7 @@ export class AudioPin implements _.IAudioPin {
         const index = this._connections.indexOf(connection);
         if (index !== -1) {
             this._connections.splice(index, 1);
+            this.onConnectionsChangedObservable.notifyObservers(this);
         }
     }
 
@@ -67,12 +88,20 @@ export class AudioConnection implements _.IAudioConnection {
 }
 
 export abstract class AudioParam implements _.IAudioParam {
-    input: AudioPin;
+    input = new AudioPin();
     value: number;
 
-    dispose() {
-        this.input.dispose();
+    constructor() {
+        initPin(this, this.input);
     }
+
+    dispose() {
+        disposePin(this, this.input);
+    }
+
+    _onPinConnectionsChangedObserver: Nullable<Observer<AudioPin>> = null;
+    _updateConnectionsPending = false;
+    abstract _updateConnections(): void;
 }
 
 export abstract class AudioProcessor implements _.IAudioProcessor {
@@ -86,17 +115,26 @@ export abstract class AudioProcessor implements _.IAudioProcessor {
     output: AudioPin;
     optimize: boolean;
 
-    // IAudioNode
-    updateConnectionsPending = false;
-    abstract updateConnections(): void;
+    constructor() {
+        initPin(this, this.input);
+        initPin(this, this.output);
+    }
+
+    dispose() {
+        disposePin(this, this.input);
+        disposePin(this, this.output);
+    }
+
+    _onPinConnectionsChangedObserver: Nullable<Observer<AudioPin>> = null;
+    _updateConnectionsPending = false;
+    abstract _updateConnections(): void;
 }
 
 export abstract class AudioSender implements _.IAudioSender {
-    output: AudioPin;
+    output = new AudioPin();
 
-    preEffectsOutput: AudioPin;
-    preFaderOutput: AudioPin;
-    postFaderOutput: AudioPin;
+    preEffectsOutput = new AudioPin();
+    preFaderOutput = new AudioPin();
 
     effects: AudioEffectsChain;
 
@@ -112,6 +150,18 @@ export abstract class AudioSender implements _.IAudioSender {
 
     get params(): Array<AudioParam> {
         return this._params;
+    }
+
+    constructor() {
+        initPin(this, this.output);
+        initPin(this, this.preEffectsOutput);
+        initPin(this, this.preFaderOutput);
+    }
+
+    dispose() {
+        disposePin(this, this.output);
+        disposePin(this, this.preEffectsOutput);
+        disposePin(this, this.preFaderOutput);
     }
 
     connect(destination: _.IAudioInput) {
@@ -138,9 +188,9 @@ export abstract class AudioSender implements _.IAudioSender {
         }
     }
 
-    // IAudioNode
-    updateConnectionsPending = false;
-    abstract updateConnections(): void;
+    _onPinConnectionsChangedObserver: Nullable<Observer<AudioPin>> = null;
+    _updateConnectionsPending = false;
+    abstract _updateConnections(): void;
 }
 
 export abstract class AudioDestination implements _.IAudioDestination {
@@ -152,8 +202,9 @@ export abstract class AudioDestination implements _.IAudioDestination {
 
     input: AudioPin;
 
-    updateConnectionsPending = false;
-    abstract updateConnections(): void;
+    _onPinConnectionsChangedObserver: Nullable<Observer<AudioPin>> = null;
+    _updateConnectionsPending = false;
+    abstract _updateConnections(): void;
 }
 
 export abstract class AudioEffect extends AudioProcessor {
@@ -189,8 +240,9 @@ export abstract class AudioSend extends AudioConnection implements _.IAudioSend 
         super.dispose();
     }
 
-    updateConnectionsPending = false;
-    abstract updateConnections(): void;
+    _onPinConnectionsChangedObserver: Nullable<Observer<AudioPin>> = null;
+    _updateConnectionsPending = false;
+    abstract _updateConnections(): void;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -208,8 +260,9 @@ export abstract class AudioDevice implements _.IAudioDestination {
         return this._params;
     }
 
-    updateConnectionsPending = false;
-    abstract updateConnections(): void;
+    _onPinConnectionsChangedObserver: Nullable<Observer<AudioPin>> = null;
+    _updateConnectionsPending = false;
+    abstract _updateConnections(): void;
 }
 
 export abstract class AudioBus extends AudioSender implements _.IAudioProcessor {
