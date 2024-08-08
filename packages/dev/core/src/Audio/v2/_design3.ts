@@ -13,22 +13,26 @@ interface IAudioUpdatable {
     _updateConnections(): void;
 }
 
-function deferUpdateConnections(owner: IAudioUpdatable) {
-    if (owner._updateConnectionsPending) {
+function deferUpdateConnections(parent: Nullable<IAudioUpdatable>) {
+    if (!parent) {
         return;
     }
+    if (parent._updateConnectionsPending) {
+        return;
+    }
+    parent._updateConnectionsPending = true;
     setTimeout(() => {
-        owner._updateConnections();
-        owner._updateConnectionsPending = false;
+        parent._updateConnections();
+        parent._updateConnectionsPending = false;
     }, 0);
 }
 
 export class AudioPin implements _.IAudioPin {
-    owner: IAudioUpdatable;
+    parent: Nullable<IAudioUpdatable> = null;
     connections: AudioConnection[] = [];
 
-    constructor(owner: IAudioUpdatable) {
-        this.owner = owner;
+    constructor(parent: Nullable<IAudioUpdatable> = null) {
+        this.parent = parent;
     }
 
     findConnection(pin: AudioPin): Nullable<AudioConnection> {
@@ -47,14 +51,14 @@ export class AudioPin implements _.IAudioPin {
 
     addConnection(connection: AudioConnection) {
         this.connections.push(connection);
-        deferUpdateConnections(this.owner);
+        deferUpdateConnections(this.parent);
     }
 
     removeConnection(connection: AudioConnection, dispose = true) {
         const index = this.connections.indexOf(connection);
         if (index !== -1) {
             this.connections.splice(index, 1);
-            deferUpdateConnections(this.owner);
+            deferUpdateConnections(this.parent);
         }
     }
 
@@ -70,6 +74,8 @@ export class AudioPin implements _.IAudioPin {
             this.removeConnection(connection);
         }
     }
+
+    static readonly Null = new AudioPin();
 }
 
 export class AudioConnection implements _.IAudioConnection {
@@ -112,7 +118,7 @@ export class AudioConnection implements _.IAudioConnection {
 }
 
 export abstract class AudioSend extends AudioConnection implements _.IAudioSend {
-    _owner: AudioSender;
+    _parent: AudioSender;
     _type: _.SendType;
 
     get type() {
@@ -123,9 +129,9 @@ export abstract class AudioSend extends AudioConnection implements _.IAudioSend 
         if (this._type === value) {
             return;
         }
-        this._owner._getSendOutputPin(this._type).removeConnection(this);
+        this._parent._getSendOutputPin(this._type).removeConnection(this);
         this._type = value;
-        this._owner._getSendOutputPin(this._type).addConnection(this);
+        this._parent._getSendOutputPin(this._type).addConnection(this);
     }
 
     _gainParam: AudioParam;
@@ -140,9 +146,9 @@ export abstract class AudioSend extends AudioConnection implements _.IAudioSend 
         return this._params;
     }
 
-    constructor(owner: AudioSender, output: AudioPin, options?: IAudioSendOptions) {
-        super(owner._getSendOutputPin(options?.type ?? _.SendType.PostFader), output);
-        this._owner = owner;
+    constructor(parent: AudioSender, output: AudioPin, options?: IAudioSendOptions) {
+        super(parent._getSendOutputPin(options?.type ?? _.SendType.PostFader), output);
+        this._parent = parent;
         this._type = options?.type ?? _.SendType.PostFader;
     }
 
@@ -151,23 +157,13 @@ export abstract class AudioSend extends AudioConnection implements _.IAudioSend 
 }
 
 export abstract class AudioParam implements _.IAudioParam {
+    parent: IAudioUpdatable;
     input = new AudioPin(this);
     value: number;
 
-    _updateConnectionsPending = false;
-    abstract _updateConnections(): void;
-}
-
-export abstract class AudioProcessor implements _.IAudioProcessor {
-    _params = new Array<AudioParam>();
-
-    get params(): Array<AudioParam> {
-        return this._params;
+    constructor(parent: IAudioUpdatable) {
+        this.parent = parent;
     }
-
-    input: AudioPin;
-    output: AudioPin;
-    optimize: boolean;
 
     _updateConnectionsPending = false;
     abstract _updateConnections(): void;
@@ -231,6 +227,142 @@ export abstract class AudioSender implements _.IAudioSender {
     abstract _updateConnections(): void;
 }
 
+export abstract class AudioProcessor implements _.IAudioProcessor {
+    parent: Nullable<IAudioUpdatable> = null;
+    _params = new Array<AudioParam>();
+
+    get params(): Array<AudioParam> {
+        return this._params;
+    }
+
+    input = AudioPin.Null;
+    output = AudioPin.Null;
+    optimize: boolean;
+
+    constructor(parent: Nullable<IAudioUpdatable> = null) {
+        this.parent = parent;
+    }
+
+    _updateConnectionsPending = false;
+
+    _updateConnections(): void {
+        deferUpdateConnections(this.parent);
+    }
+}
+
+export abstract class AudioEffect extends AudioProcessor {
+    bypass = false;
+
+    constructor() {
+        super();
+    }
+
+    connect(destination: AudioEffect) {
+        new AudioConnection(this.output, destination.input);
+    }
+
+    disconnect() {
+        this.output.removeAllConnections();
+    }
+}
+
+export abstract class AudioEffectsChain extends AudioProcessor {
+    _effects: Nullable<Array<Nullable<AudioEffect>>> = null;
+
+    constructor(parent: IAudioUpdatable) {
+        super(parent);
+    }
+
+    addEffect(effect: AudioEffect) {
+        if (this._effects?.includes(effect)) {
+            return;
+        }
+        effect.parent = this;
+        this._getEffects().push(effect);
+        deferUpdateConnections(this);
+    }
+
+    setEffect(effect: AudioEffect, index: number) {
+        effect.parent = this;
+        this._getEffects(index + 1)[index] = effect;
+        deferUpdateConnections(this);
+    }
+
+    removeEffect(effect: AudioEffect) {
+        const index = this._effects?.indexOf(effect) ?? -1;
+        if (index !== -1) {
+            effect.parent = null;
+            effect.input.removeAllConnections();
+            effect.output.removeAllConnections();
+            this._effects![index] = null;
+            deferUpdateConnections(this);
+        }
+    }
+
+    _getEffects(maxSize: number = 1): Array<Nullable<AudioEffect>> {
+        if (!this._effects) {
+            this._effects = new Array<Nullable<AudioEffect>>();
+        }
+        this._effects.length = Math.max(this._effects.length, maxSize);
+        return this._effects;
+    }
+
+    override _updateConnections() {
+        if (this._effects) {
+            let previousEffect: Nullable<AudioEffect> = null;
+            let i = 0;
+            for (; i < this._effects.length; i++) {
+                const effect = this._effects[i];
+                if (!effect) {
+                    continue;
+                }
+
+                previousEffect = effect;
+
+                if (this.input !== effect.input) {
+                    effect.input?.removeAllConnections();
+                    this.input?.removeAllConnections();
+                    this.input = effect.input;
+                    break;
+                }
+            }
+            for (; i < this._effects.length; i++) {
+                const effect = this._effects[i];
+                if (!effect) {
+                    continue;
+                }
+                if (previousEffect?.output !== effect.input) {
+                    effect.input.removeAllConnections();
+                    previousEffect?.disconnect();
+                    previousEffect?.connect(effect);
+                }
+                previousEffect = effect;
+            }
+            if (this.output !== previousEffect?.output) {
+                previousEffect?.output?.removeAllConnections();
+                this.output?.removeAllConnections();
+                this.output = previousEffect?.output ?? AudioPin.Null;
+            }
+        } else {
+            if (this.input) {
+                this.input.removeAllConnections();
+                this.input = AudioPin.Null;
+            }
+            if (this.output) {
+                this.output.removeAllConnections();
+                this.output = AudioPin.Null;
+            }
+        }
+        super._updateConnections();
+    }
+}
+
+export abstract class AudioPositioner extends AudioProcessor {
+    constructor(parent: IAudioUpdatable) {
+        super(parent);
+    }
+}
+
 export abstract class AudioDestination implements _.IAudioDestination {
     _params = new Array<AudioParam>();
 
@@ -244,37 +376,16 @@ export abstract class AudioDestination implements _.IAudioDestination {
     abstract _updateConnections(): void;
 }
 
-export abstract class AudioEffect extends AudioProcessor {
-    //
-}
-
-export abstract class AudioEffectsChain extends AudioProcessor {
-    effects: AudioEffect[];
-}
-
-export abstract class AudioPositioner extends AudioProcessor {
-    //
-}
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 export abstract class AudioEngine {
     devices: AudioDevice[];
 
-    abstract createSend(owner: AudioSender, output: AudioPin, options?: IAudioSendOptions): AudioSend;
+    abstract createSend(parent: AudioSender, output: AudioPin, options?: IAudioSendOptions): AudioSend;
 }
 
-export abstract class AudioDevice implements _.IAudioDestination {
-    input: AudioPin;
-
-    _params = new Array<AudioParam>();
-
-    get params(): Array<AudioParam> {
-        return this._params;
-    }
-
-    _updateConnectionsPending = false;
-    abstract _updateConnections(): void;
+export abstract class AudioDevice extends AudioDestination {
+    //
 }
 
 export abstract class AudioBus extends AudioSender implements _.IAudioProcessor {
