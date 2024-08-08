@@ -19,6 +19,8 @@ export interface IAudioParam extends IAudioInput {
 
 export interface IAudioNode {
     params: Array<IAudioParam>;
+
+    update(): void;
 }
 
 export interface IAudioSend extends IAudioNode, IAudioConnection {
@@ -31,12 +33,12 @@ export interface IAudioSource extends IAudioNode {
     output: IAudioPin;
 }
 
-export interface IAudioProcessor extends IAudioSource, IAudioDestination {
-    optimize: boolean;
-}
-
 export interface IAudioDestination extends IAudioInput, IAudioNode {
     //
+}
+
+export interface IAudioProcessor extends IAudioSource, IAudioDestination {
+    optimize: boolean;
 }
 
 export interface IAudioSender extends IAudioSource {

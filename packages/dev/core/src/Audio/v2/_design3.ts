@@ -4,7 +4,7 @@ import * as _ from "./_design3.interfaces";
 import { Observable, Observer } from "../../Misc/observable";
 import { Nullable } from "../../types";
 
-export abstract class AudioPin implements _.IAudioPin {
+export class AudioPin implements _.IAudioPin {
     _connections: AudioConnection[] = [];
 
     get connections(): Array<AudioConnection> {
@@ -37,12 +37,31 @@ export abstract class AudioPin implements _.IAudioPin {
     }
 }
 
+export class AudioConnection implements _.IAudioConnection {
+    input: AudioPin;
+    output: AudioPin;
+
+    onDisposeObservable = new Observable<AudioConnection>();
+
+    constructor(input: AudioPin, output: AudioPin) {
+        this.input = input;
+        this.output = output;
+
+        this.input.addConnection(this);
+        this.output.addConnection(this);
+    }
+
+    dispose() {
+        this.onDisposeObservable.notifyObservers(this);
+    }
+}
+
 export abstract class AudioParam implements _.IAudioParam {
     input: AudioPin;
     value: number;
 
     dispose() {
-        //
+        this.input.dispose();
     }
 }
 
@@ -56,6 +75,8 @@ export abstract class AudioProcessor implements _.IAudioProcessor {
     input: AudioPin;
     output: AudioPin;
     optimize: boolean;
+
+    abstract update(): void;
 }
 
 export abstract class AudioSender implements _.IAudioSender {
@@ -80,6 +101,31 @@ export abstract class AudioSender implements _.IAudioSender {
     get params(): Array<AudioParam> {
         return this._params;
     }
+
+    connect(destination: _.IAudioInput) {
+        new AudioConnection(this.output, destination.input as AudioPin);
+    }
+
+    disconnect(destination: _.IAudioInput) {
+        for (const connection of this.output.connections) {
+            if (connection.output === this.output && connection.input === destination.input) {
+                connection.dispose();
+            }
+        }
+    }
+
+    addSend(send: AudioSend) {
+        this.sends.push(send);
+    }
+
+    removeSend(send: AudioSend) {
+        const index = this.sends.indexOf(send);
+        if (index !== -1) {
+            this.sends.splice(index, 1);
+        }
+    }
+
+    abstract update(): void;
 }
 
 export abstract class AudioDestination implements _.IAudioDestination {
@@ -90,32 +136,23 @@ export abstract class AudioDestination implements _.IAudioDestination {
     }
 
     input: AudioPin;
+
+    abstract update(): void;
 }
 
-export class AudioEffect extends AudioProcessor {
+export abstract class AudioEffect extends AudioProcessor {
     //
 }
 
-export class AudioEffectsChain extends AudioProcessor {
+export abstract class AudioEffectsChain extends AudioProcessor {
     effects: AudioEffect[];
 }
 
-export class AudioPositioner extends AudioProcessor {
+export abstract class AudioPositioner extends AudioProcessor {
     //
 }
 
-export class AudioConnection implements _.IAudioConnection {
-    input: AudioPin;
-    output: AudioPin;
-
-    onDisposeObservable = new Observable<AudioConnection>();
-
-    dispose() {
-        this.onDisposeObservable.notifyObservers(this);
-    }
-}
-
-export class AudioSend extends AudioConnection implements _.IAudioSend {
+export abstract class AudioSend extends AudioConnection implements _.IAudioSend {
     parent: _.IAudioSender;
     type: "pre-effects" | "pre-fader" | "post-fader" = "post-fader";
 
@@ -135,15 +172,17 @@ export class AudioSend extends AudioConnection implements _.IAudioSend {
         this._gainParam.dispose();
         super.dispose();
     }
+
+    abstract update(): void;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export class AudioEngine {
+export abstract class AudioEngine {
     devices: AudioDevice[];
 }
 
-export class AudioDevice implements _.IAudioDestination {
+export abstract class AudioDevice implements _.IAudioDestination {
     input: AudioPin;
 
     _params = new Array<AudioParam>();
@@ -151,25 +190,27 @@ export class AudioDevice implements _.IAudioDestination {
     get params(): Array<AudioParam> {
         return this._params;
     }
+
+    abstract update(): void;
 }
 
-export class AudioBus extends AudioSender implements _.IAudioProcessor {
+export abstract class AudioBus extends AudioSender implements _.IAudioProcessor {
     input: AudioPin;
     optimize: boolean;
 }
 
-export class AudioOutputBus extends AudioBus {
+export abstract class AudioOutputBus extends AudioBus {
     device: AudioDevice;
 }
 
-export class AudioAuxBus extends AudioBus {
+export abstract class AudioAuxBus extends AudioBus {
     positioner: AudioPositioner;
 }
 
-export class Sound extends AudioSender {
+export abstract class Sound extends AudioSender {
     positioner: AudioPositioner;
 }
 
-export class AudioAnalyzer extends AudioDestination {
+export abstract class AudioAnalyzer extends AudioDestination {
     //
 }
