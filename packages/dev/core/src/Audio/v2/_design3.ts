@@ -280,13 +280,13 @@ export abstract class AudioMixer extends AudioEffect {
     }
 }
 
-export abstract class SpatialAudioPanner extends AudioEffect {
+export abstract class EqualPowerAudioPanner extends AudioEffect {
     constructor(parent: IAudioUpdatable) {
         super(parent);
     }
 }
 
-export abstract class StereoAudioPanner extends AudioEffect {
+export abstract class HrtfAudioPanner extends AudioEffect {
     constructor(parent: IAudioUpdatable) {
         super(parent);
     }
@@ -384,15 +384,71 @@ export abstract class AudioEffectsChain extends AudioProcessor {
 }
 
 export abstract class AudioPositioner extends AudioProcessor {
+    _engine: AudioEngine;
     _distanceGain: Nullable<AudioGain> = null;
-    _stereoPanner: Nullable<StereoAudioPanner> = null;
-    _stereoPannerGain: Nullable<AudioGain> = null;
-    _spatialPanner: Nullable<SpatialAudioPanner> = null;
-    _spatialPannerGain: Nullable<AudioGain> = null;
+    _equalPowerPanner: Nullable<EqualPowerAudioPanner> = null;
+    _equalPowerPannerGain: Nullable<AudioGain> = null;
+    _hrtfPanner: Nullable<HrtfAudioPanner> = null;
+    _hrtfPannerGain: Nullable<AudioGain> = null;
     _pannerMixer: Nullable<AudioMixer> = null;
 
-    constructor(parent: IAudioUpdatable) {
+    get distanceGain(): number {
+        return this._distanceGain?.gainParam.value ?? 1;
+    }
+
+    set distanceGain(value: number) {
+        this._getDistanceGain().gainParam.value = value;
+    }
+
+    constructor(parent: IAudioUpdatable, engine: AudioEngine) {
         super(parent);
+        this._engine = engine;
+    }
+
+    _getDistanceGain(): AudioGain {
+        if (!this._distanceGain) {
+            this._distanceGain = this._engine.createGain(this);
+        }
+        return this._distanceGain;
+    }
+
+    _getEqualPowerPanner(): EqualPowerAudioPanner {
+        if (!this._equalPowerPanner) {
+            this._equalPowerPanner = this._engine.createEqualPowerPanner(this);
+        }
+        return this._equalPowerPanner;
+    }
+
+    _getEqualPowerPannerGain(): AudioGain {
+        if (!this._equalPowerPannerGain) {
+            this._equalPowerPannerGain = this._engine.createGain(this);
+            deferUpdateConnections(this);
+        }
+        return this._equalPowerPannerGain;
+    }
+
+    _getHrtfPanner(): HrtfAudioPanner {
+        if (!this._hrtfPanner) {
+            this._hrtfPanner = this._engine.createHrtfPanner(this);
+            deferUpdateConnections(this);
+        }
+        return this._hrtfPanner;
+    }
+
+    _getHrtfPannerGain(): AudioGain {
+        if (!this._hrtfPannerGain) {
+            this._hrtfPannerGain = this._engine.createGain(this);
+            deferUpdateConnections(this);
+        }
+        return this._hrtfPannerGain;
+    }
+
+    _getPannerMixer(): AudioMixer {
+        if (!this._pannerMixer) {
+            this._pannerMixer = this._engine.createMixer(this);
+            deferUpdateConnections(this);
+        }
+        return this._pannerMixer;
     }
 }
 
@@ -414,11 +470,11 @@ export abstract class AudioDestination implements _.IAudioDestination {
 export abstract class AudioEngine {
     devices: AudioDevice[];
 
+    abstract createEqualPowerPanner(parent: IAudioUpdatable): EqualPowerAudioPanner;
     abstract createGain(parent: IAudioUpdatable): AudioGain;
+    abstract createHrtfPanner(parent: IAudioUpdatable): HrtfAudioPanner;
     abstract createMixer(parent: IAudioUpdatable): AudioMixer;
     abstract createSend(parent: AudioSender, output: AudioPin, options?: IAudioSendOptions): AudioSend;
-    abstract createSpatialPanner(parent: IAudioUpdatable): SpatialAudioPanner;
-    abstract createStereoPanner(parent: IAudioUpdatable): StereoAudioPanner;
 }
 
 export abstract class AudioDevice extends AudioDestination {
