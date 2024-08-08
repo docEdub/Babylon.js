@@ -253,8 +253,8 @@ export abstract class AudioProcessor implements _.IAudioProcessor {
 export abstract class AudioEffect extends AudioProcessor {
     bypass = false;
 
-    constructor() {
-        super();
+    constructor(parent: Nullable<IAudioUpdatable> = null) {
+        super(parent);
     }
 
     connect(destination: AudioEffect) {
@@ -263,6 +263,32 @@ export abstract class AudioEffect extends AudioProcessor {
 
     disconnect() {
         this.output.removeAllConnections();
+    }
+}
+
+export abstract class AudioGain extends AudioEffect {
+    gainParam: AudioParam;
+
+    constructor(parent: IAudioUpdatable) {
+        super(parent);
+    }
+}
+
+export abstract class AudioMixer extends AudioEffect {
+    constructor(parent: IAudioUpdatable) {
+        super(parent);
+    }
+}
+
+export abstract class SpatialAudioPanner extends AudioEffect {
+    constructor(parent: IAudioUpdatable) {
+        super(parent);
+    }
+}
+
+export abstract class StereoAudioPanner extends AudioEffect {
+    constructor(parent: IAudioUpdatable) {
+        super(parent);
     }
 }
 
@@ -358,6 +384,13 @@ export abstract class AudioEffectsChain extends AudioProcessor {
 }
 
 export abstract class AudioPositioner extends AudioProcessor {
+    _distanceGain: Nullable<AudioGain> = null;
+    _stereoPanner: Nullable<StereoAudioPanner> = null;
+    _stereoPannerGain: Nullable<AudioGain> = null;
+    _spatialPanner: Nullable<SpatialAudioPanner> = null;
+    _spatialPannerGain: Nullable<AudioGain> = null;
+    _pannerMixer: Nullable<AudioMixer> = null;
+
     constructor(parent: IAudioUpdatable) {
         super(parent);
     }
@@ -381,7 +414,11 @@ export abstract class AudioDestination implements _.IAudioDestination {
 export abstract class AudioEngine {
     devices: AudioDevice[];
 
+    abstract createGain(parent: IAudioUpdatable): AudioGain;
+    abstract createMixer(parent: IAudioUpdatable): AudioMixer;
     abstract createSend(parent: AudioSender, output: AudioPin, options?: IAudioSendOptions): AudioSend;
+    abstract createSpatialPanner(parent: IAudioUpdatable): SpatialAudioPanner;
+    abstract createStereoPanner(parent: IAudioUpdatable): StereoAudioPanner;
 }
 
 export abstract class AudioDevice extends AudioDestination {
