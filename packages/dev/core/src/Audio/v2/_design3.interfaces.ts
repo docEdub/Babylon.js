@@ -1,5 +1,11 @@
 /* eslint-disable */
 
+export enum SendType {
+    PreEffects,
+    PreFader,
+    PostFader,
+}
+
 export interface IAudioPin {
     connections: Array<IAudioConnection>;
 }
@@ -22,9 +28,8 @@ export interface IAudioNode {
 }
 
 export interface IAudioSend extends IAudioNode, IAudioConnection {
-    parent: IAudioSender;
     gainParam: IAudioParam;
-    type: "pre-effects" | "pre-fader" | "post-fader";
+    type: SendType;
 }
 
 export interface IAudioSource extends IAudioNode {
