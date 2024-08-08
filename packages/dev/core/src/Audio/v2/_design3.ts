@@ -4,6 +4,16 @@ import * as _ from "./_design3.interfaces";
 import { Observable, Observer } from "../../Misc/observable";
 import { Nullable } from "../../types";
 
+function deferUpdateConnections(node: _.IAudioNode) {
+    if (node.updateConnectionsPending) {
+        return;
+    }
+    setTimeout(() => {
+        node.updateConnections();
+        node.updateConnectionsPending = false;
+    }, 0);
+}
+
 export class AudioPin implements _.IAudioPin {
     _connections: AudioConnection[] = [];
 
@@ -76,7 +86,9 @@ export abstract class AudioProcessor implements _.IAudioProcessor {
     output: AudioPin;
     optimize: boolean;
 
-    abstract update(): void;
+    // IAudioNode
+    updateConnectionsPending = false;
+    abstract updateConnections(): void;
 }
 
 export abstract class AudioSender implements _.IAudioSender {
@@ -104,6 +116,7 @@ export abstract class AudioSender implements _.IAudioSender {
 
     connect(destination: _.IAudioInput) {
         new AudioConnection(this.output, destination.input as AudioPin);
+        deferUpdateConnections(this);
     }
 
     disconnect(destination: _.IAudioInput) {
@@ -125,7 +138,9 @@ export abstract class AudioSender implements _.IAudioSender {
         }
     }
 
-    abstract update(): void;
+    // IAudioNode
+    updateConnectionsPending = false;
+    abstract updateConnections(): void;
 }
 
 export abstract class AudioDestination implements _.IAudioDestination {
@@ -137,7 +152,8 @@ export abstract class AudioDestination implements _.IAudioDestination {
 
     input: AudioPin;
 
-    abstract update(): void;
+    updateConnectionsPending = false;
+    abstract updateConnections(): void;
 }
 
 export abstract class AudioEffect extends AudioProcessor {
@@ -173,7 +189,8 @@ export abstract class AudioSend extends AudioConnection implements _.IAudioSend 
         super.dispose();
     }
 
-    abstract update(): void;
+    updateConnectionsPending = false;
+    abstract updateConnections(): void;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -191,7 +208,8 @@ export abstract class AudioDevice implements _.IAudioDestination {
         return this._params;
     }
 
-    abstract update(): void;
+    updateConnectionsPending = false;
+    abstract updateConnections(): void;
 }
 
 export abstract class AudioBus extends AudioSender implements _.IAudioProcessor {

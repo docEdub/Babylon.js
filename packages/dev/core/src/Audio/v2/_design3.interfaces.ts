@@ -20,7 +20,8 @@ export interface IAudioParam extends IAudioInput {
 export interface IAudioNode {
     params: Array<IAudioParam>;
 
-    update(): void;
+    updateConnectionsPending: boolean;
+    updateConnections(): void;
 }
 
 export interface IAudioSend extends IAudioNode, IAudioConnection {
