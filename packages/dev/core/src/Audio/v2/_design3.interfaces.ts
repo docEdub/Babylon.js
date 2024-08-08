@@ -1,45 +1,46 @@
 /* eslint-disable */
 
-export interface IAudioParam {
-    input: IAudioInPin;
-    value: number;
-}
-
 export interface IAudioPin {
     connections: Array<IAudioConnection>;
 }
 
-export interface IAudioOutPin extends IAudioPin {
-    //
+export interface IAudioConnection {
+    input: IAudioPin;
+    output: IAudioPin;
 }
 
-export interface IAudioInPin extends IAudioPin {
-    //
+export interface IAudioInput {
+    input: IAudioPin;
 }
 
-export interface IAudioConnection extends IAudioProcessor {
-    gainParam: IAudioParam;
+export interface IAudioParam extends IAudioInput {
+    value: number;
 }
 
-export interface IAudioSend extends IAudioConnection {
+export interface IAudioNode {
+    params: Array<IAudioParam>;
+}
+
+export interface IAudioSend extends IAudioNode, IAudioConnection {
     parent: IAudioSender;
+    gainParam: IAudioParam;
     type: "pre-effects" | "pre-fader" | "post-fader";
 }
 
-export interface IAudioSource {
-    output: IAudioOutPin;
+export interface IAudioSource extends IAudioNode {
+    output: IAudioPin;
 }
 
 export interface IAudioProcessor extends IAudioSource, IAudioDestination {
     optimize: boolean;
 }
 
-export interface IAudioDestination {
-    input: IAudioInPin;
+export interface IAudioDestination extends IAudioInput, IAudioNode {
+    //
 }
 
 export interface IAudioSender extends IAudioSource {
-    preEffectsOutput: IAudioOutPin;
-    preFaderOutput: IAudioOutPin;
-    postFaderOutput: IAudioOutPin;
+    preEffectsOutput: IAudioPin;
+    preFaderOutput: IAudioPin;
+    postFaderOutput: IAudioPin;
 }
