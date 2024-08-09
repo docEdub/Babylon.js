@@ -19,6 +19,7 @@ export interface IAudioNode {
     _engine: AudioEngine;
     _updateConnectionsPending: boolean;
     _updateConnections(): void;
+    _optimize(outputPin: AudioPin, optimizer: AudioConnectionOptimizer): void;
 }
 
 export interface IAudioReceiver {
@@ -66,12 +67,12 @@ export class AudioPin {
 
     _findConnection(pin: AudioPin): Nullable<AudioConnection> {
         for (const connection of this._connections) {
-            if (connection._outPin === pin) {
+            if (connection._destinationPin === pin) {
                 return connection;
             }
         }
         for (const connection of this._connections) {
-            if (connection._inPin === pin) {
+            if (connection._sourcePin === pin) {
                 return connection;
             }
         }
@@ -106,42 +107,62 @@ export class AudioPin {
 }
 
 export class AudioConnection {
-    _inPin: AudioPin;
-    _outPin: AudioPin;
+    _sourcePin: AudioPin;
+    _destinationPin: AudioPin;
+    _nextConnection: Nullable<AudioConnection> = null;
 
-    get inPin() {
-        return this._inPin;
+    get sourcePin() {
+        return this._sourcePin;
     }
 
-    set inPin(inPin: AudioPin) {
-        if (this._inPin === inPin) {
+    set sourcePin(sourcePin: AudioPin) {
+        if (this._sourcePin === sourcePin) {
             return;
         }
-        this._inPin._removeConnection(this);
-        this._inPin = inPin;
-        this._inPin._addConnection(this);
+        this._sourcePin._removeConnection(this);
+        this._sourcePin = sourcePin;
+        this._sourcePin._addConnection(this);
     }
 
-    get outPin() {
-        return this._outPin;
+    get destinationPin() {
+        return this._destinationPin;
     }
 
-    set outPin(outPin: AudioPin) {
-        if (this._outPin === outPin) {
+    set destinationPin(destinationPin: AudioPin) {
+        if (this._destinationPin === destinationPin) {
             return;
         }
-        this._outPin._removeConnection(this);
-        this._outPin = outPin;
-        this._outPin._addConnection(this);
+        this._destinationPin._removeConnection(this);
+        this._destinationPin = destinationPin;
+        this._destinationPin._addConnection(this);
     }
 
-    // TODO: Swap in/out args so left arg is upstream pin and right arg is downstream pin.
-    constructor(inPin: AudioPin, outPin: AudioPin) {
-        this._inPin = inPin;
-        this._outPin = outPin;
+    get nextConnection() {
+        return this._nextConnection;
+    }
 
-        this._inPin._addConnection(this);
-        this._outPin._addConnection(this);
+    set nextConnection(nextConnection: Nullable<AudioConnection>) {
+        this._nextConnection = nextConnection;
+    }
+
+    get isLastConnection() {
+        return this._nextConnection === null;
+    }
+
+    constructor(sourcePin: AudioPin, destinationPin: AudioPin) {
+        this._sourcePin = sourcePin;
+        this._destinationPin = destinationPin;
+
+        this._sourcePin._addConnection(this);
+        this._destinationPin._addConnection(this);
+    }
+
+    getLastConnection(): AudioConnection {
+        let connection: Nullable<AudioConnection> = this;
+        while (!connection.isLastConnection) {
+            connection = connection.nextConnection!;
+        }
+        return connection;
     }
 }
 
@@ -173,8 +194,8 @@ export abstract class AudioSend extends AudioConnection {
         return this._params;
     }
 
-    constructor(parent: AudioSender, outPin: AudioPin, options?: IAudioSendOptions) {
-        super(parent._getSendOutPin(options?.type ?? SendType.PostFader), outPin);
+    constructor(parent: AudioSender, destinationPin: AudioPin, options?: IAudioSendOptions) {
+        super(parent._getSendOutPin(options?.type ?? SendType.PostFader), destinationPin);
         this._parent = parent;
         this._type = options?.type ?? SendType.PostFader;
     }
@@ -186,9 +207,10 @@ export abstract class AudioSend extends AudioConnection {
 // #region Optimized connection classes
 
 export abstract class OptimizedAudioConnection {
-    _sourcePin: AudioPin;
+    _sourcePin: Nullable<AudioPin> = null;
     _destinationPin: AudioPin;
-    _accumulatedGain: number;
+    _nextDestinationPin: Nullable<AudioPin> = null;
+    _accumulatedGain: number = 1;
 
     get engine() {
         return this._destinationPin._parent._engine;
@@ -200,10 +222,11 @@ export abstract class OptimizedAudioConnection {
     }
 }
 
-class AudioConnectionOptimizer {
+export class AudioConnectionOptimizer {
     _engine: AudioEngine;
     _connectionsToVisit = new Array<AudioConnection>();
-    _visitedConnections = new Array<AudioConnection>();
+    _tracedConnections = new Array<AudioConnection>();
+    _currentOptimizedConnection: Nullable<OptimizedAudioConnection> = null;
 
     constructor(engine: AudioEngine) {
         this._engine = engine;
@@ -212,12 +235,38 @@ class AudioConnectionOptimizer {
         }
     }
 
+    _addConnectionToVisit(connection: AudioConnection) {
+        if (this._tracedConnections.includes(connection)) {
+            return;
+        }
+        this._tracedConnections.push(connection);
+
+        const lastConnection = connection.getLastConnection();
+        if (this._connectionsToVisit.includes(lastConnection)) {
+            return;
+        }
+
+        this._connectionsToVisit.push(lastConnection);
+    }
+
     _optimize() {
         console.log("AudioConnectionOptimizer._optimize ...");
         console.log(this._connectionsToVisit);
+
+        for (let i = 0; i < this._connectionsToVisit.length; i++) {
+            this._currentOptimizedConnection = this._engine.createOptimizedConnection(this._connectionsToVisit[i]._destinationPin);
+            this._visit(this._connectionsToVisit[i]);
+        }
+    }
+
+    _visit(connection: AudioConnection) {
+        const nodeOutPin = connection._sourcePin;
+        const node = nodeOutPin._parent;
+        node._optimize(nodeOutPin, this);
     }
 }
 
+// #endregion
 // #region Base classes
 
 export abstract class AudioSender implements IAudioNode {
@@ -535,13 +584,14 @@ export abstract class AudioEngine implements IAudioNode {
     _devices = new Array<AudioDevice>();
     _updateConnectionsPending: boolean;
 
-    abstract connectPins(inPin: AudioPin, outPin: AudioPin): void;
+    abstract connectPins(sourcePin: AudioPin, destinationPin: AudioPin): void;
+    abstract createSend(parent: AudioSender, destinationPin: AudioPin, options?: IAudioSendOptions): AudioSend;
+
     abstract createEqualPowerPanner(parent: IAudioNode): EqualPowerAudioPanner;
     abstract createGain(parent: IAudioNode): AudioGain;
     abstract createHrtfPanner(parent: IAudioNode): HrtfAudioPanner;
     abstract createMixer(parent: IAudioNode): AudioMixer;
     abstract createOptimizedConnection(destinationPin: AudioPin): OptimizedAudioConnection;
-    abstract createSend(parent: AudioSender, outPin: AudioPin, options?: IAudioSendOptions): AudioSend;
 
     abstract _updateConnections(): void;
 
