@@ -527,7 +527,7 @@ export abstract class AudioDevice extends AudioDestination {
 }
 
 export abstract class AudioBus extends AudioSender implements _.IAudioProcessor {
-    input: AudioPin;
+    input = new AudioPin(this);
     optimize: boolean;
 }
 
