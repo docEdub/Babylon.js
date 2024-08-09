@@ -3,12 +3,12 @@
 import * as _ from "./abstractAudio.interfaces";
 import { Nullable } from "../../types";
 
-interface IAudioSendOptions {
+export interface IAudioSendOptions {
     type: _.SendType;
     gain: number;
 }
 
-interface IAudioUpdatable {
+export interface IAudioUpdatable {
     _updateConnectionsPending: boolean;
     _updateConnections(): void;
 }
@@ -117,7 +117,7 @@ export class AudioConnection implements _.IAudioConnection {
     }
 }
 
-export abstract class AudioSend extends AudioConnection implements _.IAudioSend {
+export class AudioSend extends AudioConnection implements _.IAudioSend {
     _parent: AudioSender;
     _type: _.SendType;
 
@@ -153,7 +153,9 @@ export abstract class AudioSend extends AudioConnection implements _.IAudioSend 
     }
 
     _updateConnectionsPending = false;
-    abstract _updateConnections(): void;
+    _updateConnections(): void {
+        //
+    }
 }
 
 export abstract class AudioParam implements _.IAudioParam {
@@ -266,7 +268,7 @@ export abstract class AudioEffect extends AudioProcessor {
     }
 }
 
-export abstract class AudioGain extends AudioEffect {
+export class AudioGain extends AudioEffect {
     gainParam: AudioParam;
 
     constructor(parent: IAudioUpdatable) {
@@ -274,19 +276,19 @@ export abstract class AudioGain extends AudioEffect {
     }
 }
 
-export abstract class AudioMixer extends AudioEffect {
+export class AudioMixer extends AudioEffect {
     constructor(parent: IAudioUpdatable) {
         super(parent);
     }
 }
 
-export abstract class EqualPowerAudioPanner extends AudioEffect {
+export class EqualPowerAudioPanner extends AudioEffect {
     constructor(parent: IAudioUpdatable) {
         super(parent);
     }
 }
 
-export abstract class HrtfAudioPanner extends AudioEffect {
+export class HrtfAudioPanner extends AudioEffect {
     constructor(parent: IAudioUpdatable) {
         super(parent);
     }
@@ -530,7 +532,7 @@ export abstract class AudioBus extends AudioSender implements _.IAudioProcessor 
 }
 
 export abstract class AudioOutputBus extends AudioBus {
-    device: AudioDevice;
+    abstract get device(): AudioDevice;
 }
 
 export abstract class AudioAuxBus extends AudioBus {
