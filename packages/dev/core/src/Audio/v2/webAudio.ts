@@ -3,16 +3,39 @@
 import * as _ from "./abstractAudio";
 import { Nullable } from "../../types";
 
-interface IWebAudioDeviceNode extends _.IAudioUpdatable {
+interface IWebAudioNode extends _.IAudioNode {
     device: WebAudioDevice;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class WebAudioConnection extends _.AudioConnection {
+    inNode: AudioNode;
+    outNode: AudioNode;
+
+    constructor(inPin: _.AudioPin, outPin: _.AudioPin) {
+        super(inPin, outPin);
+    }
+}
+
+class WebAudioSend extends _.AudioSend {
+    inNode: AudioNode;
+    outNode: AudioNode;
+
+    constructor(parent: _.AudioSender, outPin: _.AudioPin, options?: _.IAudioSendOptions) {
+        super(parent, outPin, options);
+    }
+
+    _updateConnections(): void {
+        console.log("WebAudioSend._updateConnections ...");
+    }
 }
 
 class WebAudioGain extends _.AudioGain {
     _device: Nullable<WebAudioDevice> = null;
+    _node: Nullable<GainNode> = null;
 
-    node: Nullable<GainNode> = null;
-
-    constructor(parent: IWebAudioDeviceNode) {
+    constructor(parent: IWebAudioNode) {
         super(parent);
         this._device = parent.device;
     }
@@ -25,29 +48,36 @@ class WebAudioGain extends _.AudioGain {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 export class WebAudioEngine extends _.AudioEngine {
-    createEqualPowerPanner(parent: _.IAudioUpdatable): _.EqualPowerAudioPanner {
+    connectPins(inPin: _.AudioPin, outPin: _.AudioPin): void {
+        new WebAudioConnection(inPin, outPin);
+    }
+
+    createEqualPowerPanner(parent: _.IAudioNode): _.EqualPowerAudioPanner {
         return new _.EqualPowerAudioPanner(parent);
     }
 
-    createGain(parent: IWebAudioDeviceNode) {
+    createGain(parent: IWebAudioNode) {
         return new WebAudioGain(parent);
     }
 
-    createHrtfPanner(parent: _.IAudioUpdatable): _.HrtfAudioPanner {
+    createHrtfPanner(parent: _.IAudioNode): _.HrtfAudioPanner {
         return new _.HrtfAudioPanner(parent);
     }
 
-    createMixer(parent: _.IAudioUpdatable): _.AudioMixer {
+    createMixer(parent: _.IAudioNode): _.AudioMixer {
         return new _.AudioMixer(parent);
     }
 
-    createSend(parent: _.AudioSender, output: _.AudioPin, options?: _.IAudioSendOptions): _.AudioSend {
-        return new _.AudioSend(parent, output, options);
+    createSend(parent: _.AudioSender, output: _.AudioPin, options?: _.IAudioSendOptions): WebAudioSend {
+        return new WebAudioSend(parent, output, options);
+    }
+
+    _updateConnections(): void {
+        console.log("WebAudioEngine._updateConnections ...");
     }
 }
 
 export class WebAudioDevice extends _.AudioDevice {
-    _engine: WebAudioEngine;
     _context = new AudioContext();
 
     get context() {
@@ -55,8 +85,7 @@ export class WebAudioDevice extends _.AudioDevice {
     }
 
     constructor(engine: WebAudioEngine) {
-        super();
-        this._engine = engine;
+        super(engine);
     }
 
     _updateConnections(): void {
@@ -64,7 +93,7 @@ export class WebAudioDevice extends _.AudioDevice {
     }
 }
 
-export class WebAudioOutputBus extends _.AudioOutputBus implements IWebAudioDeviceNode {
+export class WebAudioOutputBus extends _.AudioOutputBus implements IWebAudioNode {
     _device: WebAudioDevice;
 
     get device() {
@@ -81,7 +110,7 @@ export class WebAudioOutputBus extends _.AudioOutputBus implements IWebAudioDevi
     }
 }
 
-export class WebAudioSound extends _.Sound implements IWebAudioDeviceNode {
+export class WebAudioSound extends _.Sound implements IWebAudioNode {
     _device: WebAudioDevice;
 
     get device() {
