@@ -10,17 +10,23 @@ interface IWebAudioNode extends _.IAudioNode {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class WebAudioConnection extends _.AudioConnection {
-    inNode: AudioNode;
-    outNode: AudioNode;
-
     constructor(inPin: _.AudioPin, outPin: _.AudioPin) {
         super(inPin, outPin);
     }
 }
 
+class WebAudioOptimizedConnection extends _.OptimizedAudioConnection {
+    _inNode: AudioNode;
+    _outNode: AudioNode;
+
+    constructor(destinationPin: _.AudioPin) {
+        super(destinationPin);
+    }
+}
+
 class WebAudioSend extends _.AudioSend {
-    inNode: AudioNode;
-    outNode: AudioNode;
+    _inNode: AudioNode;
+    _outNode: AudioNode;
 
     constructor(parent: _.AudioSender, outPin: _.AudioPin, options?: _.IAudioSendOptions) {
         super(parent, outPin, options);
@@ -68,6 +74,10 @@ export class WebAudioEngine extends _.AudioEngine {
         return new _.AudioMixer(parent);
     }
 
+    createOptimizedConnection(destinationPin: _.AudioPin): _.OptimizedAudioConnection {
+        return new WebAudioOptimizedConnection(destinationPin);
+    }
+
     createSend(parent: _.AudioSender, output: _.AudioPin, options?: _.IAudioSendOptions): WebAudioSend {
         return new WebAudioSend(parent, output, options);
     }
@@ -101,7 +111,7 @@ export class WebAudioOutputBus extends _.AudioOutputBus implements IWebAudioNode
     }
 
     constructor(device: WebAudioDevice) {
-        super(device._engine);
+        super(device);
         this._device = device;
     }
 
