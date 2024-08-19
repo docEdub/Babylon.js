@@ -1,8 +1,8 @@
 import type { AbstractAudioEngine } from "./abstractAudioEngine";
-import type { IAudioNode } from "./abstractAudioInterfaces";
+import type { IAudioInputNode, IAudioNode, IAudioOutputNode } from "./abstractAudioInterfaces";
 
 /**
- * Represents the available options when creating an audio device.
+ * The available options when creating an audio device.
  */
 export interface IAudioDeviceOptions {
     /**
@@ -16,7 +16,7 @@ export interface IAudioDeviceOptions {
  *
  * All audio devices are assumed to have 2 channels (left and right). More configurations may be supported later.
  */
-export abstract class AbstractAudioDevice implements IAudioNode {
+export abstract class AbstractAudioDevice implements IAudioInputNode {
     /**
      * The audio engine that owns this device.
      */
@@ -43,4 +43,7 @@ export abstract class AbstractAudioDevice implements IAudioNode {
         this.engine = engine;
         this.name = options?.name ?? "";
     }
+
+    public abstract onConnect(inputNode: IAudioOutputNode): boolean;
+    public abstract onDisconnect(inputNode: IAudioOutputNode): void;
 }

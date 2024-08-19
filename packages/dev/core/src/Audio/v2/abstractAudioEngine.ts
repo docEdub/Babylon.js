@@ -1,12 +1,12 @@
 import type { AbstractAudioDevice, IAudioDeviceOptions } from "./abstractAudioDevice";
-import type { IAudioNode } from "./abstractAudioInterfaces";
+import type { IAudioInputNode, IAudioOutputNode } from "./abstractAudioInterfaces";
 
 /**
  * The base class for audio engines.
  *
  * Audio engines are responsible for creating audio nodes and managing audio devices.
  */
-export abstract class AbstractAudioEngine implements IAudioNode {
+export abstract class AbstractAudioEngine implements IAudioInputNode {
     private _devices = new Array<AbstractAudioDevice>();
 
     /** @internal */
@@ -70,5 +70,22 @@ export abstract class AbstractAudioEngine implements IAudioNode {
         if (index > -1) {
             this._devices.splice(index, 1);
         }
+    }
+
+    /**
+     * Called when an audio output node connects to this node.
+     * @param outputNode - The node connecting to this node
+     * @returns `true` if the connection was accepted, or `false` if the connection was denied
+     */
+    public onConnect(outputNode: IAudioOutputNode): boolean {
+        return this.defaultDevice.onConnect(outputNode);
+    }
+
+    /**
+     * Called when an audio output node disconnects from this node.
+     * @param outputNode - The node disconnecting from this node
+     */
+    public onDisconnect(outputNode: IAudioOutputNode): void {
+        this.defaultDevice.onDisconnect(outputNode);
     }
 }

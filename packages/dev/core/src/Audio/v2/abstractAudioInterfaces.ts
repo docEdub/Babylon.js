@@ -23,16 +23,16 @@ export interface IAudioNode {
 export interface IAudioOutputNode extends IAudioNode {
     /**
      * Connects this node to another audio node.
-     * @param outputNode - The node to connect to
+     * @param inputNode - The node to connect to
      * @returns `true` if the connection was made, or `false` if the connection failed
      */
-    connect(outputNode: IAudioInputNode): boolean;
+    connect(inputNode: IAudioInputNode): boolean;
 
     /**
      * Disconnects this node from another audio node.
      * @param outputNode - The node to disconnect from
      */
-    disconnect(outputNode: IAudioInputNode): void;
+    disconnect(inputNode: IAudioInputNode): void;
 }
 
 /**
@@ -41,13 +41,14 @@ export interface IAudioOutputNode extends IAudioNode {
 export interface IAudioInputNode extends IAudioNode {
     /**
      * Called when an audio output node connects to this node.
-     * @param inputNode - The
+     * @param outputNode - The node connecting to this node
      * @returns `true` if the connection was accepted, or `false` if the connection was denied
      */
-    onConnect(inputNode: IAudioOutputNode): boolean;
+    onConnect(outputNode: IAudioOutputNode): boolean;
 
     /**
      * Called when an audio output node disconnects from this node.
+     * @param outputNode - The node disconnecting from this node
      */
-    onDisconnect(inputNode: IAudioOutputNode): void;
+    onDisconnect(outputNode: IAudioOutputNode): void;
 }
