@@ -1,16 +1,16 @@
 import type { AbstractAudioDevice, IAudioDeviceOptions } from "./abstractAudioDevice";
+import { AbstractAudioNodeOwner } from "./abstractAudioNodeOwner";
 import type { AbstractAudioOutputBus, IAudioOutputBusOptions } from "./abstractAudioOutputBus";
-import type { IAudioNode } from "./abstractAudioInterfaces";
-import type { IDisposable } from "../../scene";
 
 /**
  * The base class for audio engines.
  *
- * Audio engines are responsible for creating audio nodes and managing audio devices.
+ * Responsibilities:
+ *  - Create audio nodes.
+ *  - Maintain an array of audio devices.
  */
-export abstract class AbstractAudioEngine implements IDisposable {
+export abstract class AbstractAudioEngine extends AbstractAudioNodeOwner {
     private _devices = new Array<AbstractAudioDevice>();
-    private _nodes = new Array<IAudioNode>();
 
     /** @internal */
     public readonly engine = this;
@@ -33,13 +33,10 @@ export abstract class AbstractAudioEngine implements IDisposable {
     }
 
     /**
-     * Releases all held resources
+     * Releases all held resources.
      */
-    public dispose(): void {
-        for (const node of this._nodes) {
-            node.dispose();
-        }
-        this._nodes.length = 0;
+    public override dispose(): void {
+        super.dispose();
 
         for (const device of this._devices) {
             device.dispose();
@@ -69,7 +66,7 @@ export abstract class AbstractAudioEngine implements IDisposable {
     /**
      * Adds a previously created audio device to this engine.
      * @param device - The audio device to add
-     * @returns The given audio device that was added
+     * @returns The given audio device
      */
     public addDevice(device: AbstractAudioDevice): AbstractAudioDevice {
         if (this.hasDevice(device)) {
@@ -89,30 +86,6 @@ export abstract class AbstractAudioEngine implements IDisposable {
         const index = this._devices.indexOf(device);
         if (index > -1) {
             this._devices.splice(index, 1);
-        }
-    }
-
-    /** @internal */
-    public hasNode(node: IAudioNode): boolean {
-        return this._nodes.includes(node);
-    }
-
-    /** @internal */
-    public addNode(node: IAudioNode): IAudioNode {
-        if (this.hasNode(node)) {
-            return node;
-        }
-
-        this._nodes.push(node);
-
-        return node;
-    }
-
-    /** @internal */
-    public removeNode(node: IAudioNode): void {
-        const index = this._nodes.indexOf(node);
-        if (index > -1) {
-            this._nodes.splice(index, 1);
         }
     }
 }
