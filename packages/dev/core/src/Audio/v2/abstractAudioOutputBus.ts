@@ -38,12 +38,12 @@ export abstract class AbstractAudioOutputBus implements IAudioOutputNode, IAudio
     public readonly engine: AbstractAudioEngine;
 
     /**
-     * Triggered after this node is connected to an audio output node.
+     * Triggered after this node is connected to an audio input node.
      */
     public readonly onInputNodeConnected = new Observable<IAudioInputNode>();
 
     /**
-     * Triggered after this node is disconnected from an audio output node.
+     * Triggered after this node is disconnected from an audio input node.
      */
     public readonly onInputNodeDisonnected = new Observable<IAudioInputNode>();
 
@@ -76,20 +76,10 @@ export abstract class AbstractAudioOutputBus implements IAudioOutputNode, IAudio
             this.disconnect(this._device);
         }
 
-        let connected = false;
-        if (value) {
-            connected = this.connect(value);
-            if (connected) {
-                this._device = value;
-            }
-        }
+        const device = value ?? this.engine.defaultDevice;
+        device.addOutputBus(this);
 
-        if (!connected) {
-            this._device = this.engine.defaultDevice;
-            if (!this.connect(this._device)) {
-                throw new Error("Failed to connect to default audio device");
-            }
-        }
+        this._device = device;
     }
 
     /**

@@ -75,6 +75,9 @@ export abstract class AbstractAudioDevice implements IAudioInputNode {
      */
     public dispose(): void {
         this.engine.removeDevice(this);
+        for (const outputBus of this._outputBusses) {
+            this.removeOutputBus(outputBus);
+        }
     }
 
     /**
@@ -112,8 +115,10 @@ export abstract class AbstractAudioDevice implements IAudioInputNode {
     public removeOutputBus(outputBus: AbstractAudioOutputBus): void {
         const index = this._outputBusses.indexOf(outputBus);
         if (index > -1) {
-            outputBus.disconnect(this);
             this._outputBusses.splice(index, 1);
+
+            outputBus.disconnect(this);
+            outputBus.device = null;
         }
     }
 
