@@ -1,19 +1,22 @@
+import type { AbstractAudioDevice } from "./abstractAudioDevice";
 import type { AbstractAudioEngine } from "./abstractAudioEngine";
-import type { IAudioNode } from "./abstractAudioInterfaces";
+import type { IAudioInputNode, IAudioOutputNode } from "./abstractAudioInterfaces";
+import { Observable } from "../../Misc/observable";
+import type { Nullable } from "../../types";
 
 /**
- * The available options when creating an audio output bus.
+ * The available options when creating an audio device.
  */
-export interface IAudioBusOptions {
+export interface IAudioOutputBusOptions {
     /**
-     * The audio node that owns this device.
-     */
-    owner?: IAudioNode;
-
-    /**
-     * The name of the audio output bus. Defaults to an empty string.
+     * The name of the audio device. Defaults to an empty string.
      */
     name?: string;
+
+    /**
+     * The audio device this bus is connected to. Defaults to the audio engine's default device.
+     */
+    device?: AbstractAudioDevice;
 }
 
 /**
@@ -21,8 +24,8 @@ export interface IAudioBusOptions {
  *
  * All audio devices are assumed to have 2 channels (left and right). More configurations may be supported later.
  */
-export abstract class AbstractAudioOutputBus implements IAudioNode {
-    private _owner: IAudioNode;
+export abstract class AbstractAudioOutputBus implements IAudioOutputNode, IAudioInputNode {
+    private _device: AbstractAudioDevice;
 
     /**
      * The name of the audio device.
@@ -30,22 +33,63 @@ export abstract class AbstractAudioOutputBus implements IAudioNode {
     name: string;
 
     /**
-     * The audio engine that owns this device.
+     * The audio engine this node belongs to.
      */
     public readonly engine: AbstractAudioEngine;
 
     /**
-     * Gets the audio node that owns this device.
+     * Triggered after this node is connected to an audio output node.
      */
-    public get owner(): IAudioNode {
-        return this._owner;
+    public readonly onInputNodeConnected = new Observable<IAudioInputNode>();
+
+    /**
+     * Triggered after this node is disconnected from an audio output node.
+     */
+    public readonly onInputNodeDisonnected = new Observable<IAudioInputNode>();
+
+    /**
+     * Triggered after this node is connected to an audio output node.
+     */
+    public readonly onOutputNodeConnected = new Observable<IAudioOutputNode>();
+
+    /**
+     * Triggered after this node is disconnected from an audio output node.
+     */
+    public readonly onOutputNodeDisonnected = new Observable<IAudioOutputNode>();
+
+    /**
+     * The audio device this bus is connected to.
+     */
+    public get device(): AbstractAudioDevice {
+        return this._device;
     }
 
     /**
-     * Sets the audio node that owns this device.
+     * Sets the audio device this bus is connected to.
      */
-    public set owner(value: IAudioNode) {
-        this._owner = value;
+    public set device(value: Nullable<AbstractAudioDevice>) {
+        if (this._device == value) {
+            return;
+        }
+
+        if (this._device) {
+            this.disconnect(this._device);
+        }
+
+        let connected = false;
+        if (value) {
+            connected = this.connect(value);
+            if (connected) {
+                this._device = value;
+            }
+        }
+
+        if (!connected) {
+            this._device = this.engine.defaultDevice;
+            if (!this.connect(this._device)) {
+                throw new Error("Failed to connect to default audio device");
+            }
+        }
     }
 
     /**
@@ -53,9 +97,61 @@ export abstract class AbstractAudioOutputBus implements IAudioNode {
      * @param engine - The audio engine that owns this device
      * @param options - The options to use when creating the device
      */
-    public constructor(engine: AbstractAudioEngine, options?: IAudioBusOptions) {
-        this._owner = options?.owner ?? engine;
+    public constructor(engine: AbstractAudioEngine, options?: IAudioOutputBusOptions) {
+        this.device = options?.device ?? engine.defaultDevice;
         this.engine = engine;
         this.name = options?.name ?? "";
+
+        this.engine.addNode(this);
+        this.device.addOutputBus(this);
+    }
+
+    /**
+     * Releases all held resources
+     */
+    public dispose(): void {
+        this.device.removeOutputBus(this);
+        this.engine.removeNode(this);
+    }
+
+    /**
+     * Connects this node to another audio node.
+     * @param inputNode - The node to connect to
+     * @returns `true` if the connection was made, or `false` if the connection failed
+     */
+    connect(inputNode: IAudioInputNode): boolean {
+        if (!inputNode.onConnect(this)) {
+            return false;
+        }
+
+        this.onInputNodeConnected.notifyObservers(inputNode);
+
+        return true;
+    }
+
+    /**
+     * Disconnects this node from another audio node.
+     * @param inputNode - The node to disconnect from
+     */
+    disconnect(inputNode: IAudioInputNode): void {
+        this.onInputNodeDisonnected.notifyObservers(inputNode);
+    }
+
+    /**
+     * Called when an audio output node connects to this node.
+     * @param outputNode - The node connecting to this node
+     * @returns `true` if the connection was accepted, or `false` if the connection was denied
+     */
+    onConnect(outputNode: IAudioOutputNode): boolean {
+        this.onOutputNodeConnected.notifyObservers(outputNode);
+        return true;
+    }
+
+    /**
+     * Called when an audio output node disconnects from this node.
+     * @param outputNode - The node disconnecting from this node
+     */
+    onDisconnect(outputNode: IAudioOutputNode): void {
+        this.onOutputNodeDisonnected.notifyObservers(outputNode);
     }
 }

@@ -1,36 +1,50 @@
 import type { AbstractAudioDevice, IAudioDeviceOptions } from "./abstractAudioDevice";
-import type { IAudioInputNode, IAudioOutputNode } from "./abstractAudioInterfaces";
+import type { AbstractAudioOutputBus, IAudioOutputBusOptions } from "./abstractAudioOutputBus";
+import type { IAudioNode } from "./abstractAudioInterfaces";
+import type { IDisposable } from "../../scene";
 
 /**
  * The base class for audio engines.
  *
  * Audio engines are responsible for creating audio nodes and managing audio devices.
  */
-export abstract class AbstractAudioEngine implements IAudioInputNode {
+export abstract class AbstractAudioEngine implements IDisposable {
     private _devices = new Array<AbstractAudioDevice>();
+    private _nodes = new Array<IAudioNode>();
 
     /** @internal */
     public readonly engine = this;
-
-    /** @internal */
-    public readonly owner = this;
 
     /**
      * Gets the default audio device for this engine, creating it if needed.
      */
     public get defaultDevice(): AbstractAudioDevice {
-        if (this.devices.length === 0) {
-            const device = this.createDevice({ name: "Default" });
-            this.addDevice(device);
+        if (this._devices.length === 0) {
+            this.addDevice(this.createDevice({ name: "Default" }));
         }
-        return this.devices[0];
+        return this._devices[0];
     }
 
     /**
-     * Gets the audio devices that are currently connected to this engine.
+     * Gets the audio devices that are currently owned by this engine.
      */
     public get devices(): ReadonlyArray<AbstractAudioDevice> {
         return this._devices;
+    }
+
+    /**
+     * Releases all held resources
+     */
+    public dispose(): void {
+        for (const node of this._nodes) {
+            node.dispose();
+        }
+        this._nodes.length = 0;
+
+        for (const device of this._devices) {
+            device.dispose();
+        }
+        this._devices.length = 0;
     }
 
     /**
@@ -39,8 +53,14 @@ export abstract class AbstractAudioEngine implements IAudioInputNode {
     public abstract createDevice(options?: IAudioDeviceOptions): AbstractAudioDevice;
 
     /**
-     * @param device - The device to check
-     * @returns `true` if the device was added to this engine; otherwise `false`
+     * Creates a new audio device.
+     */
+    public abstract createOutputBus(options?: IAudioOutputBusOptions): AbstractAudioOutputBus;
+
+    /**
+     * Checks if an audio device is currently added to this engine.
+     * @param device - The audio device to check
+     * @returns `true` if the audio device was added to this engine; otherwise `false`
      */
     public hasDevice(device: AbstractAudioDevice): boolean {
         return this._devices.includes(device) ?? false;
@@ -48,8 +68,8 @@ export abstract class AbstractAudioEngine implements IAudioInputNode {
 
     /**
      * Adds a previously created audio device to this engine.
-     * @param device - The device to add
-     * @returns The given device that was added
+     * @param device - The audio device to add
+     * @returns The given audio device that was added
      */
     public addDevice(device: AbstractAudioDevice): AbstractAudioDevice {
         if (this.hasDevice(device)) {
@@ -63,7 +83,7 @@ export abstract class AbstractAudioEngine implements IAudioInputNode {
 
     /**
      * Removes an audio device from this engine.
-     * @param device - The device to remove
+     * @param device - The audio device to remove
      */
     public removeDevice(device: AbstractAudioDevice): void {
         const index = this._devices.indexOf(device);
@@ -72,20 +92,27 @@ export abstract class AbstractAudioEngine implements IAudioInputNode {
         }
     }
 
-    /**
-     * Called when an audio output node connects to this node.
-     * @param outputNode - The node connecting to this node
-     * @returns `true` if the connection was accepted, or `false` if the connection was denied
-     */
-    public onConnect(outputNode: IAudioOutputNode): boolean {
-        return this.defaultDevice.onConnect(outputNode);
+    /** @internal */
+    public hasNode(node: IAudioNode): boolean {
+        return this._nodes.includes(node);
     }
 
-    /**
-     * Called when an audio output node disconnects from this node.
-     * @param outputNode - The node disconnecting from this node
-     */
-    public onDisconnect(outputNode: IAudioOutputNode): void {
-        this.defaultDevice.onDisconnect(outputNode);
+    /** @internal */
+    public addNode(node: IAudioNode): IAudioNode {
+        if (this.hasNode(node)) {
+            return node;
+        }
+
+        this._nodes.push(node);
+
+        return node;
+    }
+
+    /** @internal */
+    public removeNode(node: IAudioNode): void {
+        const index = this._nodes.indexOf(node);
+        if (index > -1) {
+            this._nodes.splice(index, 1);
+        }
     }
 }
