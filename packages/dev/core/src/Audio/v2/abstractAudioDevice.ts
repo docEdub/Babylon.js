@@ -29,9 +29,7 @@ export abstract class AbstractAudioDevice extends AbstractAudioNode {
      * The default audio output bus.
      */
     public get defaultOutputBus(): AbstractAudioOutputBus {
-        if (this._outputBusses.length === 0) {
-            this.addOutputBus(this.engine.createOutputBus({ name: "Default", device: this }));
-        }
+        this._ensureDefaultOutputBusExists();
         return this._outputBusses[0];
     }
 
@@ -39,6 +37,7 @@ export abstract class AbstractAudioDevice extends AbstractAudioNode {
      * The connected audio output busses.
      */
     public get outputBusses(): ReadonlyArray<AbstractAudioOutputBus> {
+        this._ensureDefaultOutputBusExists();
         return this._outputBusses;
     }
 
@@ -91,6 +90,12 @@ export abstract class AbstractAudioDevice extends AbstractAudioNode {
         if (index > -1) {
             this._outputBusses.splice(index, 1);
             outputBus.device = null;
+        }
+    }
+
+    private _ensureDefaultOutputBusExists(): void {
+        if (this._outputBusses.length === 0) {
+            this.addOutputBus(this.engine.createOutputBus({ name: "Default", device: this }));
         }
     }
 }

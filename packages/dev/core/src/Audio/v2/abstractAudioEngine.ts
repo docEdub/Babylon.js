@@ -16,19 +16,18 @@ export abstract class AbstractAudioEngine extends AbstractAudioNodeOwner {
     public readonly engine = this;
 
     /**
-     * Gets the default audio device for this engine, creating it if needed.
+     * Gets the engine's default audio device, creating it if needed.
      */
     public get defaultDevice(): AbstractAudioDevice {
-        if (this._devices.length === 0) {
-            this.addDevice(this.createDevice({ name: "Default" }));
-        }
+        this._ensureDefaultDeviceExists();
         return this._devices[0];
     }
 
     /**
-     * Gets the audio devices that are currently owned by this engine.
+     * Gets the engine's audio devices, creating the default audio device if needed.
      */
     public get devices(): ReadonlyArray<AbstractAudioDevice> {
+        this._ensureDefaultDeviceExists();
         return this._devices;
     }
 
@@ -50,7 +49,7 @@ export abstract class AbstractAudioEngine extends AbstractAudioNodeOwner {
     public abstract createDevice(options?: IAudioDeviceOptions): AbstractAudioDevice;
 
     /**
-     * Creates a new audio device.
+     * Creates a new audio output bus.
      */
     public abstract createOutputBus(options?: IAudioOutputBusOptions): AbstractAudioOutputBus;
 
@@ -86,6 +85,12 @@ export abstract class AbstractAudioEngine extends AbstractAudioNodeOwner {
         const index = this._devices.indexOf(device);
         if (index > -1) {
             this._devices.splice(index, 1);
+        }
+    }
+
+    private _ensureDefaultDeviceExists(): void {
+        if (this._devices.length === 0) {
+            this.addDevice(this.createDevice({ name: "Default" }));
         }
     }
 }
