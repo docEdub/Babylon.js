@@ -1,5 +1,5 @@
-import { AbstractAudioBusBase } from "./abstractAudioBusBase";
-import type { IAudioBusBaseOptions } from "./abstractAudioBusBase";
+import { AbstractAudioBusNode } from "./abstractAudioBusNode";
+import type { IAudioBusNodeOptions } from "./abstractAudioBusNode";
 import type { AbstractAudioDevice } from "./abstractAudioDevice";
 import type { AbstractAudioEngine } from "./abstractAudioEngine";
 import type { Nullable } from "../../types";
@@ -7,12 +7,12 @@ import type { Nullable } from "../../types";
 /**
  * The options available when creating audio output busses.
  */
-export interface IMainAudioBusOptions extends IAudioBusBaseOptions {}
+export interface IMainAudioBusOptions extends IAudioBusNodeOptions {}
 
 /**
- * The base class for audio output busses.
+ *
  */
-export abstract class AbstractMainAudioBus extends AbstractAudioBusBase {
+export abstract class AbstractMainAudioBus extends AbstractAudioBusNode {
     private _device: Nullable<AbstractAudioDevice> = null;
 
     /**

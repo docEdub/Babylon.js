@@ -21,23 +21,12 @@ export enum AudioNodeType {
 /**
  * The options available when creating audio nodes.
  */
-export interface IAudioNodeOptions {
-    /**
-     * The name of the audio device. Defaults to an empty string.
-     */
-    name?: string;
-}
+export interface IAudioNodeOptions {}
 
 /**
  * The base class for audio nodes.
- *
- * Responsibilities:
- *  - Keep track of connections to other audio nodes.
- *  - Update audio engine when created and disposed.
  */
 export abstract class AbstractAudioNode implements IDisposable {
-    private _name: string;
-
     /**
      * The connected downstream audio nodes.
      *
@@ -56,17 +45,6 @@ export abstract class AbstractAudioNode implements IDisposable {
      * The audio node's audio engine.
      */
     public readonly engine: AbstractAudioEngine;
-
-    /**
-     * The audio node's name.
-     */
-    public get name(): string {
-        return this._name;
-    }
-
-    public set name(value: string) {
-        this._name = value;
-    }
 
     /**
      * The audio node's type.
@@ -93,7 +71,6 @@ export abstract class AbstractAudioNode implements IDisposable {
      */
     public constructor(nodeType: AudioNodeType, engine: AbstractAudioEngine, options?: IAudioNodeOptions) {
         this.engine = engine;
-        this._name = options?.name ?? "";
 
         if (nodeType | AudioNodeType.Input) {
             this.connectedDownstreamNodes = new Array<AbstractAudioNode>();
@@ -149,7 +126,7 @@ export abstract class AbstractAudioNode implements IDisposable {
 
     /**
      * Disconnects a downstream audio downstream node.
-     * @param node - The downstream audio downstream node to disconnect
+     * @param node - The downstream audio node to disconnect
      */
     public disconnect(node: AbstractAudioNode): void {
         if (!this.connectedDownstreamNodes) {
@@ -162,6 +139,7 @@ export abstract class AbstractAudioNode implements IDisposable {
         }
 
         this.connectedDownstreamNodes.splice(index, 1);
+
         node._onDisconnect(this);
     }
 

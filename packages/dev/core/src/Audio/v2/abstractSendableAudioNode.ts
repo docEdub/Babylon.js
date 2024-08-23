@@ -1,17 +1,18 @@
 import type { AbstractAudioEngine } from "./abstractAudioEngine";
-import { AbstractAudioNode } from "./abstractAudioNode";
-import type { IAudioNodeOptions, AudioNodeType } from "./abstractAudioNode";
+import type { AudioNodeType } from "./abstractAudioNode";
+import { AbstractNamedAudioNode } from "./abstractNamedAudioNode";
+import type { INamedAudioNodeOptions } from "./abstractNamedAudioNode";
 import type { AbstractAudioSend } from "./abstractAudioSend";
 
 /**
  *
  */
-export interface ISendableAudioNodeOptions extends IAudioNodeOptions {}
+export interface ISendableAudioNodeOptions extends INamedAudioNodeOptions {}
 
 /**
  *
  */
-export abstract class AbstractSendableAudioNode extends AbstractAudioNode {
+export abstract class AbstractSendableAudioNode extends AbstractNamedAudioNode {
     private _sends = new Array<AbstractAudioSend>();
 
     /**

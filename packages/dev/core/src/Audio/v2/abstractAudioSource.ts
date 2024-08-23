@@ -1,4 +1,4 @@
-import type { AbstractAudioBusBase } from "./abstractAudioBusBase";
+import type { AbstractAudioBusNode } from "./abstractAudioBusNode";
 import type { AbstractAudioEngine } from "./abstractAudioEngine";
 import { AudioNodeType } from "./abstractAudioNode";
 import { AbstractSendableAudioNode } from "./abstractSendableAudioNode";
@@ -14,12 +14,12 @@ export interface IAudioSourceOptions extends ISendableAudioNodeOptions {}
  *
  */
 export abstract class AbstractAudioSource extends AbstractSendableAudioNode {
-    private _outputBus: Nullable<AbstractAudioBusBase> = null;
+    private _outputBus: Nullable<AbstractAudioBusNode> = null;
 
     /**
      *
      */
-    public get outputBus(): Nullable<AbstractAudioBusBase> {
+    public get outputBus(): Nullable<AbstractAudioBusNode> {
         return this._outputBus;
     }
 
@@ -27,7 +27,7 @@ export abstract class AbstractAudioSource extends AbstractSendableAudioNode {
      *
      * @param outputBus
      */
-    public setOutputBus(outputBus: Nullable<AbstractAudioBusBase>) {
+    public setOutputBus(outputBus: Nullable<AbstractAudioBusNode>) {
         if (this._outputBus === outputBus) {
             return;
         }
