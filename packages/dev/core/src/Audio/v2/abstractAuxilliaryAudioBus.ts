@@ -2,15 +2,16 @@
 /* eslint-disable jsdoc/require-jsdoc */
 
 import { AbstractAudioBusNode } from "./abstractAudioBusNode";
-import type { IAudioBusNodeOptions } from "./abstractAudioBusNode";
 import type { AbstractAudioEngine } from "./abstractAudioEngine";
 import type { AbstractAudioSend } from "./abstractAudioSend";
 import type { IAudioNodeWithSends } from "./IAudioNodeWithSends";
 import type { Nullable } from "../../types";
 
-export interface IAuxilliaryAudioBusOptions extends IAudioBusNodeOptions {}
-
 export abstract class AbstractAuxilliaryAudioBus extends AbstractAudioBusNode implements IAudioNodeWithSends {
+    public constructor(name: string, engine: AbstractAudioEngine) {
+        super(name, engine);
+    }
+
     private _outputBus: Nullable<AbstractAudioBusNode> = null;
 
     public get outputBus(): Nullable<AbstractAudioBusNode> {
@@ -23,18 +24,14 @@ export abstract class AbstractAuxilliaryAudioBus extends AbstractAudioBusNode im
         }
 
         if (this._outputBus) {
-            this.disconnect(this._outputBus);
+            this._disconnect(this._outputBus);
         }
 
         this._outputBus = outputBus;
 
         if (this._outputBus) {
-            this.connect(this._outputBus);
+            this._connect(this._outputBus);
         }
-    }
-
-    public constructor(engine: AbstractAudioEngine, options?: IAuxilliaryAudioBusOptions) {
-        super(engine, options);
     }
 
     private _sends = new Array<AbstractAudioSend>();

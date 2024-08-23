@@ -3,12 +3,9 @@
 
 import type { AbstractAudioEngine } from "./abstractAudioEngine";
 import { AbstractAudioNode, AudioNodeType } from "./abstractAudioNode";
-import type { IAudioNodeOptions } from "./abstractAudioNode";
-
-export interface IAudioDeviceOptions extends IAudioNodeOptions {}
 
 export abstract class AbstractAudioDevice extends AbstractAudioNode {
-    public constructor(engine: AbstractAudioEngine, options?: IAudioDeviceOptions) {
-        super(AudioNodeType.Input, engine, options);
+    public constructor(name: string, engine: AbstractAudioEngine) {
+        super(name, engine, AudioNodeType.Input);
     }
 }

@@ -6,9 +6,13 @@ import { AbstractAudioNode, AudioNodeType } from "./abstractAudioNode";
 import type { AbstractSoundSource } from "./abstractSoundSource";
 
 export abstract class AbstractSoundSourceReference extends AbstractAudioNode {
+    public constructor(name: string, engine: AbstractAudioEngine) {
+        super(name, engine, AudioNodeType.InputOutput);
+    }
+
     private _soundSource: AbstractSoundSource;
 
-    public constructor(engine: AbstractAudioEngine, options?: any) {
-        super(AudioNodeType.InputOutput, engine, options);
+    public get soundSource(): AbstractSoundSource {
+        return this._soundSource;
     }
 }

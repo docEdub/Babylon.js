@@ -1,36 +1,44 @@
 /* eslint-disable babylonjs/available */
 /* eslint-disable jsdoc/require-jsdoc */
 
-import type { AbstractAudioDevice, IAudioDeviceOptions } from "./abstractAudioDevice";
+import type { AbstractAudioDevice } from "./abstractAudioDevice";
 import type { AbstractAudioNode } from "./abstractAudioNode";
-import type { AbstractMainAudioBus, IMainAudioBusOptions } from "./abstractMainAudioBus";
-import type { IAudioNodeOwner } from "./IAudioNodeOwner";
+import type { AbstractMainAudioBus } from "./abstractMainAudioBus";
+import type { IAudioNodeParent } from "./IAudioNodeParent";
 
-export abstract class AbstractAudioEngine implements IAudioNodeOwner {
-    private _nodes = new Array<AbstractAudioNode>();
-
+export abstract class AbstractAudioEngine implements IAudioNodeParent {
     public dispose(): void {
-        for (const node of this._nodes) {
+        for (const node of this._childNodes) {
             node.dispose();
         }
-        this._nodes.length = 0;
+        this._childNodes.length = 0;
     }
 
-    public addNode(node: AbstractAudioNode): AbstractAudioNode {
-        if (this._nodes.includes(node)) {
-            return node;
+    private _childNodes = new Array<AbstractAudioNode>();
+
+    public _addChildNode(node: AbstractAudioNode): void {
+        if (!this._childNodes) {
+            this._childNodes = new Array<AbstractAudioNode>();
+        } else if (this._childNodes.includes(node)) {
+            return;
         }
-        this._nodes.push(node);
-        return node;
+
+        this._childNodes.push(node);
     }
 
-    public removeNode(node: AbstractAudioNode): void {
-        const index = this._nodes.indexOf(node);
-        if (index > -1) {
-            this._nodes.splice(index, 1);
+    public _removeChildNode(node: AbstractAudioNode): void {
+        if (!this._childNodes) {
+            return;
         }
+
+        const index = this._childNodes.indexOf(node);
+        if (index < 0) {
+            return;
+        }
+
+        this._childNodes.splice(index, 1);
     }
 
-    public abstract createDevice(options?: IAudioDeviceOptions): AbstractAudioDevice;
-    public abstract createOutputBus(device: AbstractMainAudioBus, options?: IMainAudioBusOptions): AbstractMainAudioBus;
+    public abstract createDevice(name: string): AbstractAudioDevice;
+    public abstract createMainBus(name: string): AbstractMainAudioBus;
 }

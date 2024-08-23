@@ -2,42 +2,37 @@
 /* eslint-disable jsdoc/require-jsdoc */
 
 import { AbstractAudioBusNode } from "./abstractAudioBusNode";
-import type { IAudioBusNodeOptions } from "./abstractAudioBusNode";
 import type { AbstractAudioEngine } from "./abstractAudioEngine";
 import type { AbstractAudioSend } from "./abstractAudioSend";
 import type { AbstractMainAudioBus } from "./abstractMainAudioBus";
 import type { IAudioNodeWithSends } from "./IAudioNodeWithSends";
 import type { Nullable } from "../../types";
 
-type AbstractAudioBusOutputBus = AbstractMainAudioBus | AbstractAudioBus;
-
-export interface IAudioBusOptions extends IAudioBusNodeOptions {}
-
 export abstract class AbstractAudioBus extends AbstractAudioBusNode implements IAudioNodeWithSends {
-    private _outputBus: Nullable<AbstractAudioBusOutputBus> = null;
+    public constructor(name: string, engine: AbstractAudioEngine) {
+        super(name, engine);
+    }
 
-    public get outputBus(): Nullable<AbstractAudioBusOutputBus> {
+    private _outputBus: Nullable<AbstractMainAudioBus | AbstractAudioBus> = null;
+
+    public get outputBus(): Nullable<AbstractMainAudioBus | AbstractAudioBus> {
         return this._outputBus;
     }
 
-    public setOutputBus(outputBus: Nullable<AbstractAudioBusOutputBus>) {
+    public setOutputBus(outputBus: Nullable<AbstractMainAudioBus | AbstractAudioBus>) {
         if (this._outputBus === outputBus) {
             return;
         }
 
         if (this._outputBus) {
-            this.disconnect(this._outputBus);
+            this._disconnect(this._outputBus);
         }
 
         this._outputBus = outputBus;
 
         if (this._outputBus) {
-            this.connect(this._outputBus);
+            this._connect(this._outputBus);
         }
-    }
-
-    public constructor(engine: AbstractAudioEngine, options?: IAudioBusOptions) {
-        super(engine, options);
     }
 
     private _sends = new Array<AbstractAudioSend>();
