@@ -1,7 +1,23 @@
 import type { AbstractAudioEngine } from "./abstractAudioEngine";
 import { Observable } from "../../Misc/observable";
 import type { IDisposable } from "../../scene";
-import type { Nullable } from "../../types";
+
+export enum AudioNodeType {
+    /**
+     * Input nodes receive audio data from an upstream node.
+     */
+    Input = 1,
+
+    /**
+     * Output nodes send audio data to a downstream node.
+     */
+    Output = 2,
+
+    /**
+     * Input/Output nodes receive audio data from an upstream node and send audio data to a downstream node.
+     */
+    InputOutput = 3,
+}
 
 /**
  * The options available when creating audio nodes.
@@ -17,25 +33,61 @@ export interface IAudioNodeOptions {
  * The base class for audio nodes.
  *
  * Responsibilities:
- *  - Track connections to other audio nodes.
- *  - Inform audio engine when created and disposed.
+ *  - Keep track of connections to other audio nodes.
+ *  - Update audio engine when created and disposed.
  */
 export class AbstractAudioNode implements IDisposable {
     private _name: string;
-    private _connectedDownstreamNodes: Nullable<Array<AbstractAudioNode>>;
-    private _connectedUpstreamNodes: Nullable<Array<AbstractAudioNode>>;
-    private _onDownstreamNodeConnected: Nullable<Observable<AbstractAudioNode>>;
-    private _onDownstreamNodeDisconnected: Nullable<Observable<AbstractAudioNode>>;
-    private _onUpstreamNodeConnected: Nullable<Observable<AbstractAudioNode>>;
-    private _onUpstreamNodeDisconnected: Nullable<Observable<AbstractAudioNode>>;
 
     /**
-     * The audio engine the node belongs to.
+     * The connected downstream audio nodes.
+     *
+     * This property is undefined for input nodes.
+     */
+    public readonly connectedDownstreamNodes?: Array<AbstractAudioNode>;
+
+    /**
+     * Triggered after connecting to a downstream audio node.
+     *
+     * This property is undefined for input nodes.
+     */
+    public readonly onDownstreamNodeConnected?: Observable<AbstractAudioNode>;
+
+    /**
+     * Triggered after disconnecting from a downstream audio node.
+     *
+     * This property is undefined for input nodes.
+     */
+    public readonly onDownstreamNodeDisconnected?: Observable<AbstractAudioNode>;
+
+    /**
+     * The connected upstream audio nodes.
+     *
+     * This property is undefined for output nodes.
+     */
+    public readonly connectedUpstreamNodes?: Array<AbstractAudioNode>;
+
+    /**
+     * Triggered after connecting to an upstream audio node.
+     *
+     * This property is undefined for output nodes.
+     */
+    public readonly onUpstreamNodeConnected?: Observable<AbstractAudioNode>;
+
+    /**
+     * Triggered after disconnecting from an upstream audio node.
+     *
+     * This property is undefined for output nodes.
+     */
+    public readonly onUpstreamNodeDisconnected?: Observable<AbstractAudioNode>;
+
+    /**
+     * The audio node's audio engine.
      */
     public readonly engine: AbstractAudioEngine;
 
     /**
-     * The name of the audio node.
+     * The audio node's name.
      */
     public get name(): string {
         return this._name;
@@ -46,73 +98,26 @@ export class AbstractAudioNode implements IDisposable {
     }
 
     /**
-     * The connected downstream audio nodes.
-     */
-    public get connectedDownstreamNodes(): Array<AbstractAudioNode> {
-        if (!this._connectedDownstreamNodes) {
-            this._connectedDownstreamNodes = new Array<AbstractAudioNode>();
-        }
-        return this._connectedDownstreamNodes;
-    }
-
-    /**
-     * The connected upstream audio nodes.
-     */
-    public get connectedUpstreamNodes(): Array<AbstractAudioNode> {
-        if (!this._connectedUpstreamNodes) {
-            this._connectedUpstreamNodes = new Array<AbstractAudioNode>();
-        }
-        return this._connectedUpstreamNodes;
-    }
-
-    /**
-     * Triggered after connecting to a downstream audio node.
-     */
-    public get onDownstreamNodeConnected(): Observable<AbstractAudioNode> {
-        if (!this._onDownstreamNodeConnected) {
-            this._onDownstreamNodeConnected = new Observable<AbstractAudioNode>();
-        }
-        return this._onDownstreamNodeConnected;
-    }
-
-    /**
-     * Triggered after disconnecting from a downstream audio node.
-     */
-    public get onDownstreamNodeDisconnected(): Observable<AbstractAudioNode> {
-        if (!this._onDownstreamNodeDisconnected) {
-            this._onDownstreamNodeDisconnected = new Observable<AbstractAudioNode>();
-        }
-        return this._onDownstreamNodeDisconnected;
-    }
-
-    /**
-     * Triggered after connecting to an upstream audio node.
-     */
-    public get onUpstreamNodeConnected(): Observable<AbstractAudioNode> {
-        if (!this._onUpstreamNodeConnected) {
-            this._onUpstreamNodeConnected = new Observable<AbstractAudioNode>();
-        }
-        return this._onUpstreamNodeConnected;
-    }
-
-    /**
-     * Triggered after disconnecting from an upstream audio node.
-     */
-    public get onUpstreamNodeDisconnected(): Observable<AbstractAudioNode> {
-        if (!this._onUpstreamNodeDisconnected) {
-            this._onUpstreamNodeDisconnected = new Observable<AbstractAudioNode>();
-        }
-        return this._onUpstreamNodeDisconnected;
-    }
-
-    /**
      * Creates a new audio node.
-     * @param engine - The node's owning audio engine
+     * @param nodeType - The type of audio node
+     * @param engine - The node's audio engine
      * @param options - The node's initial options
      */
-    public constructor(engine: AbstractAudioEngine, options?: IAudioNodeOptions) {
+    public constructor(nodeType: AudioNodeType, engine: AbstractAudioEngine, options?: IAudioNodeOptions) {
         this.engine = engine;
         this._name = options?.name ?? "";
+
+        if (nodeType | AudioNodeType.Input) {
+            this.connectedDownstreamNodes = [];
+            this.onDownstreamNodeConnected = new Observable<AbstractAudioNode>();
+            this.onDownstreamNodeDisconnected = new Observable<AbstractAudioNode>();
+        }
+
+        if (nodeType | AudioNodeType.Output) {
+            this.connectedUpstreamNodes = [];
+            this.onUpstreamNodeConnected = new Observable<AbstractAudioNode>();
+            this.onUpstreamNodeDisconnected = new Observable<AbstractAudioNode>();
+        }
 
         engine.addNode(this);
     }
@@ -121,20 +126,18 @@ export class AbstractAudioNode implements IDisposable {
      * Releases all held resources.
      */
     public dispose(): void {
-        if (this._connectedDownstreamNodes) {
-            for (const node of this._connectedDownstreamNodes) {
+        if (this.connectedDownstreamNodes) {
+            for (const node of this.connectedDownstreamNodes) {
                 this.disconnect(node);
             }
-            this._connectedDownstreamNodes.length = 0;
-            this._connectedDownstreamNodes = null;
+            this.connectedDownstreamNodes.length = 0;
         }
 
-        if (this._connectedUpstreamNodes) {
-            for (const node of this._connectedUpstreamNodes) {
+        if (this.connectedUpstreamNodes) {
+            for (const node of this.connectedUpstreamNodes) {
                 node.disconnect(this);
             }
-            this._connectedUpstreamNodes.length = 0;
-            this._connectedUpstreamNodes = null;
+            this.connectedUpstreamNodes.length = 0;
         }
 
         this.engine.removeNode(this);
@@ -145,9 +148,20 @@ export class AbstractAudioNode implements IDisposable {
      * @param node - The downstream audio node to connect
      */
     public connect(node: AbstractAudioNode): void {
-        node._onConnect(this);
+        if (!this.connectedDownstreamNodes) {
+            return;
+        }
+
+        if (this.connectedDownstreamNodes.includes(node)) {
+            return;
+        }
+
+        if (!node._onConnect(this)) {
+            return;
+        }
+
         this.connectedDownstreamNodes.push(node);
-        this.onDownstreamNodeConnected.notifyObservers(node);
+        this.onDownstreamNodeConnected!.notifyObservers(node);
     }
 
     /**
@@ -155,23 +169,38 @@ export class AbstractAudioNode implements IDisposable {
      * @param node - The downstream audio downstream node to disconnect
      */
     public disconnect(node: AbstractAudioNode): void {
-        node._onDisconnect(this);
-
-        if (!this._connectedDownstreamNodes) {
+        if (!this.connectedDownstreamNodes) {
             return;
         }
 
-        this._connectedDownstreamNodes = this._connectedDownstreamNodes.filter((node) => node !== node);
-        this.onDownstreamNodeDisconnected.notifyObservers(node);
+        const index = this.connectedDownstreamNodes.indexOf(node);
+        if (index < 0) {
+            return;
+        }
+
+        this.connectedDownstreamNodes.splice(index, 1);
+        node._onDisconnect(this);
+        this.onDownstreamNodeDisconnected!.notifyObservers(node);
     }
 
     /**
      * Called when an upstream audio node connects.
      * @param node - The connecting upstream audio node
+     * @returns `true` if the connection was successful; otherwise `false`
      */
-    protected _onConnect(node: AbstractAudioNode): void {
+    protected _onConnect(node: AbstractAudioNode): boolean {
+        if (!this.connectedUpstreamNodes) {
+            return false;
+        }
+
+        if (this.connectedUpstreamNodes.includes(node)) {
+            return true;
+        }
+
         this.connectedUpstreamNodes.push(node);
-        this.onUpstreamNodeConnected.notifyObservers(node);
+        this.onUpstreamNodeConnected!.notifyObservers(node);
+
+        return true;
     }
 
     /**
@@ -179,11 +208,16 @@ export class AbstractAudioNode implements IDisposable {
      * @param node - The disconnecting upstream audio node
      */
     protected _onDisconnect(node: AbstractAudioNode): void {
-        if (!this._connectedUpstreamNodes) {
+        if (!this.connectedUpstreamNodes) {
             return;
         }
 
-        this._connectedUpstreamNodes = this._connectedUpstreamNodes.filter((node) => node !== node);
-        this.onUpstreamNodeDisconnected.notifyObservers(node);
+        const index = this.connectedUpstreamNodes.indexOf(node);
+        if (index < 0) {
+            return;
+        }
+
+        this.connectedUpstreamNodes.splice(index, 1);
+        this.onUpstreamNodeDisconnected!.notifyObservers(node);
     }
 }
