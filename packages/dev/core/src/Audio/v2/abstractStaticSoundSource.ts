@@ -4,7 +4,7 @@
 import type { AbstractAudioEngine } from "./abstractAudioEngine";
 import { AbstractSoundSource } from "./abstractSoundSource";
 
-export abstract class AbstractStaticSound extends AbstractSoundSource {
+export abstract class AbstractStaticSoundSource extends AbstractSoundSource {
     public constructor(engine: AbstractAudioEngine, options?: any) {
         super(engine, options);
     }
