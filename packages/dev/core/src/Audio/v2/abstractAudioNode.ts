@@ -98,6 +98,23 @@ export class AbstractAudioNode implements IDisposable {
     }
 
     /**
+     * The audio node's type.
+     */
+    public get type(): AudioNodeType {
+        let type = 0;
+
+        if (this.connectedDownstreamNodes) {
+            type |= AudioNodeType.Output;
+        }
+
+        if (this.connectedUpstreamNodes) {
+            type |= AudioNodeType.Input;
+        }
+
+        return type;
+    }
+
+    /**
      * Creates a new audio node.
      * @param nodeType - The type of audio node
      * @param engine - The node's audio engine
