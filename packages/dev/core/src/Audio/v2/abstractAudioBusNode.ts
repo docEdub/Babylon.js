@@ -1,21 +1,14 @@
-import type { AbstractAudioEngine } from "./abstractAudioEngine";
-import { AbstractAudioNode, AudioNodeType } from "./abstractAudioNode";
-import type { IAudioNodeOptions } from "./abstractAudioNode";
+/* eslint-disable babylonjs/available */
+/* eslint-disable jsdoc/require-jsdoc */
 
-/**
- * The options available when creating audio busses.
- */
+import type { AbstractAudioEngine } from "./abstractAudioEngine";
+import { AudioNodeType } from "./abstractAudioNode";
+import type { IAudioNodeOptions } from "./abstractAudioNode";
+import { AbstractNamedAudioNode } from "./abstractNamedAudioNode";
+
 export interface IAudioBusNodeOptions extends IAudioNodeOptions {}
 
-/**
- *
- */
-export abstract class AbstractAudioBusNode extends AbstractAudioNode {
-    /**
-     *
-     * @param engine
-     * @param options
-     */
+export abstract class AbstractAudioBusNode extends AbstractNamedAudioNode {
     public constructor(engine: AbstractAudioEngine, options?: IAudioBusNodeOptions) {
         super(AudioNodeType.InputOutput, engine, options);
     }

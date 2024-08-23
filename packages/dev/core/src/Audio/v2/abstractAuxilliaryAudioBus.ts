@@ -1,26 +1,20 @@
 /* eslint-disable babylonjs/available */
 /* eslint-disable jsdoc/require-jsdoc */
 
-import type { AbstractAudioBusNode } from "./abstractAudioBusNode";
+import { AbstractAudioBusNode } from "./abstractAudioBusNode";
+import type { IAudioBusNodeOptions } from "./abstractAudioBusNode";
 import type { AbstractAudioEngine } from "./abstractAudioEngine";
-import { AudioNodeType } from "./abstractAudioNode";
 import type { AbstractAudioSend } from "./abstractAudioSend";
-import { AbstractNamedAudioNode } from "./abstractNamedAudioNode";
-import type { INamedAudioNodeOptions } from "./abstractNamedAudioNode";
 import type { IAudioNodeWithSends } from "./IAudioNodeWithSends";
 import type { Nullable } from "../../types";
 
-export interface IAudioSourceOptions extends INamedAudioNodeOptions {}
+export interface IAuxilliaryAudioBusOptions extends IAudioBusNodeOptions {}
 
-export abstract class AbstractAudioSource extends AbstractNamedAudioNode implements IAudioNodeWithSends {
+export abstract class AbstractAuxilliaryAudioBus extends AbstractAudioBusNode implements IAudioNodeWithSends {
     private _outputBus: Nullable<AbstractAudioBusNode> = null;
 
     public get outputBus(): Nullable<AbstractAudioBusNode> {
         return this._outputBus;
-    }
-
-    public constructor(engine: AbstractAudioEngine, options?: IAudioSourceOptions) {
-        super(AudioNodeType.Output, engine, options);
     }
 
     public setOutputBus(outputBus: Nullable<AbstractAudioBusNode>) {
@@ -37,6 +31,10 @@ export abstract class AbstractAudioSource extends AbstractNamedAudioNode impleme
         if (this._outputBus) {
             this.connect(this._outputBus);
         }
+    }
+
+    public constructor(engine: AbstractAudioEngine, options?: IAuxilliaryAudioBusOptions) {
+        super(engine, options);
     }
 
     private _sends = new Array<AbstractAudioSend>();

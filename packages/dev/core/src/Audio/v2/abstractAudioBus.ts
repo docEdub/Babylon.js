@@ -1,29 +1,26 @@
 /* eslint-disable babylonjs/available */
 /* eslint-disable jsdoc/require-jsdoc */
 
-import type { AbstractAudioBusNode } from "./abstractAudioBusNode";
+import { AbstractAudioBusNode } from "./abstractAudioBusNode";
+import type { IAudioBusNodeOptions } from "./abstractAudioBusNode";
 import type { AbstractAudioEngine } from "./abstractAudioEngine";
-import { AudioNodeType } from "./abstractAudioNode";
 import type { AbstractAudioSend } from "./abstractAudioSend";
-import { AbstractNamedAudioNode } from "./abstractNamedAudioNode";
-import type { INamedAudioNodeOptions } from "./abstractNamedAudioNode";
+import type { AbstractMainAudioBus } from "./abstractMainAudioBus";
 import type { IAudioNodeWithSends } from "./IAudioNodeWithSends";
 import type { Nullable } from "../../types";
 
-export interface IAudioSourceOptions extends INamedAudioNodeOptions {}
+type AbstractAudioBusOutputBus = AbstractMainAudioBus | AbstractAudioBus;
 
-export abstract class AbstractAudioSource extends AbstractNamedAudioNode implements IAudioNodeWithSends {
-    private _outputBus: Nullable<AbstractAudioBusNode> = null;
+export interface IAudioBusOptions extends IAudioBusNodeOptions {}
 
-    public get outputBus(): Nullable<AbstractAudioBusNode> {
+export abstract class AbstractAudioBus extends AbstractAudioBusNode implements IAudioNodeWithSends {
+    private _outputBus: Nullable<AbstractAudioBusOutputBus> = null;
+
+    public get outputBus(): Nullable<AbstractAudioBusOutputBus> {
         return this._outputBus;
     }
 
-    public constructor(engine: AbstractAudioEngine, options?: IAudioSourceOptions) {
-        super(AudioNodeType.Output, engine, options);
-    }
-
-    public setOutputBus(outputBus: Nullable<AbstractAudioBusNode>) {
+    public setOutputBus(outputBus: Nullable<AbstractAudioBusOutputBus>) {
         if (this._outputBus === outputBus) {
             return;
         }
@@ -37,6 +34,10 @@ export abstract class AbstractAudioSource extends AbstractNamedAudioNode impleme
         if (this._outputBus) {
             this.connect(this._outputBus);
         }
+    }
+
+    public constructor(engine: AbstractAudioEngine, options?: IAudioBusOptions) {
+        super(engine, options);
     }
 
     private _sends = new Array<AbstractAudioSend>();
