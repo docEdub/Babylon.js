@@ -4,6 +4,8 @@
 import type { AbstractAudioDevice } from "./abstractAudioDevice";
 import type { AbstractAudioNode } from "./abstractAudioNode";
 import type { AbstractMainAudioBus } from "./abstractMainAudioBus";
+import type { AbstractStaticSoundInstance } from "./abstractStaticSoundInstance";
+import type { AbstractStaticSoundSource } from "./abstractStaticSoundSource";
 import type { IAudioNodeParent } from "./IAudioNodeParent";
 
 export abstract class AbstractAudioEngine implements IAudioNodeParent {
@@ -41,4 +43,5 @@ export abstract class AbstractAudioEngine implements IAudioNodeParent {
 
     public abstract createDevice(name: string): AbstractAudioDevice;
     public abstract createMainBus(name: string): AbstractMainAudioBus;
+    public abstract createStaticSoundInstance(source: AbstractStaticSoundSource): AbstractStaticSoundInstance;
 }

@@ -2,9 +2,9 @@
 /* eslint-disable jsdoc/require-jsdoc */
 
 import type { AbstractAudioEngine } from "./abstractAudioEngine";
-import { AbstractAudioNode, AudioNodeType } from "./abstractAudioNode";
+import { AbstractNamedAudioNode, AudioNodeType } from "./abstractAudioNode";
 
-export abstract class AbstractAudioBusNode extends AbstractAudioNode {
+export abstract class AbstractAudioBusNode extends AbstractNamedAudioNode {
     public constructor(name: string, engine: AbstractAudioEngine) {
         super(name, engine, AudioNodeType.InputOutput);
     }

@@ -25,13 +25,10 @@ export enum AudioNodeType {
 export abstract class AbstractAudioNode implements IAudioNodeParent {
     /**
      * Creates a new audio node.
-     * @param name - The name to be given to this audio node
      * @param engine - The audio engine this node will be added to
      * @param nodeType - The type of audio node
      */
-    public constructor(name: string, engine: AbstractAudioEngine, nodeType: AudioNodeType) {
-        this.name = name;
-
+    public constructor(engine: AbstractAudioEngine, nodeType: AudioNodeType) {
         this.engine = engine;
         engine._addChildNode(this);
 
@@ -72,7 +69,6 @@ export abstract class AbstractAudioNode implements IAudioNodeParent {
         this.parent._removeChildNode(this);
     }
 
-    public name: string;
     public engine: AbstractAudioEngine;
 
     // If parent is null, node is owned by audio engine.
@@ -222,4 +218,13 @@ export abstract class AbstractAudioNode implements IAudioNodeParent {
 
         this._connectedUpstreamNodes.splice(index, 1);
     }
+}
+
+export abstract class AbstractNamedAudioNode extends AbstractAudioNode {
+    public constructor(name: string, engine: AbstractAudioEngine, nodeType: AudioNodeType) {
+        super(engine, nodeType);
+        this.name = name;
+    }
+
+    public name: string;
 }

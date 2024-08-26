@@ -2,10 +2,16 @@
 /* eslint-disable jsdoc/require-jsdoc */
 
 import type { AbstractAudioEngine } from "./abstractAudioEngine";
+import type { ISoundSourceOptions } from "./abstractSoundSource";
 import { AbstractSoundSource } from "./abstractSoundSource";
 
+export interface IStaticSoundSourceOptions extends ISoundSourceOptions {
+    loopStart?: number;
+    loopEnd?: number;
+}
+
 export abstract class AbstractStaticSoundSource extends AbstractSoundSource {
-    public constructor(name: string, engine: AbstractAudioEngine) {
-        super(name, engine);
+    public constructor(name: string, engine: AbstractAudioEngine, options?: IStaticSoundSourceOptions) {
+        super(name, engine, options);
     }
 }

@@ -2,10 +2,89 @@
 /* eslint-disable jsdoc/require-jsdoc */
 
 import type { AbstractAudioEngine } from "./abstractAudioEngine";
-import { AbstractAudioNode, AudioNodeType } from "./abstractAudioNode";
+import type { AbstractSoundInstance } from "./abstractSoundInstance";
+import type { AbstractSoundObject } from "./abstractSoundObject";
+import type { Nullable } from "../../types";
 
-export abstract class AbstractSoundSource extends AbstractAudioNode {
-    public constructor(name: string, engine: AbstractAudioEngine) {
-        super(name, engine, AudioNodeType.Output);
+export interface ISoundSourceOptions {
+    autoplay?: boolean;
+    loop?: boolean;
+}
+
+export abstract class AbstractSoundSource {
+    public constructor(name: string, engine: AbstractAudioEngine, options: Nullable<ISoundSourceOptions> = null) {
+        this.name = name;
+        this.engine = engine;
+
+        this.autoplay = options?.autoplay ?? false;
+        this.loop = options?.loop ?? false;
+    }
+
+    public name: string;
+    public readonly engine: AbstractAudioEngine;
+    public readonly autoplay: boolean;
+    public readonly loop: boolean;
+
+    protected _parent: Nullable<AbstractSoundObject> = null;
+    protected _soundInstances: Nullable<Array<AbstractSoundInstance>> = null;
+
+    public play(): AbstractSoundInstance {
+        const instance = this.engine.createStaticSoundInstance(this);
+        this._getSoundInstances().push(instance);
+
+        instance.onEndedObservable.add((instance) => {
+            this._onSoundInstanceEnded(instance);
+        });
+
+        instance.play();
+
+        return instance;
+    }
+
+    public pause(): void {
+        if (!this._soundInstances) {
+            return;
+        }
+
+        for (const instance of this._soundInstances) {
+            instance.pause();
+        }
+    }
+
+    public resume(): void {
+        if (!this._soundInstances) {
+            return;
+        }
+
+        for (const instance of this._soundInstances) {
+            instance.resume();
+        }
+    }
+
+    public stop(): void {
+        if (!this._soundInstances) {
+            return;
+        }
+
+        for (const instance of this._soundInstances) {
+            instance.stop();
+        }
+    }
+
+    protected _onSoundInstanceEnded(instance: AbstractSoundInstance): void {
+        const index = this._getSoundInstances().indexOf(instance);
+        if (index < 0) {
+            return;
+        }
+
+        this._getSoundInstances().splice(index, 1);
+    }
+
+    private _getSoundInstances(): Array<AbstractSoundInstance> {
+        if (!this._soundInstances) {
+            this._soundInstances = new Array<AbstractSoundInstance>();
+        }
+
+        return this._soundInstances;
     }
 }

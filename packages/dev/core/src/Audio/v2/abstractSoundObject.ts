@@ -2,17 +2,23 @@
 /* eslint-disable jsdoc/require-jsdoc */
 
 import type { AbstractAudioEngine } from "./abstractAudioEngine";
-import { AbstractAudioNode, AudioNodeType } from "./abstractAudioNode";
-import type { AbstractSoundSourceReference } from "./abstractSoundSourceReference";
+import { AbstractNamedAudioNode, AudioNodeType } from "./abstractAudioNode";
+import type { AbstractSoundSource } from "./abstractSoundSource";
 
-export abstract class AbstractSoundObject extends AbstractAudioNode {
+export abstract class AbstractSoundObject extends AbstractNamedAudioNode {
     public constructor(name: string, engine: AbstractAudioEngine) {
-        super(name, engine, AudioNodeType.Output);
+        super(name, engine, AudioNodeType.InputOutput);
     }
 
-    private _soundSourceReferences = new Array<AbstractSoundSourceReference>();
+    private _soundSources = new Array<AbstractSoundSource>();
 
-    public get soundSourceReferences(): ReadonlyArray<AbstractSoundSourceReference> {
-        return this._soundSourceReferences;
+    public get soundSources(): ReadonlyArray<AbstractSoundSource> {
+        return this._soundSources;
+    }
+
+    public play(): void {
+        for (const source of this._soundSources) {
+            source.play();
+        }
     }
 }

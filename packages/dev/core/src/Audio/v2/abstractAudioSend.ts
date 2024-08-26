@@ -16,8 +16,8 @@ export interface IAudioSendOptions {
 }
 
 export abstract class AbstractAudioSend extends AbstractAudioNode {
-    public constructor(name: string, engine: AbstractAudioEngine, options?: IAudioSendOptions) {
-        super(name, engine, AudioNodeType.InputOutput);
+    public constructor(engine: AbstractAudioEngine, options?: IAudioSendOptions) {
+        super(engine, AudioNodeType.InputOutput);
 
         this._sendType = options?.sendType ?? AudioSendType.PostFader;
     }
