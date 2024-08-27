@@ -9,6 +9,10 @@ import type { Nullable } from "../../types";
 export interface ISoundSourceOptions {
     autoplay?: boolean;
     loop?: boolean;
+    pitch?: number;
+    startTime?: number;
+    stopTime?: number;
+    volume?: number;
 }
 
 export abstract class AbstractSoundSource {
@@ -18,23 +22,35 @@ export abstract class AbstractSoundSource {
 
         this.autoplay = options?.autoplay ?? false;
         this.loop = options?.loop ?? false;
+        this.pitch = options?.pitch ?? 0;
+        this.startTime = options?.startTime ?? 0;
+        this.stopTime = options?.stopTime ?? 0;
+        this.volume = options?.volume ?? 1;
     }
 
     public name: string;
     public readonly engine: AbstractAudioEngine;
+
     public readonly autoplay: boolean;
-    public readonly loop: boolean;
+    public loop: boolean;
+    public pitch: number;
+    public startTime: number;
+    public stopTime: number;
+    public volume: number;
+
+    public abstract get currentTime(): number;
 
     protected _parent: Nullable<AbstractSoundObject> = null;
+
     protected _soundInstances: Nullable<Array<AbstractSoundInstance>> = null;
 
-    public play(): AbstractSoundInstance {
-        const instance = this.engine.createStaticSoundInstance(this);
-        this._getSoundInstances().push(instance);
+    public get soundInstances(): Nullable<ReadonlyArray<AbstractSoundInstance>> {
+        return this._soundInstances;
+    }
 
-        instance.onEndedObservable.add((instance) => {
-            this._onSoundInstanceEnded(instance);
-        });
+    public play(): AbstractSoundInstance {
+        const instance = this._createSoundInstance();
+        this._getSoundInstances().push(instance);
 
         instance.play();
 
@@ -71,7 +87,9 @@ export abstract class AbstractSoundSource {
         }
     }
 
-    protected _onSoundInstanceEnded(instance: AbstractSoundInstance): void {
+    protected abstract _createSoundInstance(): AbstractSoundInstance;
+
+    public _onSoundInstanceEnded(instance: AbstractSoundInstance): void {
         const index = this._getSoundInstances().indexOf(instance);
         if (index < 0) {
             return;
