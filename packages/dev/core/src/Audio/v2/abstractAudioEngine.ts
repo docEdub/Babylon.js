@@ -25,13 +25,16 @@ export abstract class AbstractAudioEngine extends AbstractAudioNodeParent {
         for (const source of this._soundSources) {
             source.dispose();
         }
-        this._soundSources.length = 0;
+        this._soundSources.clear();
 
         super.dispose();
     }
 
     // NB: Does not indicate ownership, but all its items should be in the child nodes array, too, which does indicate
     // ownership.
+    // TODO: Figure out if a Set would be better here. It would be more efficient for lookups, but we need to be able
+    // to sort sound instance by priority as fast as possible when the advanced audio engine is implemented. Is an
+    // array faster in that case?
     private _soundInstances = new Array<AbstractStaticSoundInstance>();
 
     public _addSoundInstance(instance: AbstractStaticSoundInstance): void {
@@ -51,23 +54,14 @@ export abstract class AbstractAudioEngine extends AbstractAudioNodeParent {
         this._soundInstances.splice(index, 1);
     }
 
-    private _soundSources = new Array<AbstractSoundSource>();
+    private _soundSources = new Set<AbstractSoundSource>();
 
     public _addSoundSource(soundSource: AbstractSoundSource): void {
-        if (this._soundSources.includes(soundSource)) {
-            return;
-        }
-
-        this._soundSources.push(soundSource);
+        this._soundSources.add(soundSource);
     }
 
     public _removeSoundSource(soundSource: AbstractSoundSource): void {
-        const index = this._soundSources.indexOf(soundSource);
-        if (index < 0) {
-            return;
-        }
-
-        this._soundSources.splice(index, 1);
+        this._soundSources.delete(soundSource);
     }
 
     public abstract createDevice(name: string): AbstractAudioDevice;

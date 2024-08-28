@@ -37,11 +37,11 @@ export abstract class AbstractAudioNode extends AbstractAudioNodeParent {
         this._setParent(parent);
 
         if (nodeType | AudioNodeType.Input) {
-            this._connectedDownstreamNodes = new Array<AbstractAudioNode>();
+            this._connectedDownstreamNodes = new Set<AbstractAudioNode>();
         }
 
         if (nodeType | AudioNodeType.Output) {
-            this._connectedUpstreamNodes = new Array<AbstractAudioNode>();
+            this._connectedUpstreamNodes = new Set<AbstractAudioNode>();
         }
     }
 
@@ -53,14 +53,14 @@ export abstract class AbstractAudioNode extends AbstractAudioNodeParent {
             for (const node of this._connectedDownstreamNodes) {
                 this._disconnect(node);
             }
-            this._connectedDownstreamNodes.length = 0;
+            this._connectedDownstreamNodes.clear();
         }
 
         if (this._connectedUpstreamNodes) {
             for (const node of this._connectedUpstreamNodes) {
                 node._disconnect(this);
             }
-            this._connectedUpstreamNodes.length = 0;
+            this._connectedUpstreamNodes.clear();
         }
 
         AbstractAudioNodeParent._RemoveChildNode(this._getParent(), this);
@@ -68,7 +68,7 @@ export abstract class AbstractAudioNode extends AbstractAudioNodeParent {
         super.dispose();
     }
 
-    public engine: AbstractAudioEngine;
+    public readonly engine: AbstractAudioEngine;
 
     // If parent is null, node is owned by audio engine.
     private _parent: Nullable<AbstractAudioNodeParent> = null;
@@ -92,14 +92,14 @@ export abstract class AbstractAudioNode extends AbstractAudioNodeParent {
      *
      * Undefined for input nodes.
      */
-    protected _connectedDownstreamNodes?: Array<AbstractAudioNode>;
+    protected _connectedDownstreamNodes?: Set<AbstractAudioNode>;
 
     /**
      * The connected upstream audio nodes.
      *
      * Undefined for output nodes.
      */
-    protected _connectedUpstreamNodes?: Array<AbstractAudioNode>;
+    protected _connectedUpstreamNodes?: Set<AbstractAudioNode>;
 
     /**
      * The audio node's type.
@@ -127,7 +127,7 @@ export abstract class AbstractAudioNode extends AbstractAudioNodeParent {
             return;
         }
 
-        if (this._connectedDownstreamNodes.includes(node)) {
+        if (this._connectedDownstreamNodes.has(node)) {
             return;
         }
 
@@ -135,7 +135,7 @@ export abstract class AbstractAudioNode extends AbstractAudioNodeParent {
             return;
         }
 
-        this._connectedDownstreamNodes.push(node);
+        this._connectedDownstreamNodes.add(node);
     }
 
     /**
@@ -147,12 +147,7 @@ export abstract class AbstractAudioNode extends AbstractAudioNodeParent {
             return;
         }
 
-        const index = this._connectedDownstreamNodes.indexOf(node);
-        if (index < 0) {
-            return;
-        }
-
-        this._connectedDownstreamNodes.splice(index, 1);
+        this._connectedDownstreamNodes.delete(node);
 
         node._onDisconnect(this);
     }
@@ -167,11 +162,7 @@ export abstract class AbstractAudioNode extends AbstractAudioNodeParent {
             return false;
         }
 
-        if (this._connectedUpstreamNodes.includes(node)) {
-            return true;
-        }
-
-        this._connectedUpstreamNodes.push(node);
+        this._connectedUpstreamNodes.add(node);
 
         return true;
     }
@@ -181,16 +172,7 @@ export abstract class AbstractAudioNode extends AbstractAudioNodeParent {
      * @param node - The disconnecting upstream audio node
      */
     protected _onDisconnect(node: AbstractAudioNode): void {
-        if (!this._connectedUpstreamNodes) {
-            return;
-        }
-
-        const index = this._connectedUpstreamNodes.indexOf(node);
-        if (index < 0) {
-            return;
-        }
-
-        this._connectedUpstreamNodes.splice(index, 1);
+        this._connectedUpstreamNodes?.delete(node);
     }
 }
 
