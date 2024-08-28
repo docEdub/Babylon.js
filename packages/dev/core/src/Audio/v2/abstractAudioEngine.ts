@@ -4,6 +4,7 @@
 import type { AbstractAudioDevice } from "./abstractAudioDevice";
 import type { AbstractAudioListener } from "./abstractAudioListener";
 import type { AbstractAudioNode } from "./abstractAudioNode";
+import { AbstractAudioNodeParent } from "./abstractAudioNodeParent";
 import type { AbstractAudioPositioner } from "./abstractAudioPositioner";
 import type { AbstractAudioSender } from "./abstractAudioSender";
 import type { AbstractMainAudioBus } from "./abstractMainAudioBus";
@@ -12,14 +13,13 @@ import type { AbstractStaticSoundInstance } from "./abstractStaticSoundInstance"
 import type { AbstractStaticSoundSource } from "./abstractStaticSoundSource";
 import type { AbstractStreamingSoundInstance } from "./abstractStreamingSoundInstance";
 import type { AbstractStreamingSoundSource } from "./abstractStreamingSoundSource";
-import type { IAudioNodeParent } from "./IAudioNodeParent";
 
 /**
  * Owns top-level AbstractAudioNode objects.
  * Owns all AbstractSoundSource objects.
  */
-export abstract class AbstractAudioEngine implements IAudioNodeParent {
-    public dispose(): void {
+export abstract class AbstractAudioEngine extends AbstractAudioNodeParent {
+    public override dispose(): void {
         this._soundInstances.length = 0;
 
         for (const source of this._soundSources) {
@@ -27,29 +27,7 @@ export abstract class AbstractAudioEngine implements IAudioNodeParent {
         }
         this._soundSources.length = 0;
 
-        for (const node of this._childNodes) {
-            node.dispose();
-        }
-        this._childNodes.length = 0;
-    }
-
-    private _childNodes = new Array<AbstractAudioNode>();
-
-    public _addChildNode(node: AbstractAudioNode): void {
-        if (this._childNodes.includes(node)) {
-            return;
-        }
-
-        this._childNodes.push(node);
-    }
-
-    public _removeChildNode(node: AbstractAudioNode): void {
-        const index = this._childNodes.indexOf(node);
-        if (index < 0) {
-            return;
-        }
-
-        this._childNodes.splice(index, 1);
+        super.dispose();
     }
 
     // NB: Does not indicate ownership, but all its items should be in the child nodes array, too, which does indicate
