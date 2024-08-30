@@ -2,7 +2,6 @@
 /* eslint-disable jsdoc/require-jsdoc */
 
 import type { AbstractAudioDevice } from "./abstractAudioDevice";
-import type { AbstractAudioListener } from "./abstractAudioListener";
 import type { AbstractAudioNode } from "./abstractAudioNode";
 import { AbstractAudioNodeParent } from "./abstractAudioNodeParent";
 import type { AbstractAudioPositioner } from "./abstractAudioPositioner";
@@ -13,6 +12,8 @@ import type { AbstractStaticSoundInstance } from "./abstractStaticSoundInstance"
 import type { AbstractStaticSoundSource } from "./abstractStaticSoundSource";
 import type { AbstractStreamingSoundInstance } from "./abstractStreamingSoundInstance";
 import type { AbstractStreamingSoundSource } from "./abstractStreamingSoundSource";
+import type { SpatialAudioListener } from "./spatialAudioListener";
+import type { Nullable } from "../../types";
 
 /**
  * Owns top-level AbstractAudioNode objects.
@@ -22,6 +23,13 @@ export abstract class AbstractAudioEngine extends AbstractAudioNodeParent {
     public override dispose(): void {
         this._soundInstances.length = 0;
 
+        if (this._listeners) {
+            for (const listener of this._listeners) {
+                listener.dispose();
+            }
+            this._listeners.clear();
+        }
+
         for (const source of this._soundSources) {
             source.dispose();
         }
@@ -30,10 +38,10 @@ export abstract class AbstractAudioEngine extends AbstractAudioNodeParent {
         super.dispose();
     }
 
-    // NB: Does not indicate ownership, but all its items should be in the child nodes array, too, which does indicate
-    // ownership.
+    // Not owned, but all items should be in child nodes array, too, which is owned.
+    //
     // TODO: Figure out if a Set would be better here. It would be more efficient for lookups, but we need to be able
-    // to sort sound instance by priority as fast as possible when the advanced audio engine is implemented. Is an
+    // to sort sound instances by priority as fast as possible when the advanced audio engine is implemented. Is an
     // array faster in that case?
     private _soundInstances = new Array<AbstractStaticSoundInstance>();
 
@@ -54,6 +62,7 @@ export abstract class AbstractAudioEngine extends AbstractAudioNodeParent {
         this._soundInstances.splice(index, 1);
     }
 
+    // Owned
     private _soundSources = new Set<AbstractSoundSource>();
 
     public _addSoundSource(soundSource: AbstractSoundSource): void {
@@ -64,8 +73,22 @@ export abstract class AbstractAudioEngine extends AbstractAudioNodeParent {
         this._soundSources.delete(soundSource);
     }
 
+    // Owned
+    private _listeners: Nullable<Set<SpatialAudioListener>> = null;
+
+    public _addListener(listener: SpatialAudioListener): void {
+        if (!this._listeners) {
+            this._listeners = new Set();
+        }
+
+        this._listeners.add(listener);
+    }
+
+    public _removeListener(listener: SpatialAudioListener): void {
+        this._listeners?.delete(listener);
+    }
+
     public abstract createDevice(name: string): AbstractAudioDevice;
-    public abstract createListener(parent: AbstractAudioDevice): AbstractAudioListener;
     public abstract createMainBus(name: string): AbstractMainAudioBus;
     public abstract createPositioner(parent: AbstractAudioNode): AbstractAudioPositioner;
     public abstract createSender(parent: AbstractAudioNode): AbstractAudioSender;
