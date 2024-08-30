@@ -120,7 +120,7 @@ export abstract class AbstractAudioNode extends AbstractAudioNodeParent {
 
     /**
      * Connect to a downstream audio input node.
-     * @param node - The downstream audio node to connect
+     * @param node - The downstream audio input node to connect
      */
     protected _connect(node: AbstractAudioNode): void {
         if (!this._connectedDownstreamNodes) {
@@ -140,7 +140,7 @@ export abstract class AbstractAudioNode extends AbstractAudioNodeParent {
 
     /**
      * Disconnect from a downstream audio input node.
-     * @param node - The downstream audio node to disconnect
+     * @param node - The downstream audio input node to disconnect
      */
     protected _disconnect(node: AbstractAudioNode): void {
         if (!this._connectedDownstreamNodes) {
