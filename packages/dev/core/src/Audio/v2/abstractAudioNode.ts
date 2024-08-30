@@ -92,14 +92,14 @@ export abstract class AbstractAudioNode extends AbstractAudioNodeParent {
      *
      * Undefined for input nodes.
      */
-    protected _connectedDownstreamNodes?: Set<AbstractAudioNode>;
+    protected readonly _connectedDownstreamNodes?: Set<AbstractAudioNode> | undefined;
 
     /**
      * The connected upstream audio nodes.
      *
      * Undefined for output nodes.
      */
-    protected _connectedUpstreamNodes?: Set<AbstractAudioNode>;
+    protected readonly _connectedUpstreamNodes?: Set<AbstractAudioNode> | undefined;
 
     /**
      * The audio node's type.
