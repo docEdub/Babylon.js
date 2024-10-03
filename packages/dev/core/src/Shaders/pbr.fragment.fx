@@ -477,11 +477,6 @@ void main(void) {
                 , vReflectionFilteringInfo
             #endif
         #endif
-        #if defined(ENVIRONMENTBRDF) && !defined(REFLECTIONMAP_SKYBOX)
-            #ifdef RADIANCEOCCLUSION
-                , ambientMonochrome
-            #endif
-        #endif
         #if defined(CLEARCOAT_BUMP) || defined(TWOSIDEDLIGHTING)
             , (gl_FrontFacing ? 1. : -1.)
         #endif
@@ -626,15 +621,16 @@ void main(void) {
     #define CUSTOM_FRAGMENT_BEFORE_FRAGCOLOR
 
 #ifdef PREPASS
-    float writeGeometryInfo = finalColor.a > 0.4 ? 1.0 : 0.0;
+    float writeGeometryInfo = finalColor.a > ALPHATESTVALUE ? 1.0 : 0.0;
 
     #ifdef PREPASS_POSITION
     gl_FragData[PREPASS_POSITION_INDEX] = vec4(vPositionW, writeGeometryInfo);
     #endif
 
     #ifdef PREPASS_LOCAL_POSITION
-    gl_FragData[PREPASS_LOCAL_POSITION_INDEX] = vec4(vPosition * 0.5 + 0.5, writeGeometryInfo);
-    #endif
+    gl_FragData[PREPASS_LOCAL_POSITION_INDEX] =
+        vec4(vPosition, writeGeometryInfo);
+#endif
 
 #if defined(PREPASS_VELOCITY)
     vec2 a = (vCurrentPosition.xy / vCurrentPosition.w) * 0.5 + 0.5;
@@ -687,9 +683,9 @@ void main(void) {
         vec4(vViewPos.z, 0.0, 0.0, writeGeometryInfo); // Linear depth
 #endif
 
-#ifdef PREPASS_NDC_DEPTH
-        gl_FragData[PREPASS_NDC_DEPTH_INDEX] = vec4(
-            gl_FragCoord.z, 0.0, 0.0, writeGeometryInfo); // Clip-space depth
+#ifdef PREPASS_SCREENSPACE_DEPTH
+    gl_FragData[PREPASS_SCREENSPACE_DEPTH_INDEX] =
+        vec4(gl_FragCoord.z, 0.0, 0.0, writeGeometryInfo);
 #endif
 
 #ifdef PREPASS_NORMAL
