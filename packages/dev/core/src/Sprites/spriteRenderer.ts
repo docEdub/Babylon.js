@@ -10,10 +10,6 @@ import type { ISize } from "../Maths/math.size";
 
 import type { ThinTexture } from "../Materials/Textures/thinTexture";
 import type { Scene } from "../scene";
-
-import "../Engines/Extensions/engine.alpha";
-import "../Engines/Extensions/engine.dynamicBuffer";
-
 import type { ThinEngine } from "../Engines/thinEngine";
 import { Logger } from "core/Misc/logger";
 import { BindLogDepth } from "core/Materials/materialHelper.functions";
@@ -158,6 +154,7 @@ export class SpriteRenderer {
     private _drawWrapperBase: DrawWrapper;
     private _drawWrapperDepth: DrawWrapper;
     private _vertexArrayObject: WebGLVertexArrayObject;
+    private _isDisposed = false;
 
     /**
      * Creates a new sprite Renderer
@@ -193,7 +190,16 @@ export class SpriteRenderer {
         let offsets: VertexBuffer;
 
         if (this._useInstancing) {
-            const spriteData = new Float32Array([0, 0, 1, 0, 0, 1, 1, 1]);
+            const spriteData = new Float32Array([
+                this._epsilon,
+                this._epsilon,
+                1 - this._epsilon,
+                this._epsilon,
+                this._epsilon,
+                1 - this._epsilon,
+                1 - this._epsilon,
+                1 - this._epsilon,
+            ]);
             this._spriteBuffer = new Buffer(engine, spriteData, false, 2);
             offsets = this._spriteBuffer.createVertexBuffer("offsets", 0, 2);
         } else {
@@ -233,6 +239,10 @@ export class SpriteRenderer {
     }
 
     private _createEffects() {
+        if (this._isDisposed) {
+            return;
+        }
+
         this._drawWrapperBase?.dispose();
         this._drawWrapperDepth?.dispose();
 
@@ -307,7 +317,6 @@ export class SpriteRenderer {
 
         const engine = this._engine;
         const useRightHandedSystem = !!(this._scene && this._scene.useRightHandedSystem);
-        const baseSize = this.texture.getBaseSize();
 
         // Sprites
         const max = Math.min(this._capacity, sprites.length);
@@ -322,6 +331,7 @@ export class SpriteRenderer {
 
             noSprite = false;
             sprite._animate(deltaTime);
+            const baseSize = this.texture.getBaseSize(); // This could be change by the user inside the animate callback (like onAnimationEnd)
 
             this._appendSpriteVertex(offset++, sprite, 0, 0, baseSize, useRightHandedSystem, customSpriteUpdate);
             if (!this._useInstancing) {
@@ -550,7 +560,8 @@ export class SpriteRenderer {
             this.texture.dispose();
             (<any>this.texture) = null;
         }
-        this._drawWrapperBase.dispose();
-        this._drawWrapperDepth.dispose();
+        this._drawWrapperBase?.dispose();
+        this._drawWrapperDepth?.dispose();
+        this._isDisposed = true;
     }
 }
