@@ -5,14 +5,32 @@ import type { AbstractAudioNode } from "./abstractAudioNode";
 import type { IDisposable } from "../../scene";
 
 export class AbstractAudioNodeParent implements IDisposable {
-    public readonly children = new Set<AbstractAudioNode>();
+    public readonly _children = new Set<AbstractAudioNode>();
 
     public dispose(): void {
-        if (this.children) {
-            for (const node of this.children) {
+        if (this._children) {
+            for (const node of this._children) {
                 node.dispose();
             }
-            this.children.clear();
+            this._children.clear();
         }
+    }
+
+    private _internalClass = class {
+        public internalClass: AbstractAudioNodeParent["_internalClass"];
+
+        public impl: AbstractAudioNodeParent;
+
+        public constructor(impl: AbstractAudioNodeParent) {
+            this.impl = impl;
+        }
+
+        public get children(): Set<AbstractAudioNode> {
+            return this.impl._children;
+        }
+    };
+
+    public internal() {
+        return new this._internalClass(this);
     }
 }

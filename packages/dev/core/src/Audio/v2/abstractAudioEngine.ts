@@ -38,23 +38,27 @@ export abstract class AbstractAudioEngine extends AbstractAudioNodeParent {
         this._soundSources.clear();
     }
 
-    public internal = new (class {
-        public engine: AbstractAudioEngine;
+    public override internal() {
+        return new (class extends super.internal().internalClass {
+            public engine: AbstractAudioEngine;
 
-        public constructor(engine: AbstractAudioEngine) {
-            this.engine = engine;
-        }
+            public constructor(engine: AbstractAudioEngine) {
+                super(engine);
 
-        public get listeners(): Set<SpatialAudioListener> {
-            return this.engine._listeners;
-        }
+                this.engine = engine;
+            }
 
-        public get soundInstances(): Set<AbstractStaticSoundInstance> {
-            return this.engine._soundInstances;
-        }
+            public get listeners(): Set<SpatialAudioListener> {
+                return this.engine._listeners;
+            }
 
-        public get soundSources(): Set<AbstractSoundSource> {
-            return this.engine._soundSources;
-        }
-    })(this);
+            public get soundInstances(): Set<AbstractStaticSoundInstance> {
+                return this.engine._soundInstances;
+            }
+
+            public get soundSources(): Set<AbstractSoundSource> {
+                return this.engine._soundSources;
+            }
+        })(this);
+    }
 }
