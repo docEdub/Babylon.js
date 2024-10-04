@@ -6,6 +6,12 @@ import type { AbstractSoundSource } from "./abstractSoundSource";
 import type { AbstractStaticSoundInstance } from "./abstractStaticSoundInstance";
 import type { SpatialAudioListener } from "./spatialAudioListener";
 
+abstract class AbstractAudioEngineBaseInternal extends AbstractAudioNodeParent["_InternalClass"] {
+    public abstract get listeners(): Set<SpatialAudioListener>;
+    public abstract get soundInstances(): Set<AbstractStaticSoundInstance>;
+    public abstract get soundSources(): Set<AbstractSoundSource>;
+}
+
 /**
  * Owns top-level AbstractAudioNode objects.
  * Owns all AbstractSoundSource objects.
@@ -38,27 +44,34 @@ export abstract class AbstractAudioEngine extends AbstractAudioNodeParent {
         this._soundSources.clear();
     }
 
-    public override internal() {
-        return new (class extends super.internal().internalClass {
-            public engine: AbstractAudioEngine;
+    protected static override _InternalClass = class extends AbstractAudioEngineBaseInternal {
+        public engine: AbstractAudioEngine;
 
-            public constructor(engine: AbstractAudioEngine) {
-                super(engine);
+        public constructor(engine: AbstractAudioEngine) {
+            super(engine);
 
-                this.engine = engine;
-            }
+            this.engine = engine;
+        }
 
-            public get listeners(): Set<SpatialAudioListener> {
-                return this.engine._listeners;
-            }
+        public get listeners(): Set<SpatialAudioListener> {
+            return this.engine._listeners;
+        }
 
-            public get soundInstances(): Set<AbstractStaticSoundInstance> {
-                return this.engine._soundInstances;
-            }
+        public get soundInstances(): Set<AbstractStaticSoundInstance> {
+            return this.engine._soundInstances;
+        }
 
-            public get soundSources(): Set<AbstractSoundSource> {
-                return this.engine._soundSources;
-            }
-        })(this);
+        public get soundSources(): Set<AbstractSoundSource> {
+            return this.engine._soundSources;
+        }
+    };
+
+    private _internal: AbstractAudioEngineBaseInternal | null = null;
+
+    public override get internal() {
+        if (!this._internal) {
+            this._internal = new AbstractAudioEngine._InternalClass(this);
+        }
+        return this._internal;
     }
 }

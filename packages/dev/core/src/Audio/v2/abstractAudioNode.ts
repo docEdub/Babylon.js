@@ -62,6 +62,8 @@ export abstract class AbstractAudioNode extends AbstractAudioNodeParent {
         if (nodeType | AudioNodeType.Output) {
             this._connectedUpstreamNodes = new Set<AbstractAudioNode>();
         }
+
+        this.engine.internal.children.add(this);
     }
 
     /**
@@ -70,7 +72,7 @@ export abstract class AbstractAudioNode extends AbstractAudioNodeParent {
     public override dispose(): void {
         super.dispose();
 
-        this.parent.children.delete(this);
+        this.parent.internal.children.delete(this);
 
         if (this._connectedDownstreamNodes) {
             for (const node of this._connectedDownstreamNodes) {
@@ -96,9 +98,9 @@ export abstract class AbstractAudioNode extends AbstractAudioNodeParent {
             return;
         }
 
-        this.parent.children.delete(this);
+        this.parent.internal.children.delete(this);
         this._parent = parent;
-        this.parent.children.add(this);
+        this.parent.internal.children.add(this);
     }
 
     /**

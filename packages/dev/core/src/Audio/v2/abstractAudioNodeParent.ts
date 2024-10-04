@@ -16,9 +16,7 @@ export class AbstractAudioNodeParent implements IDisposable {
         }
     }
 
-    private _internalClass = class {
-        public internalClass: AbstractAudioNodeParent["_internalClass"];
-
+    protected static _InternalClass = class {
         public impl: AbstractAudioNodeParent;
 
         public constructor(impl: AbstractAudioNodeParent) {
@@ -30,7 +28,7 @@ export class AbstractAudioNodeParent implements IDisposable {
         }
     };
 
-    public internal() {
-        return new this._internalClass(this);
+    public get internal() {
+        return new AbstractAudioNodeParent._InternalClass(this);
     }
 }
