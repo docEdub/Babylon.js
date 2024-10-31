@@ -39,23 +39,25 @@ export interface WebAudioPositionerOptions extends AudioPositionerOptions {}
 /**
  * Options for creating a new WebAudioStaticSoundBuffer.
  */
-export interface WebAudioStaticSoundBufferOptions extends StaticSoundBufferOptions {
-    /**
-     * The ArrayBuffer to be used as the sound source.
-     */
-    sourceArrayBuffer?: ArrayBuffer;
-    /**
-     * The AudioBuffer to be used as the sound source.
-     */
-    sourceAudioBuffer?: AudioBuffer;
-    /**
-     * The URL of the sound buffer.
-     */
-    sourceUrl?: string;
-    /**
-     * Potential URLs of the sound buffer. The first one that is successfully loaded will be used.
-     */
-    sourceUrls?: string[];
+export interface WebAudioStaticSoundBufferOptions<SourceType extends AudioBuffer | ArrayBuffer | string | string[]> extends StaticSoundBufferOptions {
+    source?: SourceType;
+
+    // /**
+    //  * The ArrayBuffer to be used as the sound source.
+    //  */
+    // sourceArrayBuffer?: ArrayBuffer;
+    // /**
+    //  * The AudioBuffer to be used as the sound source.
+    //  */
+    // sourceAudioBuffer?: AudioBuffer;
+    // /**
+    //  * The URL of the sound buffer.
+    //  */
+    // sourceUrl?: string;
+    // /**
+    //  * Potential URLs of the sound buffer. The first one that is successfully loaded will be used.
+    //  */
+    // sourceUrls?: string[];
     /**
      * Whether to skip codec checking when before attempting to load each source URL in `sourceUrls`.
      */
@@ -65,8 +67,8 @@ export interface WebAudioStaticSoundBufferOptions extends StaticSoundBufferOptio
 /**
  * Options for creating a new WebAudioStaticSound.
  */
-export type WebAudioStaticSoundOptions = StaticSoundOptions &
-    WebAudioStaticSoundBufferOptions & {
+export type WebAudioStaticSoundOptions<T> = StaticSoundOptions &
+    WebAudioStaticSoundBufferOptions<T> & {
         sourceBuffer?: AbstractStaticSoundBuffer;
     };
 
@@ -85,7 +87,7 @@ export interface WebAudioStreamingSoundOptions extends StreamingSoundOptions {
  * @param options - The options for creating the audio engine.
  * @returns A promise that resolves with the created audio engine.
  */
-export async function CreateAudioEngine(options: Nullable<WebAudioEngineOptions> = null): Promise<AbstractWebAudioEngine> {
+export async function CreateAudioEngineAsync(options: Nullable<WebAudioEngineOptions> = null): Promise<AbstractWebAudioEngine> {
     const engine = new WebAudioEngine();
     await engine.init(options);
     return engine;
@@ -142,7 +144,7 @@ export abstract class AbstractWebAudioEngine extends AbstractAudioEngine {
      * @param options - The options for the static sound.
      * @returns A promise that resolves to the created static sound.
      */
-    public async createSound(name: string, options: Nullable<WebAudioStaticSoundOptions> = null): Promise<AbstractStaticSound> {
+    public async createSound(name: string, options: Nullable<WebAudioStaticSoundOptions<T>> = null): Promise<AbstractStaticSound> {
         const sound = new WebAudioStaticSound(name, this, options);
         await sound.init(options);
         this._addSound(sound);
@@ -154,7 +156,7 @@ export abstract class AbstractWebAudioEngine extends AbstractAudioEngine {
      * @param options - The options for the static sound buffer.
      * @returns A promise that resolves to the created static sound buffer.
      */
-    public async createSoundBuffer(options: Nullable<WebAudioStaticSoundBufferOptions> = null): Promise<AbstractStaticSoundBuffer> {
+    public async createSoundBuffer<T>(options: Nullable<WebAudioStaticSoundBufferOptions<T>> = null): Promise<AbstractStaticSoundBuffer> {
         const buffer = new WebAudioStaticSoundBuffer(this);
         await buffer.init(options);
         return buffer;

@@ -25,7 +25,7 @@ export interface AudioBusOptions extends AudioBusNodeOptions {
 /**
  * Abstract class for an audio bus.
  */
-export abstract class AbstractAudioBus extends AbstractAudioBusNode {
+export abstract class AudioBus extends AbstractAudioBusNode {
     private _outputBus: Nullable<AbstractPrimaryAudioBus> = null;
     private _positioner: Nullable<AbstractAudioPositioner> = null;
 

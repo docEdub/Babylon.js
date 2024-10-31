@@ -129,9 +129,10 @@ export class WebAudioStaticSoundBuffer extends AbstractStaticSoundBuffer {
         super(engine);
     }
 
-    public async init(options: Nullable<WebAudioStaticSoundBufferOptions> = null): Promise<void> {
-        if (options?.sourceAudioBuffer) {
-            this.audioBuffer = options.sourceAudioBuffer;
+    public async init(options: Nullable<WebAudioStaticSoundBufferOptions<T>> = null): Promise<void> {
+        // if (options?.sourceAudioBuffer) {
+        if (options?.source instanceof AudioBuffer) {
+            this.audioBuffer = options.source;
         } else if (options?.sourceUrl) {
             await this._initFromUrl(options.sourceUrl);
         } else if (options?.sourceUrls) {
