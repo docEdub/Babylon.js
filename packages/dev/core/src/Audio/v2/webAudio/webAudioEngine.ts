@@ -85,16 +85,16 @@ export interface WebAudioStreamingSoundOptions extends StreamingSoundOptions {
  * @param options - The options for creating the audio engine.
  * @returns A promise that resolves with the created audio engine.
  */
-export async function CreateAudioEngine(options: Nullable<WebAudioEngineOptions> = null): Promise<AbstractWebAudioEngine> {
-    const engine = new WebAudioEngine();
+export async function CreateAudioEngine(options: Nullable<WebAudioEngineOptions> = null): Promise<WebAudioEngine> {
+    const engine = new InternalWebAudioEngine();
     await engine.init(options);
     return engine;
 }
 
 /**
- * Abstract class for WebAudioEngine.
+ * Abstract class for InternalWebAudioEngine.
  */
-export abstract class AbstractWebAudioEngine extends AbstractAudioEngine {
+export abstract class WebAudioEngine extends AbstractAudioEngine {
     /**
      * Creates a new main audio bus.
      * @param name - The name of the main bus.
@@ -189,7 +189,7 @@ const formatMimeTypeMap = new Map<string, string>([
 ]);
 
 /** @internal */
-export class WebAudioEngine extends AbstractWebAudioEngine {
+export class InternalWebAudioEngine extends WebAudioEngine {
     private _audioContext: BaseAudioContext;
     private _mainOutput: Nullable<WebAudioMainOutput> = null;
 

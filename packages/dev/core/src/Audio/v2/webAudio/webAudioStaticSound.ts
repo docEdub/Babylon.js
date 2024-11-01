@@ -5,7 +5,7 @@ import { StaticSoundBuffer } from "../staticSoundBuffer";
 import { StaticSoundInstance } from "../staticSoundInstance";
 import { SoundState } from "../soundState";
 import { WebAudioBus } from "./webAudioBus";
-import type { AbstractWebAudioEngine, WebAudioEngine, WebAudioStaticSoundBufferOptions, WebAudioStaticSoundOptions } from "./webAudioEngine";
+import type { WebAudioEngine, InternalWebAudioEngine, WebAudioStaticSoundBufferOptions, WebAudioStaticSoundOptions } from "./webAudioEngine";
 import { WebAudioMainBus } from "./webAudioMainBus";
 
 const fileExtensionRegex = new RegExp("\\.(\\w{3,4}$|\\?)");
@@ -15,7 +15,7 @@ export class WebAudioStaticSound extends StaticSound {
     private _gainNode: GainNode;
 
     /** @internal */
-    public override readonly engine: WebAudioEngine;
+    public override readonly engine: InternalWebAudioEngine;
 
     /** @internal */
     public audioContext: BaseAudioContext;
@@ -47,7 +47,7 @@ export class WebAudioStaticSound extends StaticSound {
     }
 
     /** @internal */
-    constructor(name: string, engine: AbstractWebAudioEngine, options: Nullable<WebAudioStaticSoundOptions> = null) {
+    constructor(name: string, engine: WebAudioEngine, options: Nullable<WebAudioStaticSoundOptions> = null) {
         super(name, engine, options);
     }
 
@@ -99,7 +99,7 @@ export class WebAudioStaticSound extends StaticSound {
 /** @internal */
 export class WebAudioStaticSoundBuffer extends StaticSoundBuffer {
     /** @internal */
-    public override readonly engine: WebAudioEngine;
+    public override readonly engine: InternalWebAudioEngine;
 
     /** @internal */
     public audioBuffer: AudioBuffer;
@@ -125,7 +125,7 @@ export class WebAudioStaticSoundBuffer extends StaticSoundBuffer {
     }
 
     /** @internal */
-    constructor(engine: AbstractWebAudioEngine) {
+    constructor(engine: WebAudioEngine) {
         super(engine);
     }
 

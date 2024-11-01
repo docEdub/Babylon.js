@@ -1,7 +1,7 @@
 import type { Nullable } from "core/types";
 import { AudioBus } from "../audioBus";
 import type { AbstractAudioNode } from "../abstractAudioNode";
-import type { AbstractWebAudioEngine, WebAudioBusOptions, WebAudioEngine } from "./webAudioEngine";
+import type { WebAudioEngine, WebAudioBusOptions, InternalWebAudioEngine } from "./webAudioEngine";
 import { WebAudioMainOutput } from "./webAudioMainOutput";
 
 /** @internal */
@@ -19,13 +19,13 @@ export class WebAudioBus extends AudioBus {
     }
 
     /** @internal */
-    constructor(name: string, engine: AbstractWebAudioEngine, options: Nullable<WebAudioBusOptions> = null) {
+    constructor(name: string, engine: WebAudioEngine, options: Nullable<WebAudioBusOptions> = null) {
         super(name, engine, options);
     }
 
     /** @internal */
     public async init(): Promise<void> {
-        this._gainNode = new GainNode(await (this.engine as WebAudioEngine).audioContext);
+        this._gainNode = new GainNode(await (this.engine as InternalWebAudioEngine).audioContext);
     }
 
     protected override _connect(node: AbstractAudioNode): void {
