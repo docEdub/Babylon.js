@@ -1,8 +1,8 @@
 import type { Nullable } from "../../../types";
 import type { AbstractAudioNode } from "../abstractAudioNode";
-import { AbstractStaticSound } from "../abstractStaticSound";
-import { AbstractStaticSoundBuffer } from "../abstractStaticSoundBuffer";
-import { AbstractStaticSoundInstance } from "../abstractStaticSoundInstance";
+import { AbstractStaticSound } from "../staticSound";
+import { AbstractStaticSoundBuffer } from "../staticSoundBuffer";
+import { AbstractStaticSoundInstance } from "../staticSoundInstance";
 import { SoundState } from "../soundState";
 import { WebAudioBus } from "./webAudioBus";
 import type { AbstractWebAudioEngine, WebAudioEngine, WebAudioStaticSoundBufferOptions, WebAudioStaticSoundOptions } from "./webAudioEngine";

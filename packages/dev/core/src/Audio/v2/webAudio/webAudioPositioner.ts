@@ -1,6 +1,6 @@
 import type { Nullable } from "../../../types";
 import type { AbstractAudioNode } from "../abstractAudioNode";
-import { AbstractAudioPositioner } from "../abstractAudioPositioner";
+import { AbstractAudioPositioner } from "../audioPositioner";
 import type { SpatialAudioTransformOptions } from "../spatialAudioTransform";
 
 /** @internal */

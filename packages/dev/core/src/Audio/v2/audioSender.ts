@@ -1,5 +1,5 @@
 import { AbstractAudioNode, AudioNodeType } from "./abstractAudioNode";
-import type { AbstractAudioSend } from "./abstractAudioSend";
+import type { AbstractAudioSend } from "./audioSend";
 
 /**
  * Abstract base class for audio senders.

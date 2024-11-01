@@ -1,6 +1,6 @@
 import type { Nullable } from "../../../types";
-import { AbstractStreamingSound } from "../abstractStreamingSound";
-import { AbstractStreamingSoundInstance } from "../abstractStreamingSoundInstance";
+import { AbstractStreamingSound } from "../streamingSound";
+import { AbstractStreamingSoundInstance } from "../streamingSoundInstance";
 import type { AbstractWebAudioEngine, WebAudioEngine, WebAudioStreamingSoundOptions } from "./webAudioEngine";
 
 /** @internal */

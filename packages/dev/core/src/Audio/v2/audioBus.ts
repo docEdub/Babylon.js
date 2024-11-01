@@ -2,8 +2,8 @@ import type { Nullable } from "../../types";
 import type { AbstractAudioBusOptions } from "./abstractAudioBus";
 import { AbstractAudioBus } from "./abstractAudioBus";
 import type { AbstractAudioEngine } from "./abstractAudioEngine";
-import type { AbstractAudioPositioner } from "./abstractAudioPositioner";
-import type { AbstractAudioSender } from "./abstractAudioSender";
+import type { AbstractAudioPositioner } from "./audioPositioner";
+import type { AbstractAudioSender } from "./audioSender";
 import type { MainAudioBus } from "./mainAudioBus";
 
 export type AbstractPrimaryAudioBus = MainAudioBus | AudioBus;

@@ -1,15 +1,15 @@
 import type { Nullable } from "../../types";
 import type { AbstractAudioNode } from "./abstractAudioNode";
 import { AbstractAudioNodeParent } from "./abstractAudioNodeParent";
-import type { AbstractAudioPositioner } from "./abstractAudioPositioner";
-import type { AbstractAudioSender } from "./abstractAudioSender";
+import type { AbstractAudioPositioner } from "./audioPositioner";
+import type { AbstractAudioSender } from "./audioSender";
 import type { MainAudioBus } from "./mainAudioBus";
-import type { AbstractMainAudioOutput } from "./abstractMainAudioOutput";
+import type { AbstractMainAudioOutput } from "./mainAudioOutput";
 import type { AbstractSound } from "./abstractSound";
 import type { AbstractSoundInstance } from "./abstractSoundInstance";
-import type { AbstractStaticSound, StaticSoundOptions } from "./abstractStaticSound";
-import type { AbstractStaticSoundBuffer, StaticSoundBufferOptions } from "./abstractStaticSoundBuffer";
-import type { AbstractStreamingSound, StreamingSoundOptions } from "./abstractStreamingSound";
+import type { AbstractStaticSound, StaticSoundOptions } from "./staticSound";
+import type { AbstractStaticSoundBuffer, StaticSoundBufferOptions } from "./staticSoundBuffer";
+import type { AbstractStreamingSound, StreamingSoundOptions } from "./streamingSound";
 import type { SpatialAudioListener } from "./spatialAudioListener";
 
 /**

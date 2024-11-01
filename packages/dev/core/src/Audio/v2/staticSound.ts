@@ -2,7 +2,7 @@ import type { Nullable } from "../../types";
 import type { AbstractAudioEngine } from "./abstractAudioEngine";
 import type { SoundOptions } from "./abstractSound";
 import { AbstractSound } from "./abstractSound";
-import type { AbstractStaticSoundBuffer } from "./abstractStaticSoundBuffer";
+import type { AbstractStaticSoundBuffer } from "./staticSoundBuffer";
 
 /**
  * Options for creating a new static sound.
