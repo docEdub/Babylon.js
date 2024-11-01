@@ -1,6 +1,6 @@
 import type { AbstractAudioNode } from "../abstractAudioNode";
 import { MainAudioBus } from "../mainAudioBus";
-import type { WebAudioEngine, InternalWebAudioEngine } from "./webAudioEngine";
+import type { WebAudioEngine } from "./webAudioEngine";
 import { WebAudioMainOutput } from "./webAudioMainOutput";
 
 /** @internal */
@@ -24,7 +24,7 @@ export class WebAudioMainBus extends MainAudioBus {
 
     /** @internal */
     public async init(): Promise<void> {
-        this._gainNode = new GainNode(await (this.engine as InternalWebAudioEngine).audioContext);
+        this._gainNode = new GainNode(await (this.engine as WebAudioEngine).audioContext);
 
         if (this.engine.mainOutput) {
             this._connect(this.engine.mainOutput);

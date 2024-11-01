@@ -1,14 +1,25 @@
 import type { Nullable } from "../../../types";
 import { StreamingSound } from "../streamingSound";
 import { StreamingSoundInstance } from "../streamingSoundInstance";
-import type { WebAudioEngine, InternalWebAudioEngine, WebAudioStreamingSoundOptions } from "./webAudioEngine";
+import type { WebAudioEngine, WebAudioStreamingSoundOptions } from "./webAudioEngine";
+
+/**
+ *
+ * @param source
+ * @returns
+ */
+export function CreateStreamingSoundInstance(source: WebAudioStreamingSound): StreamingSoundInstance {
+    const soundInstance = new WebAudioStreamingSoundInstance(source);
+    source.engine.addSoundInstance(soundInstance);
+    return soundInstance;
+}
 
 /** @internal */
 export class WebAudioStreamingSound extends StreamingSound {
     private _gainNode: GainNode;
 
     /** @internal */
-    public override readonly engine: InternalWebAudioEngine;
+    public override readonly engine: WebAudioEngine;
 
     /** @internal */
     public audioContext: BaseAudioContext;
@@ -42,7 +53,7 @@ export class WebAudioStreamingSound extends StreamingSound {
     }
 
     protected _createSoundInstance(): WebAudioStreamingSoundInstance {
-        return this.engine.createStreamingSoundInstance(this);
+        return CreateStreamingSoundInstance(this) as WebAudioStreamingSoundInstance;
     }
 }
 

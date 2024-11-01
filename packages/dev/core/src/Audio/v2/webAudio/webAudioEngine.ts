@@ -1,20 +1,19 @@
 import type { Nullable } from "../../../types";
-import type { AudioBusOptions } from "../audioBus";
 import { AbstractAudioEngine } from "../abstractAudioEngine";
 import type { AbstractAudioNode } from "../abstractAudioNode";
+import type { AbstractSound } from "../abstractSound";
+import type { AbstractSoundInstance } from "../abstractSoundInstance";
+import type { AudioBusOptions } from "../audioBus";
 import type { AudioPositioner, AudioPositionerOptions } from "../audioPositioner";
 import type { AudioSender } from "../audioSender";
 import type { MainAudioBus } from "../mainAudioBus";
 import type { MainAudioOutput } from "../mainAudioOutput";
-import type { StaticSound, StaticSoundOptions } from "../staticSound";
-import type { StaticSoundBuffer, StaticSoundBufferOptions } from "../staticSoundBuffer";
 import type { StreamingSound, StreamingSoundOptions } from "../streamingSound";
 import { WebAudioMainBus } from "./webAudioMainBus";
 import { WebAudioMainOutput } from "./webAudioMainOutput";
 import { WebAudioPositioner } from "./webAudioPositioner";
 import { WebAudioSender } from "./webAudioSender";
-import { WebAudioStaticSound, WebAudioStaticSoundBuffer, WebAudioStaticSoundInstance } from "./webAudioStaticSound";
-import { WebAudioStreamingSound, WebAudioStreamingSoundInstance } from "./webAudioStreamingSound";
+import { WebAudioStreamingSound } from "./webAudioStreamingSound";
 
 /**
  * Options for creating a new WebAudioBus.
@@ -37,40 +36,6 @@ export interface WebAudioEngineOptions {
 export interface WebAudioPositionerOptions extends AudioPositionerOptions {}
 
 /**
- * Options for creating a new WebAudioStaticSoundBuffer.
- */
-export interface WebAudioStaticSoundBufferOptions extends StaticSoundBufferOptions {
-    /**
-     * The ArrayBuffer to be used as the sound source.
-     */
-    sourceArrayBuffer?: ArrayBuffer;
-    /**
-     * The AudioBuffer to be used as the sound source.
-     */
-    sourceAudioBuffer?: AudioBuffer;
-    /**
-     * The URL of the sound buffer.
-     */
-    sourceUrl?: string;
-    /**
-     * Potential URLs of the sound buffer. The first one that is successfully loaded will be used.
-     */
-    sourceUrls?: string[];
-    /**
-     * Whether to skip codec checking when before attempting to load each source URL in `sourceUrls`.
-     */
-    sourceUrlsSkipCodecCheck?: boolean;
-}
-
-/**
- * Options for creating a new WebAudioStaticSound.
- */
-export type WebAudioStaticSoundOptions = StaticSoundOptions &
-    WebAudioStaticSoundBufferOptions & {
-        sourceBuffer?: StaticSoundBuffer;
-    };
-
-/**
  * Options for creating a new WebAudioStreamingSound.
  */
 export interface WebAudioStreamingSoundOptions extends StreamingSoundOptions {
@@ -85,95 +50,67 @@ export interface WebAudioStreamingSoundOptions extends StreamingSoundOptions {
  * @param options - The options for creating the audio engine.
  * @returns A promise that resolves with the created audio engine.
  */
-export async function CreateAudioEngine(options: Nullable<WebAudioEngineOptions> = null): Promise<WebAudioEngine> {
-    const engine = new InternalWebAudioEngine();
+export async function CreateAudioEngineAsync(options: Nullable<WebAudioEngineOptions> = null): Promise<AbstractAudioEngine> {
+    const engine = new WebAudioEngine();
     await engine.init(options);
     return engine;
 }
 
 /**
- * Abstract class for InternalWebAudioEngine.
+ * Creates a new main audio bus.
+ * @param name - The name of the main bus.
+ * @param engine - The audio engine.
+ * @returns A promise that resolves with the created main audio bus.
  */
-export abstract class WebAudioEngine extends AbstractAudioEngine {
-    /**
-     * Creates a new main audio bus.
-     * @param name - The name of the main bus.
-     * @returns A promise that resolves with the created main audio bus.
-     */
-    public override async createMainBus(name: string): Promise<MainAudioBus> {
-        const bus = new WebAudioMainBus(name, this);
-        await bus.init();
-        this._addMainBus(bus);
-        return bus;
-    }
+export async function CreateMainAudioBusAsync(name: string, engine: WebAudioEngine): Promise<MainAudioBus> {
+    const bus = new WebAudioMainBus(name, engine);
+    await bus.init();
+    engine.addMainBus(bus);
+    return bus;
+}
 
-    /**
-     * Creates a new main audio output.
-     * @returns A promise that resolves with the created audio output.
-     */
-    public async createMainOutput(): Promise<MainAudioOutput> {
-        const mainAudioOutput = new WebAudioMainOutput(this);
-        await mainAudioOutput.init();
-        return mainAudioOutput;
-    }
+/**
+ * Creates a new main audio output.
+ * @param engine - The audio engine.
+ * @returns A promise that resolves with the created audio output.
+ */
+export async function CreateMainAudioOutputAsync(engine: WebAudioEngine): Promise<MainAudioOutput> {
+    const mainAudioOutput = new WebAudioMainOutput(engine);
+    await mainAudioOutput.init();
+    return mainAudioOutput;
+}
 
-    /**
-     * Creates a new audio positioner.
-     * @param parent - The parent node.
-     * @param options - The options for creating the positioner.
-     * @returns A promise that resolves with the created positioner.
-     */
-    public async createPositioner(parent: AbstractAudioNode, options: Nullable<WebAudioPositionerOptions> = null): Promise<AudioPositioner> {
-        return new WebAudioPositioner(parent, options);
-    }
+/**
+ * Creates a new audio positioner.
+ * @param parent - The parent node.
+ * @param options - The options for creating the positioner.
+ * @returns A promise that resolves with the created positioner.
+ */
+export async function CreateAudioPositionerAsync(parent: AbstractAudioNode, options: Nullable<WebAudioPositionerOptions> = null): Promise<AudioPositioner> {
+    return new WebAudioPositioner(parent, options);
+}
 
-    /**
-     * Creates a new WebAudioSender.
-     * @param parent - The parent audio node.
-     * @returns A promise that resolves to the created WebAudioSender.
-     */
-    public async createSender(parent: AbstractAudioNode): Promise<AudioSender> {
-        return new WebAudioSender(parent);
-    }
+/**
+ * Creates a new WebAudioSender.
+ * @param parent - The parent audio node.
+ * @returns A promise that resolves to the created WebAudioSender.
+ */
+export async function CreateAudioSenderAsync(parent: AbstractAudioNode): Promise<AudioSender> {
+    return new WebAudioSender(parent);
+}
 
-    /**
-     * Creates a new static sound.
-     * @param name - The name of the sound.
-     * @param options - The options for the static sound.
-     * @returns A promise that resolves to the created static sound.
-     */
-    public async createSound(name: string, options: Nullable<WebAudioStaticSoundOptions> = null): Promise<StaticSound> {
-        const sound = new WebAudioStaticSound(name, this, options);
-        await sound.init(options);
-        this._addSound(sound);
-        return sound;
-    }
-
-    /**
-     * Creates a new static sound buffer.
-     * @param options - The options for the static sound buffer.
-     * @returns A promise that resolves to the created static sound buffer.
-     */
-    public async createSoundBuffer(options: Nullable<WebAudioStaticSoundBufferOptions> = null): Promise<StaticSoundBuffer> {
-        const buffer = new WebAudioStaticSoundBuffer(this);
-        await buffer.init(options);
-        return buffer;
-    }
-
-    /**
-     * Creates a new streaming sound.
-     * @param name - The name of the sound.
-     * @param options - The options for the streaming sound.
-     * @returns A promise that resolves to the created streaming sound.
-     */
-    public async createStreamingSound(name: string, options: Nullable<StreamingSoundOptions> = null): Promise<StreamingSound> {
-        const sound = new WebAudioStreamingSound(name, this, options);
-        await sound.init(options);
-        this._addSound(sound);
-        return sound;
-    }
-
-    public abstract formatIsValid(format: string): boolean;
+/**
+ * Creates a new streaming sound.
+ * @param name - The name of the sound.
+ * @param engine - The audio engine.
+ * @param options - The options for the streaming sound.
+ * @returns A promise that resolves to the created streaming sound.
+ */
+export async function CreateStreamingSoundAsync(name: string, engine: WebAudioEngine, options: Nullable<StreamingSoundOptions> = null): Promise<StreamingSound> {
+    const sound = new WebAudioStreamingSound(name, engine, options);
+    await sound.init(options);
+    engine.addSound(sound);
+    return sound;
 }
 
 const formatMimeTypeMap = new Map<string, string>([
@@ -189,7 +126,7 @@ const formatMimeTypeMap = new Map<string, string>([
 ]);
 
 /** @internal */
-export class InternalWebAudioEngine extends WebAudioEngine {
+export class WebAudioEngine extends AbstractAudioEngine {
     private _audioContext: BaseAudioContext;
     private _mainOutput: Nullable<WebAudioMainOutput> = null;
 
@@ -240,23 +177,9 @@ export class InternalWebAudioEngine extends WebAudioEngine {
             this._initAudioContext();
         }
 
-        this._mainOutput = (await this.createMainOutput()) as WebAudioMainOutput;
+        this._mainOutput = (await CreateMainAudioOutputAsync(this)) as WebAudioMainOutput;
 
-        await this.createMainBus("default");
-    }
-
-    /** @internal */
-    public createStaticSoundInstance(source: WebAudioStaticSound): WebAudioStaticSoundInstance {
-        const soundInstance = new WebAudioStaticSoundInstance(source);
-        this._addSoundInstance(soundInstance);
-        return soundInstance;
-    }
-
-    /** @internal */
-    public createStreamingSoundInstance(source: WebAudioStreamingSound): WebAudioStreamingSoundInstance {
-        const soundInstance = new WebAudioStreamingSoundInstance(source);
-        this._addSoundInstance(soundInstance);
-        return soundInstance;
+        await CreateMainAudioBusAsync("default", this);
     }
 
     /** @internal */
@@ -288,5 +211,20 @@ export class InternalWebAudioEngine extends WebAudioEngine {
         this._validFormats.add(format);
 
         return true;
+    }
+
+    /** @internal */
+    public addMainBus(mainBus: MainAudioBus): void {
+        this._addMainBus(mainBus);
+    }
+
+    /** @internal */
+    public addSound(sound: AbstractSound): void {
+        this._addSound(sound);
+    }
+
+    /** @internal */
+    public addSoundInstance(soundInstance: AbstractSoundInstance): void {
+        this._addSoundInstance(soundInstance);
     }
 }
