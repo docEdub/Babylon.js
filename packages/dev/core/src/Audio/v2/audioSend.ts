@@ -30,7 +30,7 @@ export interface AudioSendOptions {
 /**
  * Owned by AbstractAudioEngine.
  */
-export abstract class AbstractAudioSend extends AbstractAudioNode {
+export abstract class AudioSend extends AbstractAudioNode {
     private _outputBus: Nullable<AuxiliaryAudioBus> = null;
     private _sendType: AudioSendType;
 

@@ -1,9 +1,9 @@
 import type { AbstractAudioEngine } from "../abstractAudioEngine";
-import { AbstractMainAudioOutput } from "../mainAudioOutput";
+import { MainAudioOutput } from "../mainAudioOutput";
 import type { WebAudioEngine } from "./webAudioEngine";
 
 /** @internal */
-export class WebAudioMainOutput extends AbstractMainAudioOutput {
+export class WebAudioMainOutput extends MainAudioOutput {
     private _destinationNode: AudioDestinationNode;
 
     /** @internal */

@@ -2,13 +2,13 @@ import type { Nullable } from "../../../types";
 import type { AudioBusOptions } from "../audioBus";
 import { AbstractAudioEngine } from "../abstractAudioEngine";
 import type { AbstractAudioNode } from "../abstractAudioNode";
-import type { AbstractAudioPositioner, AudioPositionerOptions } from "../audioPositioner";
-import type { AbstractAudioSender } from "../audioSender";
+import type { AudioPositioner, AudioPositionerOptions } from "../audioPositioner";
+import type { AudioSender } from "../audioSender";
 import type { MainAudioBus } from "../mainAudioBus";
-import type { AbstractMainAudioOutput } from "../mainAudioOutput";
-import type { AbstractStaticSound, StaticSoundOptions } from "../staticSound";
-import type { AbstractStaticSoundBuffer, StaticSoundBufferOptions } from "../staticSoundBuffer";
-import type { AbstractStreamingSound, StreamingSoundOptions } from "../streamingSound";
+import type { MainAudioOutput } from "../mainAudioOutput";
+import type { StaticSound, StaticSoundOptions } from "../staticSound";
+import type { StaticSoundBuffer, StaticSoundBufferOptions } from "../staticSoundBuffer";
+import type { StreamingSound, StreamingSoundOptions } from "../streamingSound";
 import { WebAudioMainBus } from "./webAudioMainBus";
 import { WebAudioMainOutput } from "./webAudioMainOutput";
 import { WebAudioPositioner } from "./webAudioPositioner";
@@ -67,7 +67,7 @@ export interface WebAudioStaticSoundBufferOptions extends StaticSoundBufferOptio
  */
 export type WebAudioStaticSoundOptions = StaticSoundOptions &
     WebAudioStaticSoundBufferOptions & {
-        sourceBuffer?: AbstractStaticSoundBuffer;
+        sourceBuffer?: StaticSoundBuffer;
     };
 
 /**
@@ -111,7 +111,7 @@ export abstract class AbstractWebAudioEngine extends AbstractAudioEngine {
      * Creates a new main audio output.
      * @returns A promise that resolves with the created audio output.
      */
-    public async createMainOutput(): Promise<AbstractMainAudioOutput> {
+    public async createMainOutput(): Promise<MainAudioOutput> {
         const mainAudioOutput = new WebAudioMainOutput(this);
         await mainAudioOutput.init();
         return mainAudioOutput;
@@ -123,7 +123,7 @@ export abstract class AbstractWebAudioEngine extends AbstractAudioEngine {
      * @param options - The options for creating the positioner.
      * @returns A promise that resolves with the created positioner.
      */
-    public async createPositioner(parent: AbstractAudioNode, options: Nullable<WebAudioPositionerOptions> = null): Promise<AbstractAudioPositioner> {
+    public async createPositioner(parent: AbstractAudioNode, options: Nullable<WebAudioPositionerOptions> = null): Promise<AudioPositioner> {
         return new WebAudioPositioner(parent, options);
     }
 
@@ -132,7 +132,7 @@ export abstract class AbstractWebAudioEngine extends AbstractAudioEngine {
      * @param parent - The parent audio node.
      * @returns A promise that resolves to the created WebAudioSender.
      */
-    public async createSender(parent: AbstractAudioNode): Promise<AbstractAudioSender> {
+    public async createSender(parent: AbstractAudioNode): Promise<AudioSender> {
         return new WebAudioSender(parent);
     }
 
@@ -142,7 +142,7 @@ export abstract class AbstractWebAudioEngine extends AbstractAudioEngine {
      * @param options - The options for the static sound.
      * @returns A promise that resolves to the created static sound.
      */
-    public async createSound(name: string, options: Nullable<WebAudioStaticSoundOptions> = null): Promise<AbstractStaticSound> {
+    public async createSound(name: string, options: Nullable<WebAudioStaticSoundOptions> = null): Promise<StaticSound> {
         const sound = new WebAudioStaticSound(name, this, options);
         await sound.init(options);
         this._addSound(sound);
@@ -154,7 +154,7 @@ export abstract class AbstractWebAudioEngine extends AbstractAudioEngine {
      * @param options - The options for the static sound buffer.
      * @returns A promise that resolves to the created static sound buffer.
      */
-    public async createSoundBuffer(options: Nullable<WebAudioStaticSoundBufferOptions> = null): Promise<AbstractStaticSoundBuffer> {
+    public async createSoundBuffer(options: Nullable<WebAudioStaticSoundBufferOptions> = null): Promise<StaticSoundBuffer> {
         const buffer = new WebAudioStaticSoundBuffer(this);
         await buffer.init(options);
         return buffer;
@@ -166,7 +166,7 @@ export abstract class AbstractWebAudioEngine extends AbstractAudioEngine {
      * @param options - The options for the streaming sound.
      * @returns A promise that resolves to the created streaming sound.
      */
-    public async createStreamingSound(name: string, options: Nullable<StreamingSoundOptions> = null): Promise<AbstractStreamingSound> {
+    public async createStreamingSound(name: string, options: Nullable<StreamingSoundOptions> = null): Promise<StreamingSound> {
         const sound = new WebAudioStreamingSound(name, this, options);
         await sound.init(options);
         this._addSound(sound);

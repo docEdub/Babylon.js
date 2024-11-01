@@ -13,7 +13,7 @@ export interface StaticSoundBufferOptions {
 /**
  * Abstract class for static sound buffer.
  */
-export abstract class AbstractStaticSoundBuffer {
+export abstract class StaticSoundBuffer {
     /**
      * The engine that the sound buffer belongs to.
      */

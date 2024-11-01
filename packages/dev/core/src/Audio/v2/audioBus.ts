@@ -2,8 +2,8 @@ import type { Nullable } from "../../types";
 import type { AbstractAudioBusOptions } from "./abstractAudioBus";
 import { AbstractAudioBus } from "./abstractAudioBus";
 import type { AbstractAudioEngine } from "./abstractAudioEngine";
-import type { AbstractAudioPositioner } from "./audioPositioner";
-import type { AbstractAudioSender } from "./audioSender";
+import type { AudioPositioner } from "./audioPositioner";
+import type { AudioSender } from "./audioSender";
 import type { MainAudioBus } from "./mainAudioBus";
 
 export type AbstractPrimaryAudioBus = MainAudioBus | AudioBus;
@@ -27,12 +27,12 @@ export interface AudioBusOptions extends AbstractAudioBusOptions {
  */
 export abstract class AudioBus extends AbstractAudioBus {
     private _outputBus: Nullable<AbstractPrimaryAudioBus> = null;
-    private _positioner: Nullable<AbstractAudioPositioner> = null;
+    private _positioner: Nullable<AudioPositioner> = null;
 
     /**
      * The sender of the audio bus.
      */
-    public readonly sender: AbstractAudioSender;
+    public readonly sender: AudioSender;
 
     /** @internal */
     constructor(name: string, engine: AbstractAudioEngine, options: Nullable<AudioBusOptions> = null) {
@@ -52,7 +52,7 @@ export abstract class AudioBus extends AbstractAudioBus {
     /**
      * The positioner of the audio bus.
      */
-    public get positioner(): Nullable<AbstractAudioPositioner> {
+    public get positioner(): Nullable<AudioPositioner> {
         return this._positioner;
     }
 

@@ -1,10 +1,10 @@
 import type { Nullable } from "../../../types";
-import { AbstractStreamingSound } from "../streamingSound";
-import { AbstractStreamingSoundInstance } from "../streamingSoundInstance";
+import { StreamingSound } from "../streamingSound";
+import { StreamingSoundInstance } from "../streamingSoundInstance";
 import type { AbstractWebAudioEngine, WebAudioEngine, WebAudioStreamingSoundOptions } from "./webAudioEngine";
 
 /** @internal */
-export class WebAudioStreamingSound extends AbstractStreamingSound {
+export class WebAudioStreamingSound extends StreamingSound {
     private _gainNode: GainNode;
 
     /** @internal */
@@ -47,7 +47,7 @@ export class WebAudioStreamingSound extends AbstractStreamingSound {
 }
 
 /** @internal */
-export class WebAudioStreamingSoundInstance extends AbstractStreamingSoundInstance {
+export class WebAudioStreamingSoundInstance extends StreamingSoundInstance {
     public get currentTime(): number {
         return 0;
     }
