@@ -3,7 +3,7 @@ import type { AbstractAudioNode } from "./abstractAudioNode";
 import { AbstractAudioNodeParent } from "./abstractAudioNodeParent";
 import type { AbstractAudioPositioner } from "./abstractAudioPositioner";
 import type { AbstractAudioSender } from "./abstractAudioSender";
-import type { AbstractMainAudioBus } from "./abstractMainAudioBus";
+import type { AbstractMainAudioBus } from "./mainAudioBus";
 import type { AbstractMainAudioOutput } from "./abstractMainAudioOutput";
 import type { AbstractSound } from "./abstractSound";
 import type { AbstractSoundInstance } from "./abstractSoundInstance";

@@ -4,7 +4,7 @@ import { AbstractAudioEngine } from "../abstractAudioEngine";
 import type { AbstractAudioNode } from "../abstractAudioNode";
 import type { AbstractAudioPositioner, AudioPositionerOptions } from "../abstractAudioPositioner";
 import type { AbstractAudioSender } from "../abstractAudioSender";
-import type { AbstractMainAudioBus } from "../abstractMainAudioBus";
+import type { AbstractMainAudioBus } from "../mainAudioBus";
 import type { AbstractMainAudioOutput } from "../abstractMainAudioOutput";
 import type { AbstractStaticSound, StaticSoundOptions } from "../abstractStaticSound";
 import type { AbstractStaticSoundBuffer, StaticSoundBufferOptions } from "../abstractStaticSoundBuffer";

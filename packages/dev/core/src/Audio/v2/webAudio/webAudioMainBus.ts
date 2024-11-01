@@ -1,5 +1,5 @@
 import type { AbstractAudioNode } from "../abstractAudioNode";
-import { AbstractMainAudioBus } from "../abstractMainAudioBus";
+import { AbstractMainAudioBus } from "../mainAudioBus";
 import type { AbstractWebAudioEngine, WebAudioEngine } from "./webAudioEngine";
 import { WebAudioMainOutput } from "./webAudioMainOutput";
 
