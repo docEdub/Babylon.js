@@ -1,4 +1,4 @@
-import { AbstractAudioBusNode } from "./abstractAudioBusNode";
+import { AbstractAudioBusNode } from "./abstractAudioBus";
 import type { AbstractAudioEngine } from "./abstractAudioEngine";
 
 /**
