@@ -1,17 +1,11 @@
 import type { Nullable } from "../../../types";
 import { AbstractAudioEngine } from "../abstractAudioEngine";
+import type { AbstractAudioNode } from "../abstractAudioNode";
 import type { AbstractSound } from "../abstractSound";
 import type { AbstractSoundInstance } from "../abstractSoundInstance";
-import type { AudioBusOptions } from "../audioBus";
 import type { MainAudioBus } from "../mainAudioBus";
-import type { MainAudioOutput } from "../mainAudioOutput";
-import { WebAudioMainBus } from "./webAudioMainBus";
-import { WebAudioMainOutput } from "./webAudioMainOutput";
-
-/**
- * Options for creating a new WebAudioBus.
- */
-export interface WebAudioBusOptions extends AudioBusOptions {}
+import { CreateMainAudioBusAsync } from "./webAudioMainBus";
+import { CreateMainAudioOutputAsync } from "./webAudioMainOutput";
 
 /**
  * Options for creating a new WebAudioEngine.
@@ -21,30 +15,6 @@ export interface WebAudioEngineOptions {
      * The audio context to be used by the engine.
      */
     audioContext?: BaseAudioContext;
-}
-
-/**
- * Creates a new main audio bus.
- * @param name - The name of the main bus.
- * @param engine - The audio engine.
- * @returns A promise that resolves with the created main audio bus.
- */
-export async function CreateMainAudioBusAsync(name: string, engine: WebAudioEngine): Promise<MainAudioBus> {
-    const bus = new WebAudioMainBus(name, engine);
-    await bus.init();
-    engine.addMainBus(bus);
-    return bus;
-}
-
-/**
- * Creates a new main audio output.
- * @param engine - The audio engine.
- * @returns A promise that resolves with the created audio output.
- */
-export async function CreateMainAudioOutputAsync(engine: WebAudioEngine): Promise<MainAudioOutput> {
-    const mainAudioOutput = new WebAudioMainOutput(engine);
-    await mainAudioOutput.init();
-    return mainAudioOutput;
 }
 
 /**
@@ -73,7 +43,7 @@ const formatMimeTypeMap = new Map<string, string>([
 /** @internal */
 export class WebAudioEngine extends AbstractAudioEngine {
     private _audioContext: BaseAudioContext;
-    private _mainOutput: Nullable<WebAudioMainOutput> = null;
+    private _mainOutput: Nullable<AbstractAudioNode> = null;
 
     private _invalidFormats = new Set<string>();
     private _validFormats = new Set<string>();
@@ -84,7 +54,7 @@ export class WebAudioEngine extends AbstractAudioEngine {
     }
 
     /** @internal */
-    public get mainOutput(): Nullable<WebAudioMainOutput> {
+    public get mainOutput(): Nullable<AbstractAudioNode> {
         return this._mainOutput;
     }
 
@@ -122,7 +92,7 @@ export class WebAudioEngine extends AbstractAudioEngine {
             this._initAudioContext();
         }
 
-        this._mainOutput = (await CreateMainAudioOutputAsync(this)) as WebAudioMainOutput;
+        this._mainOutput = await CreateMainAudioOutputAsync(this);
 
         await CreateMainAudioBusAsync("default", this);
     }

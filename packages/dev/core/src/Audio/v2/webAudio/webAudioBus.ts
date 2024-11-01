@@ -1,10 +1,16 @@
 import type { Nullable } from "core/types";
 import type { AbstractAudioNode } from "../abstractAudioNode";
+import type { AudioBusOptions } from "../audioBus";
 import { AudioBus } from "../audioBus";
 import type { AudioPositioner } from "../audioPositioner";
-import type { WebAudioBusOptions, WebAudioEngine } from "./webAudioEngine";
-import { WebAudioMainOutput } from "./webAudioMainOutput";
+import type { WebAudioEngine } from "./webAudioEngine";
+import type { WebAudioMainOutput } from "./webAudioMainOutput";
 import { CreateAudioPositionerAsync } from "./webAudioPositioner";
+
+/**
+ * Options for creating a new WebAudioBus.
+ */
+export interface WebAudioBusOptions extends AudioBusOptions {}
 
 /** @internal */
 export class WebAudioBus extends AudioBus {
@@ -37,8 +43,8 @@ export class WebAudioBus extends AudioBus {
     protected override _connect(node: AbstractAudioNode): void {
         super._connect(node);
 
-        if (node instanceof WebAudioMainOutput && node.webAudioInputNode) {
-            this.webAudioOutputNode.connect(node.webAudioInputNode);
+        if (node.constructor.name === "WebAudioMainOutput" && (node as WebAudioMainOutput).webAudioInputNode) {
+            this.webAudioOutputNode.connect((node as WebAudioMainOutput).webAudioInputNode);
         } else {
             throw new Error("Unsupported node type.");
         }
@@ -47,8 +53,8 @@ export class WebAudioBus extends AudioBus {
     protected override _disconnect(node: AbstractAudioNode): void {
         super._disconnect(node);
 
-        if (node instanceof WebAudioMainOutput && node.webAudioInputNode) {
-            this.webAudioOutputNode.disconnect(node.webAudioInputNode);
+        if (node.constructor.name === "WebAudioMainOutput" && (node as WebAudioMainOutput).webAudioInputNode) {
+            this.webAudioOutputNode.disconnect((node as WebAudioMainOutput).webAudioInputNode);
         } else {
             throw new Error("Unsupported node type.");
         }

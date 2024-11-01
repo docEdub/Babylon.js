@@ -2,6 +2,21 @@ import type { AbstractAudioEngine } from "../abstractAudioEngine";
 import { MainAudioOutput } from "../mainAudioOutput";
 import type { WebAudioEngine } from "./webAudioEngine";
 
+/**
+ * Creates a new main audio output.
+ * @param engine - The audio engine.
+ * @returns A promise that resolves with the created audio output.
+ */
+export async function CreateMainAudioOutputAsync(engine: AbstractAudioEngine): Promise<MainAudioOutput> {
+    if (engine.constructor.name !== "WebAudioEngine") {
+        throw new Error("Wrong engine type.");
+    }
+
+    const mainAudioOutput = new WebAudioMainOutput(engine);
+    await mainAudioOutput.init();
+    return mainAudioOutput;
+}
+
 /** @internal */
 export class WebAudioMainOutput extends MainAudioOutput {
     private _destinationNode: AudioDestinationNode;
