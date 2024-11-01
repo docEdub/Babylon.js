@@ -1,5 +1,5 @@
 import type { Nullable } from "core/types";
-import { AbstractAudioBus } from "../abstractAudioBus";
+import { AbstractAudioBus } from "../audioBus";
 import type { AbstractAudioNode } from "../abstractAudioNode";
 import type { AbstractWebAudioEngine, WebAudioBusOptions, WebAudioEngine } from "./webAudioEngine";
 import { WebAudioMainOutput } from "./webAudioMainOutput";
