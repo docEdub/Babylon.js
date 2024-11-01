@@ -2,7 +2,11 @@ import type { AbstractAudioNode } from "../abstractAudioNode";
 import { AudioSender } from "../audioSender";
 
 /** @internal */
-export class WebAudioSender extends AudioSender {
+export async function CreateAudioSenderAsync(parent: AbstractAudioNode): Promise<AudioSender> {
+    return new WebAudioSender(parent);
+}
+
+class WebAudioSender extends AudioSender {
     /** @internal */
     constructor(parent: AbstractAudioNode) {
         super(parent);

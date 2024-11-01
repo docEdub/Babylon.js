@@ -1,15 +1,12 @@
 import type { Nullable } from "../../../types";
 import { AbstractAudioEngine } from "../abstractAudioEngine";
-import type { AbstractAudioNode } from "../abstractAudioNode";
 import type { AbstractSound } from "../abstractSound";
 import type { AbstractSoundInstance } from "../abstractSoundInstance";
 import type { AudioBusOptions } from "../audioBus";
-import type { AudioSender } from "../audioSender";
 import type { MainAudioBus } from "../mainAudioBus";
 import type { MainAudioOutput } from "../mainAudioOutput";
 import { WebAudioMainBus } from "./webAudioMainBus";
 import { WebAudioMainOutput } from "./webAudioMainOutput";
-import { WebAudioSender } from "./webAudioSender";
 
 /**
  * Options for creating a new WebAudioBus.
@@ -48,15 +45,6 @@ export async function CreateMainAudioOutputAsync(engine: WebAudioEngine): Promis
     const mainAudioOutput = new WebAudioMainOutput(engine);
     await mainAudioOutput.init();
     return mainAudioOutput;
-}
-
-/**
- * Creates a new WebAudioSender.
- * @param parent - The parent audio node.
- * @returns A promise that resolves to the created WebAudioSender.
- */
-export async function CreateAudioSenderAsync(parent: AbstractAudioNode): Promise<AudioSender> {
-    return new WebAudioSender(parent);
 }
 
 /**
