@@ -1,11 +1,11 @@
 import type { Nullable } from "core/types";
-import { AbstractAudioBus } from "../audioBus";
+import { AudioBus } from "../audioBus";
 import type { AbstractAudioNode } from "../abstractAudioNode";
 import type { AbstractWebAudioEngine, WebAudioBusOptions, WebAudioEngine } from "./webAudioEngine";
 import { WebAudioMainOutput } from "./webAudioMainOutput";
 
 /** @internal */
-export class WebAudioBus extends AbstractAudioBus {
+export class WebAudioBus extends AudioBus {
     private _gainNode: GainNode;
 
     /** @internal */
