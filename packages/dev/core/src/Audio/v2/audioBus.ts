@@ -1,6 +1,6 @@
 import type { Nullable } from "../../types";
-import type { AudioBusNodeOptions } from "./abstractAudioBus";
-import { AbstractAudioBusNode } from "./abstractAudioBus";
+import type { AbstractAudioBusOptions } from "./abstractAudioBus";
+import { AbstractAudioBus } from "./abstractAudioBus";
 import type { AbstractAudioEngine } from "./abstractAudioEngine";
 import type { AbstractAudioPositioner } from "./abstractAudioPositioner";
 import type { AbstractAudioSender } from "./abstractAudioSender";
@@ -11,7 +11,7 @@ export type AbstractPrimaryAudioBus = AbstractMainAudioBus | AudioBus;
 /**
  * Options for creating a new audio bus.
  */
-export interface AudioBusOptions extends AudioBusNodeOptions {
+export interface AudioBusOptions extends AbstractAudioBusOptions {
     /**
      * Whether to enable the positioner.
      */
@@ -25,7 +25,7 @@ export interface AudioBusOptions extends AudioBusNodeOptions {
 /**
  * Abstract class for an audio bus.
  */
-export abstract class AudioBus extends AbstractAudioBusNode {
+export abstract class AudioBus extends AbstractAudioBus {
     private _outputBus: Nullable<AbstractPrimaryAudioBus> = null;
     private _positioner: Nullable<AbstractAudioPositioner> = null;
 

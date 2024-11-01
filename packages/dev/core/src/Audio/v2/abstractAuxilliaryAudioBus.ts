@@ -1,6 +1,6 @@
 import type { Nullable } from "../../types";
-import type { AudioBusNodeOptions } from "./abstractAudioBus";
-import { AbstractAudioBusNode } from "./abstractAudioBus";
+import type { AbstractAudioBusOptions } from "./abstractAudioBus";
+import { AbstractAudioBus } from "./abstractAudioBus";
 import type { AbstractAudioEngine } from "./abstractAudioEngine";
 import type { AbstractAudioPositioner } from "./abstractAudioPositioner";
 import type { AbstractAudioSender } from "./abstractAudioSender";
@@ -8,7 +8,7 @@ import type { AbstractAudioSender } from "./abstractAudioSender";
 /**
  * Options for creating a new auxilliary audio bus.
  */
-export interface AuxilliaryAudioBusOptions extends AudioBusNodeOptions {
+export interface AuxilliaryAudioBusOptions extends AbstractAudioBusOptions {
     /**
      * Whether to enable a positioner for the auxilliary audio bus.
      */
@@ -16,15 +16,15 @@ export interface AuxilliaryAudioBusOptions extends AudioBusNodeOptions {
     /**
      * The output bus for the auxilliary audio bus.
      */
-    outputBus?: AbstractAudioBusNode;
+    outputBus?: AbstractAudioBus;
 }
 
 /**
  * Abstract class representing an auxilliary audio bus in the audio engine.
  */
-export abstract class AbstractAuxilliaryAudioBus extends AbstractAudioBusNode {
+export abstract class AbstractAuxilliaryAudioBus extends AbstractAudioBus {
     private _positioner: Nullable<AbstractAudioPositioner> = null;
-    private _outputBus: Nullable<AbstractAudioBusNode> = null;
+    private _outputBus: Nullable<AbstractAudioBus> = null;
 
     /**
      * The sender for the auxilliary audio bus.
@@ -68,11 +68,11 @@ export abstract class AbstractAuxilliaryAudioBus extends AbstractAudioBusNode {
     /**
      * The output bus for the auxilliary audio bus.
      */
-    public get outputBus(): Nullable<AbstractAudioBusNode> {
+    public get outputBus(): Nullable<AbstractAudioBus> {
         return this._outputBus;
     }
 
-    public set outputBus(outputBus: Nullable<AbstractAudioBusNode>) {
+    public set outputBus(outputBus: Nullable<AbstractAudioBus>) {
         if (this._outputBus === outputBus) {
             return;
         }
