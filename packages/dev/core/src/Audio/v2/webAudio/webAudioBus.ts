@@ -3,8 +3,8 @@ import type { AbstractAudioNode } from "../abstractAudioNode";
 import { AudioBus } from "../audioBus";
 import type { AudioPositioner } from "../audioPositioner";
 import type { WebAudioBusOptions, WebAudioEngine } from "./webAudioEngine";
-import { CreateAudioPositionerAsync } from "./webAudioEngine";
 import { WebAudioMainOutput } from "./webAudioMainOutput";
+import { CreateAudioPositionerAsync } from "./webAudioPositioner";
 
 /** @internal */
 export class WebAudioBus extends AudioBus {
