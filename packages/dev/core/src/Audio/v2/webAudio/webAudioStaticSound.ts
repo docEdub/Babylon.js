@@ -7,9 +7,9 @@ import { StaticSound } from "../staticSound";
 import type { StaticSoundBufferOptions } from "../staticSoundBuffer";
 import { StaticSoundBuffer } from "../staticSoundBuffer";
 import { StaticSoundInstance } from "../staticSoundInstance";
-import { WebAudioBus } from "./webAudioBus"; // TODO: Remove import. Should be optional?
-import { WebAudioEngine } from "./webAudioEngine";
-import { WebAudioMainBus } from "./webAudioMainBus";
+import type { WebAudioBus } from "./webAudioBus";
+import type { WebAudioEngine } from "./webAudioEngine";
+import type { WebAudioMainBus } from "./webAudioMainBus";
 
 const fileExtensionRegex = new RegExp("\\.(\\w{3,4}$|\\?)");
 
@@ -55,13 +55,13 @@ export type WebAudioStaticSoundOptions = StaticSoundOptions &
  * @returns A promise that resolves to the created static sound.
  */
 export async function CreateSoundAsync(name: string, engine: AbstractAudioEngine, options: Nullable<WebAudioStaticSoundOptions> = null): Promise<StaticSound> {
-    if (!(engine instanceof WebAudioEngine)) {
+    if (engine.constructor.name !== "WebAudioEngine") {
         throw new Error("Unsupported engine type.");
     }
 
-    const sound = new WebAudioStaticSound(name, engine, options);
+    const sound = new WebAudioStaticSound(name, engine as WebAudioEngine, options);
     await sound.init(options);
-    engine.addSound(sound);
+    (engine as WebAudioEngine).addSound(sound);
     return sound;
 }
 
@@ -72,11 +72,11 @@ export async function CreateSoundAsync(name: string, engine: AbstractAudioEngine
  * @returns A promise that resolves to the created static sound buffer.
  */
 export async function CreateSoundBufferAsync(engine: AbstractAudioEngine, options: Nullable<WebAudioStaticSoundBufferOptions> = null): Promise<StaticSoundBuffer> {
-    if (!(engine instanceof WebAudioEngine)) {
+    if (engine.constructor.name !== "WebAudioEngine") {
         throw new Error("Unsupported engine type.");
     }
 
-    const buffer = new WebAudioStaticSoundBuffer(engine);
+    const buffer = new WebAudioStaticSoundBuffer(engine as WebAudioEngine);
     await buffer.init(options);
     return buffer;
 }
@@ -151,8 +151,8 @@ class WebAudioStaticSound extends StaticSound {
     protected override _connect(node: AbstractAudioNode): void {
         super._connect(node);
 
-        if (node instanceof WebAudioMainBus) {
-            this.webAudioOutputNode.connect(node.webAudioInputNode);
+        if (node.constructor.name === "WebAudioMainBus" || node.constructor.name === "WebAudioBus") {
+            this.webAudioOutputNode.connect((node as WebAudioMainBus | WebAudioBus).webAudioInputNode);
         } else {
             throw new Error("Unsupported node type.");
         }
@@ -161,8 +161,8 @@ class WebAudioStaticSound extends StaticSound {
     protected override _disconnect(node: AbstractAudioNode): void {
         super._disconnect(node);
 
-        if (node instanceof WebAudioMainBus || node instanceof WebAudioBus) {
-            this.webAudioOutputNode.disconnect(node.webAudioInputNode);
+        if (node.constructor.name === "WebAudioMainBus" || node.constructor.name === "WebAudioBus") {
+            this.webAudioOutputNode.disconnect((node as WebAudioMainBus | WebAudioBus).webAudioInputNode);
         } else {
             throw new Error("Unsupported node type.");
         }

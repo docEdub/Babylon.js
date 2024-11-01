@@ -1,4 +1,5 @@
 import type { Nullable } from "../../../types";
+import type { AbstractAudioEngine } from "../abstractAudioEngine";
 import type { StreamingSoundOptions } from "../streamingSound";
 import { StreamingSound } from "../streamingSound";
 import { StreamingSoundInstance } from "../streamingSoundInstance";
@@ -21,10 +22,14 @@ export interface WebAudioStreamingSoundOptions extends StreamingSoundOptions {
  * @param options - The options for the streaming sound.
  * @returns A promise that resolves to the created streaming sound.
  */
-export async function CreateStreamingSoundAsync(name: string, engine: WebAudioEngine, options: Nullable<StreamingSoundOptions> = null): Promise<StreamingSound> {
-    const sound = new WebAudioStreamingSound(name, engine, options);
+export async function CreateStreamingSoundAsync(name: string, engine: AbstractAudioEngine, options: Nullable<StreamingSoundOptions> = null): Promise<StreamingSound> {
+    if (engine.constructor.name !== "WebAudioEngine") {
+        throw new Error("Unsupported engine type.");
+    }
+
+    const sound = new WebAudioStreamingSound(name, engine as WebAudioEngine, options);
     await sound.init(options);
-    engine.addSound(sound);
+    (engine as WebAudioEngine).addSound(sound);
     return sound;
 }
 
