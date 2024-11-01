@@ -8,12 +8,10 @@ import type { AudioPositioner, AudioPositionerOptions } from "../audioPositioner
 import type { AudioSender } from "../audioSender";
 import type { MainAudioBus } from "../mainAudioBus";
 import type { MainAudioOutput } from "../mainAudioOutput";
-import type { StreamingSound, StreamingSoundOptions } from "../streamingSound";
 import { WebAudioMainBus } from "./webAudioMainBus";
 import { WebAudioMainOutput } from "./webAudioMainOutput";
 import { WebAudioPositioner } from "./webAudioPositioner";
 import { WebAudioSender } from "./webAudioSender";
-import { WebAudioStreamingSound } from "./webAudioStreamingSound";
 
 /**
  * Options for creating a new WebAudioBus.
@@ -34,16 +32,6 @@ export interface WebAudioEngineOptions {
  * Options for creating a new WebAudioPositioner.
  */
 export interface WebAudioPositionerOptions extends AudioPositionerOptions {}
-
-/**
- * Options for creating a new WebAudioStreamingSound.
- */
-export interface WebAudioStreamingSoundOptions extends StreamingSoundOptions {
-    /**
-     * The URL of the sound source.
-     */
-    sourceUrl?: string;
-}
 
 /**
  * Creates a new WebAudioEngine.
@@ -97,20 +85,6 @@ export async function CreateAudioPositionerAsync(parent: AbstractAudioNode, opti
  */
 export async function CreateAudioSenderAsync(parent: AbstractAudioNode): Promise<AudioSender> {
     return new WebAudioSender(parent);
-}
-
-/**
- * Creates a new streaming sound.
- * @param name - The name of the sound.
- * @param engine - The audio engine.
- * @param options - The options for the streaming sound.
- * @returns A promise that resolves to the created streaming sound.
- */
-export async function CreateStreamingSoundAsync(name: string, engine: WebAudioEngine, options: Nullable<StreamingSoundOptions> = null): Promise<StreamingSound> {
-    const sound = new WebAudioStreamingSound(name, engine, options);
-    await sound.init(options);
-    engine.addSound(sound);
-    return sound;
 }
 
 const formatMimeTypeMap = new Map<string, string>([
