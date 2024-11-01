@@ -3,7 +3,7 @@ import type { AbstractAudioNode } from "./abstractAudioNode";
 import { AbstractAudioNodeParent } from "./abstractAudioNodeParent";
 import type { AbstractAudioPositioner } from "./abstractAudioPositioner";
 import type { AbstractAudioSender } from "./abstractAudioSender";
-import type { AbstractMainAudioBus } from "./mainAudioBus";
+import type { MainAudioBus } from "./mainAudioBus";
 import type { AbstractMainAudioOutput } from "./abstractMainAudioOutput";
 import type { AbstractSound } from "./abstractSound";
 import type { AbstractSoundInstance } from "./abstractSoundInstance";
@@ -20,7 +20,7 @@ export abstract class AbstractAudioEngine extends AbstractAudioNodeParent {
     // Owns all AbstractSound objects.
 
     // Not owned, but all items should be in parent's `children` container, too, which is owned.
-    private readonly _mainBuses = new Set<AbstractMainAudioBus>();
+    private readonly _mainBuses = new Set<MainAudioBus>();
 
     // Owned
     private readonly _sounds = new Set<AbstractSound>();
@@ -46,7 +46,7 @@ export abstract class AbstractAudioEngine extends AbstractAudioNodeParent {
     /**
      * The default main bus.
      */
-    public get defaultMainBus(): Nullable<AbstractMainAudioBus> {
+    public get defaultMainBus(): Nullable<MainAudioBus> {
         if (this._mainBuses.size === 0) {
             return null;
         }
@@ -76,7 +76,7 @@ export abstract class AbstractAudioEngine extends AbstractAudioNodeParent {
         this._sounds.clear();
     }
 
-    protected _addMainBus(mainBus: AbstractMainAudioBus): void {
+    protected _addMainBus(mainBus: MainAudioBus): void {
         this._mainBuses.add(mainBus);
         mainBus.onDisposeObservable.addOnce(() => {
             this._mainBuses.delete(mainBus);
@@ -97,7 +97,7 @@ export abstract class AbstractAudioEngine extends AbstractAudioNodeParent {
         });
     }
 
-    public abstract createMainBus(name: string): Promise<AbstractMainAudioBus>;
+    public abstract createMainBus(name: string): Promise<MainAudioBus>;
     public abstract createMainOutput(): Promise<AbstractMainAudioOutput>;
     public abstract createPositioner(parent: AbstractAudioNode): Promise<AbstractAudioPositioner>;
     public abstract createSender(parent: AbstractAudioNode): Promise<AbstractAudioSender>;

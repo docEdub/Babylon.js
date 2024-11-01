@@ -4,9 +4,9 @@ import { AbstractAudioBus } from "./abstractAudioBus";
 import type { AbstractAudioEngine } from "./abstractAudioEngine";
 import type { AbstractAudioPositioner } from "./abstractAudioPositioner";
 import type { AbstractAudioSender } from "./abstractAudioSender";
-import type { AbstractMainAudioBus } from "./mainAudioBus";
+import type { MainAudioBus } from "./mainAudioBus";
 
-export type AbstractPrimaryAudioBus = AbstractMainAudioBus | AudioBus;
+export type AbstractPrimaryAudioBus = MainAudioBus | AudioBus;
 
 /**
  * Options for creating a new audio bus.

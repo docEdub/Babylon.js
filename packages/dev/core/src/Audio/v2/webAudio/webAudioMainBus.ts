@@ -1,10 +1,10 @@
 import type { AbstractAudioNode } from "../abstractAudioNode";
-import { AbstractMainAudioBus } from "../mainAudioBus";
+import { MainAudioBus } from "../mainAudioBus";
 import type { AbstractWebAudioEngine, WebAudioEngine } from "./webAudioEngine";
 import { WebAudioMainOutput } from "./webAudioMainOutput";
 
 /** @internal */
-export class WebAudioMainBus extends AbstractMainAudioBus {
+export class WebAudioMainBus extends MainAudioBus {
     private _gainNode: GainNode;
 
     /** @internal */

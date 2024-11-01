@@ -22,7 +22,7 @@ export interface AuxilliaryAudioBusOptions extends AbstractAudioBusOptions {
 /**
  * Abstract class representing an auxilliary audio bus in the audio engine.
  */
-export abstract class AbstractAuxilliaryAudioBus extends AbstractAudioBus {
+export abstract class AuxiliaryAudioBus extends AbstractAudioBus {
     private _positioner: Nullable<AbstractAudioPositioner> = null;
     private _outputBus: Nullable<AbstractAudioBus> = null;
 

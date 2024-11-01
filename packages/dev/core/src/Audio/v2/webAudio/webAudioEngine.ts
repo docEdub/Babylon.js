@@ -4,7 +4,7 @@ import { AbstractAudioEngine } from "../abstractAudioEngine";
 import type { AbstractAudioNode } from "../abstractAudioNode";
 import type { AbstractAudioPositioner, AudioPositionerOptions } from "../abstractAudioPositioner";
 import type { AbstractAudioSender } from "../abstractAudioSender";
-import type { AbstractMainAudioBus } from "../mainAudioBus";
+import type { MainAudioBus } from "../mainAudioBus";
 import type { AbstractMainAudioOutput } from "../abstractMainAudioOutput";
 import type { AbstractStaticSound, StaticSoundOptions } from "../abstractStaticSound";
 import type { AbstractStaticSoundBuffer, StaticSoundBufferOptions } from "../abstractStaticSoundBuffer";
@@ -100,7 +100,7 @@ export abstract class AbstractWebAudioEngine extends AbstractAudioEngine {
      * @param name - The name of the main bus.
      * @returns A promise that resolves with the created main audio bus.
      */
-    public override async createMainBus(name: string): Promise<AbstractMainAudioBus> {
+    public override async createMainBus(name: string): Promise<MainAudioBus> {
         const bus = new WebAudioMainBus(name, this);
         await bus.init();
         this._addMainBus(bus);

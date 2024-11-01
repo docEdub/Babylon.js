@@ -1,7 +1,7 @@
 import type { Nullable } from "../../types";
 import type { AbstractAudioEngine } from "./abstractAudioEngine";
 import { AbstractAudioNode, AudioNodeType } from "./abstractAudioNode";
-import type { AbstractAuxilliaryAudioBus } from "./auxilliaryAudioBus";
+import type { AuxiliaryAudioBus } from "./auxilliaryAudioBus";
 
 /**
  * The type of send.
@@ -31,7 +31,7 @@ export interface AudioSendOptions {
  * Owned by AbstractAudioEngine.
  */
 export abstract class AbstractAudioSend extends AbstractAudioNode {
-    private _outputBus: Nullable<AbstractAuxilliaryAudioBus> = null;
+    private _outputBus: Nullable<AuxiliaryAudioBus> = null;
     private _sendType: AudioSendType;
 
     /** @internal */
@@ -44,11 +44,11 @@ export abstract class AbstractAudioSend extends AbstractAudioNode {
     /**
      * The output bus.
      */
-    public get outputBus(): Nullable<AbstractAuxilliaryAudioBus> {
+    public get outputBus(): Nullable<AuxiliaryAudioBus> {
         return this._outputBus;
     }
 
-    public set outputBus(outputBus: Nullable<AbstractAuxilliaryAudioBus>) {
+    public set outputBus(outputBus: Nullable<AuxiliaryAudioBus>) {
         if (this._outputBus === outputBus) {
             return;
         }
