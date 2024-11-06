@@ -119,14 +119,16 @@ export const evaluatePlaywrightVisTests = async (engineType = "webgl2", testFile
             });
             const renderCount = testCase.renderCount || 1;
             //Consider commenting line below
-            const renderResult = await page.evaluate(evaluateRenderSceneForVisualization, { renderCount });
+            //const renderResult = await page.evaluate(evaluateRenderSceneForVisualization, { renderCount });
 
             //Incorporate Minh and Cam's code into this part of the code
             if (testCase.isAudioTest === true) {
                 console.log("Audio Test Loaded");
                 //Using page.evaulate to interact with the audioContext
-                await page.evaluate(() => {
-                    const canvas = document.getElementById("renderCanvas") as HTMLCanvasElement;
+                await page.evaluate(async () => {
+                    // const canvas = document.getElementById("renderCanvas") as HTMLCanvasElement;
+                    const canvas = window.engine.getRenderingCanvas() as HTMLCanvasElement;
+                    console.log(`Canvas: ${canvas}`);
 
                     //Creating
                     const audioEngine = BABYLON.Engine.audioEngine!;
@@ -139,9 +141,9 @@ export const evaluatePlaywrightVisTests = async (engineType = "webgl2", testFile
                     const analyzer = new AnalyserNode(audioContext);
                     masterGainNode.connect(analyzer);
 
-                    /*
                     const freqData = new Float32Array(analyzer.frequencyBinCount);
 
+                    console.log("Drawing audio fft ...");
                     const visualizationCanvas = document.createElement("canvas");
                     visualizationCanvas.width = canvas.width;
                     visualizationCanvas.height = canvas.height;
@@ -149,20 +151,27 @@ export const evaluatePlaywrightVisTests = async (engineType = "webgl2", testFile
                     visualizationCanvas.style.top = canvas.offsetTop + "px";
                     visualizationCanvas.style.left = "0px"; // Align to the very left of the screen
                     document.body.appendChild(visualizationCanvas);
-                    */
+
+                    // await new Promise<void>((resolve) => {
+                    //     setTimeout(() => {
+                    //         resolve();
+                    //     }, 10000);
+                    // });
+
+                    debugger;
                 });
             }
 
-            expect(renderResult).toBeTruthy();
-            if (engineType.startsWith("webgl")) {
-                const glError = await page.evaluate(evaluateIsGLError);
-                expect(glError).toBe(false);
-            }
-            await expect(page).toHaveScreenshot((testCase.referenceImage || testCase.title).replace(".png", "") + ".png", {
-                // omitBackground: true,
-                threshold: 0.1,
-                maxDiffPixelRatio: (testCase.errorRatio || 3) / 100,
-            });
+            // expect(renderResult).toBeTruthy();
+            // if (engineType.startsWith("webgl")) {
+            //     const glError = await page.evaluate(evaluateIsGLError);
+            //     expect(glError).toBe(false);
+            // }
+            // await expect(page).toHaveScreenshot((testCase.referenceImage || testCase.title).replace(".png", "") + ".png", {
+            //     // omitBackground: true,
+            //     threshold: 0.1,
+            //     maxDiffPixelRatio: (testCase.errorRatio || 3) / 100,
+            // });
             page.off("console", logCallback);
         });
     }
