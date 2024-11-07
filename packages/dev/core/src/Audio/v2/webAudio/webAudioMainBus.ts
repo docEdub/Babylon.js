@@ -11,7 +11,7 @@ import type { WebAudioMainOutput } from "./webAudioMainOutput";
  * @returns A promise that resolves with the created main audio bus.
  */
 export async function CreateMainAudioBusAsync(name: string, engine: AbstractAudioEngine): Promise<MainAudioBus> {
-    if (engine.constructor.name !== "WebAudioEngine") {
+    if (!engine.isWebAudio) {
         throw new Error("Wrong engine type.");
     }
 
@@ -49,10 +49,15 @@ export class WebAudioMainBus extends MainAudioBus {
         }
     }
 
+    /** @internal */
+    public getClassName(): string {
+        return "WebAudioMainBus";
+    }
+
     protected override _connect(node: AbstractAudioNode): void {
         super._connect(node);
 
-        if (node.constructor.name === "WebAudioMainOutput" && (node as WebAudioMainOutput).webAudioInputNode) {
+        if (node.getClassName() === "WebAudioMainOutput" && (node as WebAudioMainOutput).webAudioInputNode) {
             this.webAudioOutputNode.connect((node as WebAudioMainOutput).webAudioInputNode);
         } else {
             throw new Error("Unsupported node type.");
@@ -62,7 +67,7 @@ export class WebAudioMainBus extends MainAudioBus {
     protected override _disconnect(node: AbstractAudioNode): void {
         super._disconnect(node);
 
-        if (node.constructor.name === "WebAudioMainOutput" && (node as WebAudioMainOutput).webAudioInputNode) {
+        if (node.getClassName() === "WebAudioMainOutput" && (node as WebAudioMainOutput).webAudioInputNode) {
             this.webAudioOutputNode.disconnect((node as WebAudioMainOutput).webAudioInputNode);
         } else {
             throw new Error("Unsupported node type.");

@@ -11,4 +11,9 @@ class WebAudioSender extends AudioSender {
     constructor(parent: AbstractAudioNode) {
         super(parent);
     }
+
+    /** @internal */
+    public getClassName(): string {
+        return "WebAudioSender";
+    }
 }

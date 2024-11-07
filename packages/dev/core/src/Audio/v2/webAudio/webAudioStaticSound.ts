@@ -55,7 +55,7 @@ export type WebAudioStaticSoundOptions = StaticSoundOptions &
  * @returns A promise that resolves to the created static sound.
  */
 export async function CreateSoundAsync(name: string, engine: AbstractAudioEngine, options: Nullable<WebAudioStaticSoundOptions> = null): Promise<StaticSound> {
-    if (engine.constructor.name !== "WebAudioEngine") {
+    if (!engine.isWebAudio) {
         throw new Error("Unsupported engine type.");
     }
 
@@ -72,7 +72,7 @@ export async function CreateSoundAsync(name: string, engine: AbstractAudioEngine
  * @returns A promise that resolves to the created static sound buffer.
  */
 export async function CreateSoundBufferAsync(engine: AbstractAudioEngine, options: Nullable<WebAudioStaticSoundBufferOptions> = null): Promise<StaticSoundBuffer> {
-    if (engine.constructor.name !== "WebAudioEngine") {
+    if (!engine.isWebAudio) {
         throw new Error("Unsupported engine type.");
     }
 
@@ -142,6 +142,11 @@ class WebAudioStaticSound extends StaticSound {
         }
     }
 
+    /** @internal */
+    public getClassName(): string {
+        return "WebAudioStaticSound";
+    }
+
     protected _createSoundInstance(): WebAudioStaticSoundInstance {
         const soundInstance = new WebAudioStaticSoundInstance(this);
         this.engine.addSoundInstance(soundInstance);
@@ -151,7 +156,7 @@ class WebAudioStaticSound extends StaticSound {
     protected override _connect(node: AbstractAudioNode): void {
         super._connect(node);
 
-        if (node.constructor.name === "WebAudioMainBus" || node.constructor.name === "WebAudioBus") {
+        if (node.getClassName() === "WebAudioMainBus" || node.getClassName() === "WebAudioBus") {
             this.webAudioOutputNode.connect((node as WebAudioMainBus | WebAudioBus).webAudioInputNode);
         } else {
             throw new Error("Unsupported node type.");
@@ -161,7 +166,7 @@ class WebAudioStaticSound extends StaticSound {
     protected override _disconnect(node: AbstractAudioNode): void {
         super._disconnect(node);
 
-        if (node.constructor.name === "WebAudioMainBus" || node.constructor.name === "WebAudioBus") {
+        if (node.getClassName() === "WebAudioMainBus" || node.getClassName() === "WebAudioBus") {
             this.webAudioOutputNode.disconnect((node as WebAudioMainBus | WebAudioBus).webAudioInputNode);
         } else {
             throw new Error("Unsupported node type.");
@@ -331,6 +336,11 @@ class WebAudioStaticSoundInstance extends StaticSoundInstance {
         this._state = SoundState.Stopped;
 
         this.sourceNode?.stop(waitTime ? this.engine.currentTime + waitTime : 0);
+    }
+
+    /** @internal */
+    public getClassName(): string {
+        return "WebAudioStaticSoundInstance";
     }
 
     protected _onEnded = (() => {

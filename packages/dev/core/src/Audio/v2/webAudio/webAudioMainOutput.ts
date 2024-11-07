@@ -8,7 +8,7 @@ import type { WebAudioEngine } from "./webAudioEngine";
  * @returns A promise that resolves with the created audio output.
  */
 export async function CreateMainAudioOutputAsync(engine: AbstractAudioEngine): Promise<MainAudioOutput> {
-    if (engine.constructor.name !== "WebAudioEngine") {
+    if (!engine.isWebAudio) {
         throw new Error("Wrong engine type.");
     }
 
@@ -34,5 +34,10 @@ export class WebAudioMainOutput extends MainAudioOutput {
     /** @internal */
     public async init(): Promise<void> {
         this._destinationNode = (await (this.engine as WebAudioEngine).audioContext).destination;
+    }
+
+    /** @internal */
+    public getClassName(): string {
+        return "WebAudioMainOutput";
     }
 }

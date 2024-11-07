@@ -49,6 +49,11 @@ export class WebAudioEngine extends AbstractAudioEngine {
     private _validFormats = new Set<string>();
 
     /** @internal */
+    public get isWebAudio(): boolean {
+        return true;
+    }
+
+    /** @internal */
     public get currentTime(): number {
         return this._audioContext.currentTime;
     }

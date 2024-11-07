@@ -23,7 +23,7 @@ export interface WebAudioStreamingSoundOptions extends StreamingSoundOptions {
  * @returns A promise that resolves to the created streaming sound.
  */
 export async function CreateStreamingSoundAsync(name: string, engine: AbstractAudioEngine, options: Nullable<StreamingSoundOptions> = null): Promise<StreamingSound> {
-    if (engine.constructor.name !== "WebAudioEngine") {
+    if (!engine.isWebAudio) {
         throw new Error("Unsupported engine type.");
     }
 
@@ -71,6 +71,11 @@ class WebAudioStreamingSound extends StreamingSound {
         this.volume = options?.volume ?? 1;
     }
 
+    /** @internal */
+    public getClassName(): string {
+        return "WebAudioStreamingSound";
+    }
+
     protected _createSoundInstance(): WebAudioStreamingSoundInstance {
         const soundInstance = new WebAudioStreamingSoundInstance(this);
         this.engine.addSoundInstance(soundInstance);
@@ -101,4 +106,9 @@ class WebAudioStreamingSoundInstance extends StreamingSoundInstance {
 
     /** @internal */
     public override stop(waitTime: Nullable<number> = null): void {}
+
+    /** @internal */
+    public getClassName(): string {
+        return "WebAudioStreamingSoundInstance";
+    }
 }

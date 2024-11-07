@@ -28,6 +28,11 @@ export abstract class AbstractAudioEngine extends AbstractAudioNodeParent {
     public readonly listeners = new Set<SpatialAudioListener>(); // Owned
 
     /**
+     * `true` if the engine is a WebAudio engine; otherwise `false`.
+     */
+    public abstract get isWebAudio(): boolean;
+
+    /**
      * The current time in seconds.
      */
     public abstract get currentTime(): number;

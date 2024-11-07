@@ -17,4 +17,9 @@ class WebAudioPositioner extends AudioPositioner {
     constructor(parent: AbstractAudioNode, options: Nullable<SpatialAudioTransformOptions> = null) {
         super(parent, options);
     }
+
+    /** @internal */
+    public getClassName(): string {
+        return "WebAudioPositioner";
+    }
 }
