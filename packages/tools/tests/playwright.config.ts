@@ -38,6 +38,17 @@ export default defineConfig({
     /* Project configuration */
     projects: [
         {
+            name: "audio",
+            testMatch: "**/audio.test.ts",
+            use: {
+                ...devices["Desktop " + browserType],
+                headless,
+                launchOptions: {
+                    args,
+                },
+            },
+        },
+        {
             name: "webgl2",
             testMatch: "**/*webgl2.test.ts",
             use: forceChrome
