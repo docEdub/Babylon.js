@@ -105,9 +105,8 @@ class WebAudioStreamingSound extends StreamingSound {
         return "WebAudioStreamingSound";
     }
 
-    protected async _createSoundInstance(): Promise<WebAudioStreamingSoundInstance> {
+    protected _createSoundInstance(): WebAudioStreamingSoundInstance {
         const soundInstance = new WebAudioStreamingSoundInstance(this);
-        await soundInstance.init();
         this.engine.addSoundInstance(soundInstance);
         return soundInstance;
     }
@@ -137,14 +136,14 @@ class WebAudioStreamingSound extends StreamingSound {
 class WebAudioStreamingSoundInstance extends StreamingSoundInstance {
     private _waitTimer: Nullable<NodeJS.Timeout> = null;
 
-    private _mediaElementPromise: Promise<HTMLMediaElement> = new Promise((resolve) => {
-        this._resolveMediaElementPromise = resolve;
-    });
-    private _resolveMediaElementPromise: (mediaElement: HTMLMediaElement) => void;
+    // private _mediaElementPromise: Promise<HTMLMediaElement> = new Promise((resolve) => {
+    //     this._resolveMediaElementPromise = resolve;
+    // });
+    // private _resolveMediaElementPromise: (mediaElement: HTMLMediaElement) => void;
 
-    private _onCanPlayThrough: () => void = (() => {
-        this._resolveMediaElementPromise(this.mediaElement);
-    }).bind(this);
+    // private _onCanPlayThrough: () => void = (() => {
+    //     this._resolveMediaElementPromise(this.mediaElement);
+    // }).bind(this);
 
     protected override _source: WebAudioStreamingSound;
 
@@ -175,10 +174,6 @@ class WebAudioStreamingSoundInstance extends StreamingSoundInstance {
         }
     }
 
-    public async init(): Promise<void> {
-        await this._mediaElementPromise;
-    }
-
     private _initFromUrl(url: string): void {
         const audio = new Audio(url);
         this._initFromMediaElement(audio);
@@ -204,7 +199,7 @@ class WebAudioStreamingSoundInstance extends StreamingSoundInstance {
         mediaElement.preload = this._source.preload;
         mediaElement.preservesPitch = this._source.preservesPitch;
 
-        mediaElement.addEventListener("canplaythrough", this._onCanPlayThrough, { once: true });
+        // mediaElement.addEventListener("canplaythrough", this._onCanPlayThrough, { once: true });
         mediaElement.addEventListener("ended", this._onEnded);
 
         mediaElement.load();

@@ -155,7 +155,7 @@ export abstract class AbstractSound extends AbstractNamedAudioNode {
         this.onDisposeObservable.notifyObservers(this);
     }
 
-    protected abstract _createSoundInstance(): AbstractSoundInstance | Promise<AbstractSoundInstance>;
+    protected abstract _createSoundInstance(): AbstractSoundInstance;
 
     // TODO: Consider breaking this out into the static and streaming sound classes since static sound don't need to be async. Only streaming sounds need to be async here.
     // TODO: Or... figure out a better way to handle the async nature of `HTMLMediaElement.play` needing to wait for the `canplaythrough` event to fire before it can be called.
@@ -165,7 +165,7 @@ export abstract class AbstractSound extends AbstractNamedAudioNode {
      * @param startOffset - The time within the sound source to start playing the sound in seconds.
      * @param duration - How long to play the sound in seconds.
      */
-    public async play(waitTime: Nullable<number> = null, startOffset: Nullable<number> = null, duration: Nullable<number> = null): Promise<void> {
+    public play(waitTime: Nullable<number> = null, startOffset: Nullable<number> = null, duration: Nullable<number> = null): void {
         if (this._state === SoundState.Paused && this._soundInstances.size > 0) {
             this.resume();
             return;
@@ -173,13 +173,8 @@ export abstract class AbstractSound extends AbstractNamedAudioNode {
 
         this._state = SoundState.Playing;
 
-        let instance = this._createSoundInstance();
-        if (instance instanceof Promise) {
-            instance = await instance;
-        }
-
+        const instance = this._createSoundInstance();
         instance.onEndedObservable.addOnce(this._onSoundInstanceEnded.bind(this));
-
         instance.play(waitTime, startOffset, duration);
 
         this._soundInstances.add(instance);
