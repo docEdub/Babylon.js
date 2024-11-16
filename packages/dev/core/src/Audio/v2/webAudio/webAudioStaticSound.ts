@@ -263,7 +263,7 @@ class WebAudioStaticSoundInstance extends StaticSoundInstance {
 
     /** @internal */
     public play(waitTime: Nullable<number> = null, startOffset: Nullable<number> = null, duration: Nullable<number> = null): void {
-        if (this._state === SoundState.Playing) {
+        if (this._state === SoundState.Started) {
             return;
         }
 
@@ -277,7 +277,7 @@ class WebAudioStaticSoundInstance extends StaticSoundInstance {
             startOffset = this._startOffset;
         }
 
-        this._state = SoundState.Playing;
+        this._setState(SoundState.Started);
         this._startTime = this.engine.currentTime + (waitTime ?? 0);
 
         this._initSourceNode();
@@ -290,7 +290,7 @@ class WebAudioStaticSoundInstance extends StaticSoundInstance {
             return;
         }
 
-        this._state = SoundState.Paused;
+        this._setState(SoundState.Paused);
         this._currentTime += this.engine.currentTime - this._startTime;
 
         this.sourceNode?.stop();
@@ -310,7 +310,7 @@ class WebAudioStaticSoundInstance extends StaticSoundInstance {
             return;
         }
 
-        this._state = SoundState.Stopped;
+        this._setState(SoundState.Stopped);
 
         this.sourceNode?.stop(waitTime ? this.engine.currentTime + waitTime : 0);
     }
