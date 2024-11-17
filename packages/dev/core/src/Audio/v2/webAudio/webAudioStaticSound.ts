@@ -231,13 +231,22 @@ class WebAudioStaticSoundBuffer extends StaticSoundBuffer {
 
 /** @internal */
 class WebAudioStaticSoundInstance extends StaticSoundInstance {
-    private _currentTime: number = 0;
     private _startTime: number = 0;
+    private _currentTime: number = 0;
 
     protected override _source: WebAudioStaticSound;
 
     /** @internal */
     public sourceNode: Nullable<AudioBufferSourceNode>;
+
+    /** @internal */
+    get startTime(): number {
+        if (this._state === SoundState.Stopped) {
+            return 0;
+        }
+
+        return this._startTime;
+    }
 
     /** @internal */
     get currentTime(): number {

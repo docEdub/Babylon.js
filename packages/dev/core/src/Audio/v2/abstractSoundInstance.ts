@@ -31,6 +31,7 @@ export abstract class AbstractSoundInstance extends AbstractAudioNode {
         this.onStateChangedObservable.clear();
     }
 
+    public abstract get startTime(): number;
     public abstract get currentTime(): number;
 
     /** The playback state of sound instance */

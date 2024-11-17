@@ -159,13 +159,24 @@ class WebAudioStreamingSoundInstance extends StreamingSoundInstance {
     /** @internal */
     public sourceNode: Nullable<MediaElementAudioSourceNode>;
 
+    private _startTime: number = 0;
+
+    /** @internal */
+    get startTime(): number {
+        if (this._state === SoundState.Stopped) {
+            return 0;
+        }
+
+        return this._startTime;
+    }
+
     /** @internal */
     get currentTime(): number {
         if (this._state === SoundState.Stopped) {
             return 0;
         }
 
-        return this.mediaElement?.currentTime ?? 0;
+        return this._source.audioContext.currentTime - this._startTime;
     }
 
     constructor(source: WebAudioStreamingSound) {
@@ -335,6 +346,7 @@ class WebAudioStreamingSoundInstance extends StreamingSoundInstance {
         }
 
         this.mediaElement.play();
+        this._startTime = this._source.audioContext.currentTime;
         this._setState(SoundState.Started);
     }
 

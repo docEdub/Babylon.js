@@ -53,10 +53,10 @@ export abstract class StreamingSound extends AbstractSound {
      * @param duration - How long to play the sound in seconds.
      * @returns The new playback instance, or `null` if the sound was resumed from pause.
      */
-    public play(waitTime: Nullable<number> = null, startOffset: Nullable<number> = null, duration: Nullable<number> = null): Nullable<StreamingSoundInstance> {
-        if (this._isPaused) {
+    public play(waitTime: Nullable<number> = null, startOffset: Nullable<number> = null, duration: Nullable<number> = null): StreamingSoundInstance {
+        if (this._isPaused && this._soundInstances.size > 0) {
             this.resume();
-            return null;
+            return Array.from(this._soundInstances)[this._soundInstances.size - 1] as StreamingSoundInstance;
         }
 
         const instance = this._createSoundInstance();
