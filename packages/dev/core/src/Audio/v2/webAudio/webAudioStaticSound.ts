@@ -114,7 +114,7 @@ class WebAudioStaticSound extends StaticSound {
 
     /** @internal */
     public async init(source: StaticSoundSourceType, options: Nullable<IStaticSoundOptions> = null): Promise<void> {
-        this.audioContext = await this.engine.audioContext;
+        this.audioContext = this.engine.audioContext;
 
         this._gainNode = new GainNode(this.audioContext);
 
@@ -237,7 +237,7 @@ class WebAudioStaticSoundBuffer extends StaticSoundBuffer {
     }
 
     private async _initFromArrayBuffer(arrayBuffer: ArrayBuffer): Promise<void> {
-        this.audioBuffer = await (await this.engine.audioContext).decodeAudioData(arrayBuffer);
+        this.audioBuffer = await this.engine.audioContext.decodeAudioData(arrayBuffer);
     }
 }
 

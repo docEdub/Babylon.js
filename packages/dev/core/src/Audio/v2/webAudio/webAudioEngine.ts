@@ -47,19 +47,8 @@ const formatMimeTypeMap = new Map<string, string>([
 
 /** @internal */
 export class WebAudioEngine extends AudioEngineV2 {
-    private _audioContext: AudioContext | OfflineAudioContext;
+    private _audioContext: Nullable<AudioContext | OfflineAudioContext>;
     private _audioContextStarted = false;
-
-    private _onAudioContextStateChange = (() => {
-        if (this.state === "running") {
-            this._audioContextStarted = true;
-        }
-        if (this.state === "suspended" || this.state === "interrupted") {
-            if (this._resumeOnInteraction) {
-                document.addEventListener("click", this._onInteraction, { once: true });
-            }
-        }
-    }).bind(this);
 
     private _mainOutput: Nullable<AbstractAudioNode> = null;
 
@@ -73,7 +62,7 @@ export class WebAudioEngine extends AudioEngineV2 {
 
     /** @internal */
     public get currentTime(): number {
-        return this._audioContext.currentTime;
+        return this._audioContext?.currentTime ?? 0;
     }
 
     /** @internal */
@@ -81,43 +70,65 @@ export class WebAudioEngine extends AudioEngineV2 {
         return this._mainOutput;
     }
 
-    private _initAudioContext: () => void = (async () => {
-        if (this._audioContext === undefined) {
-            this._audioContext = new AudioContext();
+    private _initAudioContext: () => Promise<void> = async () => {
+        if (!this._audioContext) {
+            return;
         }
 
         this._audioContext.addEventListener("statechange", this._onAudioContextStateChange);
 
-        await this.resume();
-
-        document.removeEventListener("click", this._initAudioContext);
-    }).bind(this);
-
-    private _resolveAudioContext: (audioContext: BaseAudioContext) => void;
-
-    private _resumeOnInteraction = true;
-
-    private _onInteraction = (() => {
-        if (this._resumeOnInteraction) {
-            this.resume();
+        if (this.state === "suspended" || this.state === "interrupted") {
+            if (this._resumeOnInteraction) {
+                document.addEventListener("click", this._onUserInteraction, { once: true });
+            }
         }
 
-        document.removeEventListener("click", this._onInteraction);
-    }).bind(this);
+        this._mainOutput = await CreateMainAudioOutputAsync(this);
+        await CreateMainAudioBusAsync("default", this);
+    };
+
+    private _onUserInteraction: () => void = async () => {
+        if (!this._audioContext) {
+            return;
+        }
+
+        await this._audioContext.resume();
+    };
+
+    private _onAudioContextStateChange = () => {
+        if (this.state === "running") {
+            this._audioContextStarted = true;
+            document.removeEventListener("click", this._onUserInteraction);
+        }
+        if (this.state === "suspended" || this.state === "interrupted") {
+            if (this._resumeOnInteraction) {
+                document.addEventListener("click", this._onUserInteraction, { once: true });
+            }
+        }
+    };
+
+    private _resumeOnInteraction = true;
 
     // TODO: Make this return the audio context directly, not a Promise.
     // TODO: Consider waiting for a click in init to avoid the console warning, but stop waiting and create the audio context immediately if this member gets accessed, which will trigger the console warning.
     /** @internal */
-    public audioContext: Promise<BaseAudioContext>;
+    public get audioContext(): AudioContext | OfflineAudioContext {
+        if (!this._audioContext) {
+            this._audioContext = new AudioContext();
+            this._initAudioContext();
+        }
+
+        return this._audioContext!;
+    }
 
     /** @internal */
     public get state(): string {
-        return this._audioContext.state;
+        return this._audioContext?.state ?? "uninitialized";
     }
 
     /** @internal */
     public get webAudioInputNode(): AudioNode {
-        return this._audioContext.destination;
+        return this.audioContext.destination;
     }
 
     /** @internal */
@@ -127,24 +138,10 @@ export class WebAudioEngine extends AudioEngineV2 {
 
     /** @internal */
     public async init(options: Nullable<IWebAudioEngineOptions> = null): Promise<void> {
-        this.audioContext = new Promise<BaseAudioContext>((resolve) => {
-            this._resolveAudioContext = resolve;
-
-            if (this._resumeOnInteraction) {
-                document.addEventListener("click", this._initAudioContext, { once: true });
-            }
-        });
-
-        if (options?.audioContext) {
-            this._audioContext = options.audioContext;
-            this._initAudioContext();
-        }
+        this._audioContext = options?.audioContext ?? null;
+        await this._initAudioContext();
 
         this._resumeOnInteraction = options?.resumeOnInteraction ?? true;
-
-        await this.audioContext;
-        this._mainOutput = await CreateMainAudioOutputAsync(this);
-        await CreateMainAudioBusAsync("default", this);
     }
 
     /** @internal */
@@ -155,9 +152,8 @@ export class WebAudioEngine extends AudioEngineV2 {
             this._audioContext.close();
         }
 
-        document.removeEventListener("click", this._initAudioContext);
-        document.removeEventListener("click", this._onInteraction);
-        this._audioContext.removeEventListener("statechange", this._onAudioContextStateChange);
+        document.removeEventListener("click", this._onUserInteraction);
+        this._audioContext?.removeEventListener("statechange", this._onAudioContextStateChange);
     }
 
     /** @internal */
@@ -202,20 +198,15 @@ export class WebAudioEngine extends AudioEngineV2 {
 
     /** @internal */
     public override async resume(): Promise<void> {
-        if (this._audioContext === undefined) {
-            this._initAudioContext();
-        }
+        const audioContext = this.audioContext;
 
-        if (this._audioContext instanceof AudioContext) {
-            await this._audioContext.resume();
-            this._resolveAudioContext(this._audioContext);
-        } else if (this._audioContext instanceof OfflineAudioContext) {
+        if (audioContext instanceof AudioContext) {
+            await audioContext.resume();
+        } else if (audioContext instanceof OfflineAudioContext) {
             if (this._audioContextStarted) {
-                return this._audioContext.resume();
+                return audioContext.resume();
             }
         }
-
-        this._resolveAudioContext(this._audioContext);
     }
 
     /** @internal */

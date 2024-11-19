@@ -8,7 +8,7 @@ import type { WebAudioMainOutput } from "./webAudioMainOutput";
  * Creates a new main audio bus.
  * @param name - The name of the main bus.
  * @param engine - The audio engine.
- * @returns A promise that resolves with the created main audio bus.
+ * @returns The created main audio bus.
  */
 export async function CreateMainAudioBusAsync(name: string, engine: AudioEngineV2): Promise<MainAudioBus> {
     if (!engine.isWebAudio) {
@@ -16,7 +16,6 @@ export async function CreateMainAudioBusAsync(name: string, engine: AudioEngineV
     }
 
     const bus = new WebAudioMainBus(name, engine as WebAudioEngine);
-    await bus.init();
     (engine as WebAudioEngine).addMainBus(bus);
     return bus;
 }
@@ -38,11 +37,8 @@ export class WebAudioMainBus extends MainAudioBus {
     /** @internal */
     constructor(name: string, engine: WebAudioEngine) {
         super(name, engine);
-    }
 
-    /** @internal */
-    public async init(): Promise<void> {
-        this._gainNode = new GainNode(await (this.engine as WebAudioEngine).audioContext);
+        this._gainNode = new GainNode((this.engine as WebAudioEngine).audioContext);
 
         if (this.engine.mainOutput) {
             this._connect(this.engine.mainOutput);

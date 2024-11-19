@@ -86,7 +86,7 @@ class WebAudioStreamingSound extends StreamingSound {
 
     /** @internal */
     public async init(source: StreamingSoundSourceType, options: Nullable<IStreamingSoundOptions> = null): Promise<void> {
-        const audioContext = await this.engine.audioContext;
+        const audioContext = this.engine.audioContext;
 
         if (!(audioContext instanceof AudioContext)) {
             throw new Error("Unsupported audio context type.");
@@ -101,7 +101,7 @@ class WebAudioStreamingSound extends StreamingSound {
         this.volume = options?.volume ?? 1;
 
         if (options?.autoplay) {
-            await this.play(null, this.startOffset);
+            this.play(null, this.startOffset);
         }
     }
 
