@@ -97,6 +97,9 @@ class WebAudioStreamingSound extends StreamingSound {
         this._gainNode = new GainNode(this.audioContext);
 
         this.source = source;
+
+        await this.engine.isReadyPromise;
+
         this.outputBus = options?.outputBus ?? this.engine.defaultMainBus;
         this.volume = options?.volume ?? 1;
 
@@ -139,6 +142,12 @@ class WebAudioStreamingSound extends StreamingSound {
 
 /** @internal */
 class WebAudioStreamingSoundInstance extends StreamingSoundInstance {
+    /** @internal */
+    public override readonly engine: WebAudioEngine;
+
+    private _loop: boolean = false;
+    private _preload: "" | "none" | "metadata" | "auto" = "auto";
+
     private _waitTimer: Nullable<NodeJS.Timeout> = null;
 
     private _isReadyPromise: Promise<HTMLMediaElement> = new Promise((resolve) => {
@@ -184,8 +193,23 @@ class WebAudioStreamingSoundInstance extends StreamingSoundInstance {
         return this._source.audioContext.currentTime - this._startTime;
     }
 
+    private _onEngineStateChanged = () => {
+        if (this.engine.state !== "running") {
+            return;
+        }
+
+        if (this._loop && this.state === SoundState.Starting) {
+            this.play(this._startTime, this._startOffset);
+        }
+
+        this.engine.stateChangedObservable.removeCallback(this._onEngineStateChanged);
+    };
+
     constructor(source: WebAudioStreamingSound) {
         super(source);
+
+        this._loop = source.loop;
+        this._preload = source.preload;
 
         if (typeof source.source === "string") {
             this._initFromUrl(source.source);
@@ -217,9 +241,8 @@ class WebAudioStreamingSoundInstance extends StreamingSoundInstance {
         Tools.SetCorsBehavior(mediaElement.currentSrc, mediaElement);
 
         mediaElement.controls = false;
-        mediaElement.loop = this._source.loop;
-        mediaElement.preload = this._source.preload;
-        mediaElement.preservesPitch = this._source.preservesPitch;
+        mediaElement.loop = this._loop;
+        mediaElement.preload = this._preload;
 
         mediaElement.addEventListener("canplaythrough", this._onCanPlayThrough, { once: true });
         mediaElement.addEventListener("ended", this._onEnded, { once: true });
@@ -252,6 +275,8 @@ class WebAudioStreamingSoundInstance extends StreamingSoundInstance {
         for (const child of Array.from(this.mediaElement.children)) {
             this.mediaElement.removeChild(child);
         }
+
+        this.engine.stateChangedObservable.removeCallback(this._onEngineStateChanged);
     }
 
     /** @internal */
@@ -260,10 +285,17 @@ class WebAudioStreamingSoundInstance extends StreamingSoundInstance {
             return;
         }
 
+        if (this._state === SoundState.Paused) {
+            startOffset = this.currentTime + this._startOffset;
+            waitTime = 0;
+        } else if (startOffset) {
+            this._startOffset = startOffset;
+        } else {
+            startOffset = this._startOffset;
+        }
+
         if (startOffset && startOffset > 0) {
-            if (this.mediaElement) {
-                this.mediaElement.currentTime = startOffset;
-            }
+            this.mediaElement.currentTime = startOffset;
         }
 
         this._clearWaitTimer();
@@ -347,15 +379,20 @@ class WebAudioStreamingSoundInstance extends StreamingSoundInstance {
             return;
         }
 
-        this.mediaElement.play();
-        this._startTime = this._source.audioContext.currentTime;
-        this._setState(SoundState.Started);
+        if (this.engine.state === "running") {
+            this.mediaElement.play();
+            this._startTime = this._source.audioContext.currentTime;
+            this._setState(SoundState.Started);
+        } else if (this._loop) {
+            this.engine.stateChangedObservable.add(this._onEngineStateChanged);
+        }
     }
 
     private _stop(): void {
         this.mediaElement.pause();
         this._setState(SoundState.Stopped);
         this._onEnded();
+        this.engine.stateChangedObservable.removeCallback(this._onEngineStateChanged);
     }
 
     private _clearWaitTimer(): void {

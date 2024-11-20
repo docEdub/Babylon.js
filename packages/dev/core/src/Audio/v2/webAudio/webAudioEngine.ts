@@ -1,3 +1,4 @@
+import { Observable } from "../../../Misc/observable";
 import type { Nullable } from "../../../types";
 import type { AbstractAudioNode } from "../abstractAudioNode";
 import type { AbstractSound } from "../abstractSound";
@@ -61,6 +62,13 @@ export class WebAudioEngine extends AudioEngineV2 {
     }
 
     /** @internal */
+    public readonly isReadyPromise: Promise<void> = new Promise((resolve) => {
+        this._resolveIsReadyPromise = resolve;
+    });
+
+    private _resolveIsReadyPromise: () => void;
+
+    /** @internal */
     public get currentTime(): number {
         return this._audioContext?.currentTime ?? 0;
     }
@@ -69,6 +77,8 @@ export class WebAudioEngine extends AudioEngineV2 {
     public get mainOutput(): Nullable<AbstractAudioNode> {
         return this._mainOutput;
     }
+
+    private _resolveInitPromise: Nullable<() => void> = null;
 
     private _initAudioContext: () => Promise<void> = async () => {
         if (!this._audioContext) {
@@ -85,6 +95,8 @@ export class WebAudioEngine extends AudioEngineV2 {
 
         this._mainOutput = await CreateMainAudioOutputAsync(this);
         await CreateMainAudioBusAsync("default", this);
+
+        this._resolveIsReadyPromise();
     };
 
     private _onUserInteraction: () => void = async () => {
@@ -93,18 +105,22 @@ export class WebAudioEngine extends AudioEngineV2 {
         }
 
         await this._audioContext.resume();
+        this._resolveInitPromise?.();
     };
 
     private _onAudioContextStateChange = () => {
         if (this.state === "running") {
             this._audioContextStarted = true;
             document.removeEventListener("click", this._onUserInteraction);
+            this._resolveInitPromise?.();
         }
         if (this.state === "suspended" || this.state === "interrupted") {
             if (this._resumeOnInteraction) {
                 document.addEventListener("click", this._onUserInteraction, { once: true });
             }
         }
+
+        this.stateChangedObservable.notifyObservers(this.state);
     };
 
     private _resumeOnInteraction = true;
@@ -127,6 +143,9 @@ export class WebAudioEngine extends AudioEngineV2 {
     }
 
     /** @internal */
+    public stateChangedObservable: Observable<string> = new Observable();
+
+    /** @internal */
     public get webAudioInputNode(): AudioNode {
         return this.audioContext.destination;
     }
@@ -139,9 +158,9 @@ export class WebAudioEngine extends AudioEngineV2 {
     /** @internal */
     public async init(options: Nullable<IWebAudioEngineOptions> = null): Promise<void> {
         this._audioContext = options?.audioContext ?? null;
-        await this._initAudioContext();
-
         this._resumeOnInteraction = options?.resumeOnInteraction ?? true;
+
+        await this._initAudioContext();
     }
 
     /** @internal */
@@ -201,7 +220,7 @@ export class WebAudioEngine extends AudioEngineV2 {
         const audioContext = this.audioContext;
 
         if (audioContext instanceof AudioContext) {
-            await audioContext.resume();
+            return audioContext.resume();
         } else if (audioContext instanceof OfflineAudioContext) {
             if (this._audioContextStarted) {
                 return audioContext.resume();
