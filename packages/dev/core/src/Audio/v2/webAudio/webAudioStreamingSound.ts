@@ -2,6 +2,8 @@ import { Tools } from "../../../Misc/tools";
 import type { Nullable } from "../../../types";
 import type { AbstractAudioNode } from "../abstractAudioNode";
 import { LastCreatedAudioEngine, type AudioEngineV2 } from "../audioEngineV2";
+import type { RampType } from "../audioParameter";
+import { _setAudioParameterRamp } from "../audioParameter";
 import { SoundState } from "../soundState";
 import { _cleanUrl } from "../soundTools";
 import type { IStreamingSoundOptions } from "../streamingSound";
@@ -110,6 +112,11 @@ class WebAudioStreamingSound extends StreamingSound {
         if (options?.autoplay) {
             this.play(null, this.startOffset);
         }
+    }
+
+    /** @internal */
+    public override setVolumeRamp(value: number, duration: number, rampType: Nullable<RampType> = null, customCurve: Nullable<Array<number>> = null): void {
+        _setAudioParameterRamp(this.engine.audioContext, this._gainNode.gain, value, duration, rampType, customCurve);
     }
 
     /** @internal */
