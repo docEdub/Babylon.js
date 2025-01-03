@@ -39,7 +39,7 @@ export abstract class _AbstractSoundInstance extends AbstractAudioNode {
         return this._state;
     }
 
-    public abstract play(startOffset?: Nullable<number>, duration?: Nullable<number>): void;
+    public abstract play(volume?: Nullable<number>, startOffset?: Nullable<number>, duration?: Nullable<number>): void;
     public abstract pause(): void;
     public abstract resume(): void;
     public abstract stop(): void;

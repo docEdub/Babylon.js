@@ -328,8 +328,12 @@ class WebAudioStaticSoundInstance extends _StaticSoundInstance implements IWebAu
     /** @internal */
     public sourceNode: Nullable<AudioBufferSourceNode>;
 
+    /** @internal */
+    public volumeNode: GainNode;
+
     public constructor(sound: WebAudioStaticSound) {
         super(sound);
+        this.volumeNode = new GainNode(this._sound.audioContext);
         this._initSourceNode();
         this._loop = sound.loop;
     }
@@ -346,11 +350,11 @@ class WebAudioStaticSoundInstance extends _StaticSoundInstance implements IWebAu
     }
 
     public get outNode(): Nullable<AudioNode> {
-        return this.sourceNode;
+        return this.volumeNode;
     }
 
     /** @internal */
-    public play(startOffset: Nullable<number> = null, duration: Nullable<number> = null, waitTime: Nullable<number> = null): void {
+    public play(volume: Nullable<number> = null, startOffset: Nullable<number> = null, duration: Nullable<number> = null, waitTime: Nullable<number> = null): void {
         if (this._state === SoundState.Started) {
             return;
         }
@@ -369,6 +373,7 @@ class WebAudioStaticSoundInstance extends _StaticSoundInstance implements IWebAu
 
         this._enginePlayTime = this.engine.currentTime + (waitTime ?? 0);
 
+        this.volumeNode.gain.value = volume ?? 1;
         this._initSourceNode();
 
         if (this.engine.state === "running") {
@@ -429,7 +434,7 @@ class WebAudioStaticSoundInstance extends _StaticSoundInstance implements IWebAu
         super._connect(node);
 
         if (node instanceof WebAudioStaticSound && node.inNode) {
-            this.sourceNode?.connect(node.inNode);
+            this.outNode?.connect(node.inNode);
         }
     }
 
@@ -437,7 +442,7 @@ class WebAudioStaticSoundInstance extends _StaticSoundInstance implements IWebAu
         super._disconnect(node);
 
         if (node instanceof WebAudioStaticSound && node.inNode) {
-            this.sourceNode?.disconnect(node.inNode);
+            this.outNode?.disconnect(node.inNode);
         }
     }
 
@@ -456,6 +461,8 @@ class WebAudioStaticSoundInstance extends _StaticSoundInstance implements IWebAu
         });
 
         this.sourceNode.addEventListener("ended", this._onEnded, { once: true });
+        this.sourceNode.connect(this.volumeNode);
+
         this._connect(this._sound);
     }
 
@@ -465,6 +472,8 @@ class WebAudioStaticSoundInstance extends _StaticSoundInstance implements IWebAu
         }
 
         this._disconnect(this._sound);
+
+        this.sourceNode.disconnect(this.volumeNode);
         this.sourceNode.removeEventListener("ended", this._onEnded);
 
         this.sourceNode = null;

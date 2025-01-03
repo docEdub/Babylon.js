@@ -74,8 +74,9 @@ export abstract class StreamingSound extends AbstractSound {
 
     /**
      * Plays the sound.
+     * @param volume - The volume of the sound.
      */
-    public play(): void {
+    public play(volume: Nullable<number> = null): void {
         if (this._isPaused && this._instances.size > 0) {
             this.resume();
             return;
@@ -100,7 +101,7 @@ export abstract class StreamingSound extends AbstractSound {
         instance.onStateChangedObservable.add(onInstanceStateChanged);
 
         this._beforePlay(instance);
-        instance.play(this.startOffset, this.duration != 0 ? this.duration : null);
+        instance.play(volume, this.startOffset, this.duration != 0 ? this.duration : null);
         this._afterPlay(instance);
     }
 

@@ -71,9 +71,10 @@ export abstract class StaticSound extends AbstractSound {
 
     /**
      * Plays the sound.
+     * @param volume - The volume of the sound.
      * @param waitTime - The time to wait before playing the sound in seconds.
      */
-    public play(waitTime: Nullable<number> = null): void {
+    public play(volume: Nullable<number> = null, waitTime: Nullable<number> = null): void {
         if (this._isPaused && this._instances.size > 0) {
             this.resume();
             return;
@@ -81,7 +82,7 @@ export abstract class StaticSound extends AbstractSound {
 
         const instance = this._createInstance();
         this._beforePlay(instance);
-        instance.play(this.startOffset, this.duration != 0 ? this.duration : null, waitTime);
+        instance.play(volume, this.startOffset, this.duration != 0 ? this.duration : null, waitTime);
         this._afterPlay(instance);
 
         this._stopExcessInstances();

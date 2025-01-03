@@ -174,7 +174,7 @@ export abstract class AbstractSound extends NamedAbstractAudioNode {
 
     protected abstract _createInstance(): _AbstractSoundInstance;
 
-    public abstract play(): void;
+    public abstract play(volume?: Nullable<number>): void;
 
     /**
      * Pauses the sound.

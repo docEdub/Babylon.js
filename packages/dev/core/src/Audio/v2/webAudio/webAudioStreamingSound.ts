@@ -194,6 +194,9 @@ class WebAudioStreamingSoundInstance extends _StreamingSoundInstance implements 
     /** @internal */
     public sourceNode: Nullable<MediaElementAudioSourceNode>;
 
+    /** @internal */
+    public volumeNode: GainNode;
+
     private _enginePlayTime: number = Infinity;
     private _enginePauseTime: number = 0;
 
@@ -253,6 +256,8 @@ class WebAudioStreamingSoundInstance extends _StreamingSoundInstance implements 
         this._loop = sound.loop;
         this._preloadType = sound.preloadType;
 
+        this.volumeNode = new GainNode(this._sound.audioContext);
+
         if (typeof sound.source === "string") {
             this._initFromUrl(sound.source);
         } else if (Array.isArray(sound.source)) {
@@ -294,6 +299,8 @@ class WebAudioStreamingSoundInstance extends _StreamingSoundInstance implements 
         mediaElement.load();
 
         this.sourceNode = new MediaElementAudioSourceNode(this._sound.audioContext, { mediaElement: mediaElement });
+        this.sourceNode.connect(this.volumeNode);
+
         this._connect(this._sound);
 
         this.mediaElement = mediaElement;
@@ -305,6 +312,7 @@ class WebAudioStreamingSoundInstance extends _StreamingSoundInstance implements 
 
         this.stop();
 
+        this.sourceNode?.disconnect(this.volumeNode);
         this.sourceNode = null;
 
         this.mediaElement.removeEventListener("ended", this._onEnded);
@@ -318,14 +326,16 @@ class WebAudioStreamingSoundInstance extends _StreamingSoundInstance implements 
     }
 
     public get outNode(): Nullable<AudioNode> {
-        return this.sourceNode;
+        return this.volumeNode;
     }
 
     /** @internal */
-    public play(startOffset: Nullable<number> = null): void {
+    public play(volume: Nullable<number> = null, startOffset: Nullable<number> = null): void {
         if (this._state === SoundState.Started) {
             return;
         }
+
+        this.volumeNode.gain.value = volume ?? 1;
 
         if (this._currentTimeChangedWhilePaused) {
             startOffset = this._startOffset;
@@ -384,7 +394,7 @@ class WebAudioStreamingSoundInstance extends _StreamingSoundInstance implements 
         super._connect(node);
 
         if (node instanceof WebAudioStreamingSound && node.inNode) {
-            this.sourceNode?.connect(node.inNode);
+            this.outNode?.connect(node.inNode);
         }
     }
 
@@ -392,7 +402,7 @@ class WebAudioStreamingSoundInstance extends _StreamingSoundInstance implements 
         super._disconnect(node);
 
         if (node instanceof WebAudioStreamingSound && node.inNode) {
-            this.sourceNode?.disconnect(node.inNode);
+            this.outNode?.disconnect(node.inNode);
         }
     }
 
