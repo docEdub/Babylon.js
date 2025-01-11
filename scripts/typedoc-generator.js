@@ -58,7 +58,6 @@ async function generateTypedocAndAnalyze(entryPoints, filesChanged) {
     console.log("Converting, generating JSON...");
     if (project) {
         const outputDir = "tmp";
-        await app.generateDocs(project, outputDir);
         await app.generateJson(project, `${outputDir}/typedoc.json`);
 
         const data = JSON.parse(fs.readFileSync(`${outputDir}/typedoc.json`, "utf8"));
@@ -82,8 +81,7 @@ async function main() {
     const packages = process.argv.includes("--packages") ? process.argv[process.argv.indexOf("--packages") + 1].split(",") : ["core", "loaders", "materials", "gui", "serializers"];
     const full = process.argv.includes("--full");
     const filesChanged = (await runCommand(process.env.GIT_CHANGES_COMMAND || "git diff --name-only master")).split("\n");
-    // const files = glob.globSync(`packages/dev/@(${packages.join("|")})/src/index.ts`).filter((f) => /*!f.endsWith("index.ts") && */ !f.endsWith(".d.ts"));
-    const files = [`packages/dev/core/src/Audio/v2/index.ts`];
+    const files = glob.globSync(`packages/dev/@(${packages.join("|")})/src/index.ts`).filter((f) => /*!f.endsWith("index.ts") && */ !f.endsWith(".d.ts"));
     console.log(files);
     const dirList = files.filter((file) => {
         return file.endsWith(".ts");
