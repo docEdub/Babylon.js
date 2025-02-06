@@ -68,20 +68,32 @@ export class _WebAudioMainBus extends MainAudioBus implements IWebAudioSuperNode
         return this._subGraph.outNode;
     }
 
-    protected override _connect(node: IWebAudioInNode): void {
-        super._connect(node);
+    protected override _connect(node: IWebAudioInNode): boolean {
+        const connected = super._connect(node);
+
+        if (!connected) {
+            return false;
+        }
 
         if (node.inNode) {
             this.outNode?.connect(node.inNode);
         }
+
+        return true;
     }
 
-    protected override _disconnect(node: IWebAudioInNode): void {
-        super._disconnect(node);
+    protected override _disconnect(node: IWebAudioInNode): boolean {
+        const disconnected = super._disconnect(node);
+
+        if (!disconnected) {
+            return false;
+        }
 
         if (node.inNode) {
             this.outNode?.disconnect(node.inNode);
         }
+
+        return true;
     }
 
     /** @internal */

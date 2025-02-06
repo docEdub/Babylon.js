@@ -146,27 +146,33 @@ class _WebAudioStaticSound extends StaticSound implements IWebAudioSuperNode {
         return new _WebAudioStaticSoundInstance(this, this._options);
     }
 
-    protected override _connect(node: IWebAudioInNode): void {
-        super._connect(node);
+    protected override _connect(node: IWebAudioInNode): boolean {
+        const connected = super._connect(node);
 
+        if (!connected) {
+            return false;
+        }
+
+        // If the wrapped node is not available now, it will be connected later by the subgraph.
         if (node.inNode) {
             this.outNode?.connect(node.inNode);
         }
+
+        return true;
     }
 
-    protected override _disconnect(node: IWebAudioInNode): void {
-        super._disconnect(node);
+    protected override _disconnect(node: IWebAudioInNode): boolean {
+        const disconnected = super._disconnect(node);
+
+        if (!disconnected) {
+            return false;
+        }
 
         if (node.inNode) {
-            try {
-                this.outNode?.disconnect(node.inNode);
-            } catch (e) {
-                // Ignore error that occurs when node is not connected.
-                if (!(e instanceof DOMException && e.name === "InvalidAccessError")) {
-                    throw e;
-                }
-            }
+            this.outNode?.disconnect(node.inNode);
         }
+
+        return true;
     }
 
     private static _SubGraph = class extends _WebAudioBusAndSoundSubGraph {
@@ -423,20 +429,33 @@ class _WebAudioStaticSoundInstance extends _StaticSoundInstance implements IWebA
         this.engine.stateChangedObservable.removeCallback(this._onEngineStateChanged);
     }
 
-    protected override _connect(node: AbstractAudioNode): void {
-        super._connect(node);
+    protected override _connect(node: AbstractAudioNode): boolean {
+        const connected = super._connect(node);
 
+        if (!connected) {
+            return false;
+        }
+
+        // If the wrapped node is not available now, it will be connected later by the sound's subgraph.
         if (node instanceof _WebAudioStaticSound && node.inNode) {
             this.outNode?.connect(node.inNode);
         }
+
+        return true;
     }
 
-    protected override _disconnect(node: AbstractAudioNode): void {
-        super._disconnect(node);
+    protected override _disconnect(node: AbstractAudioNode): boolean {
+        const disconnected = super._disconnect(node);
+
+        if (!disconnected) {
+            return false;
+        }
 
         if (node instanceof _WebAudioStaticSound && node.inNode) {
             this.outNode?.disconnect(node.inNode);
         }
+
+        return true;
     }
 
     protected _onEnded = () => {
