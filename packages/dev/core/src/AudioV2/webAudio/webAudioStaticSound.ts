@@ -470,7 +470,9 @@ class _WebAudioStaticSoundInstance extends _StaticSoundInstance implements IWebA
             return;
         }
 
-        this._disconnect(this._sound);
+        if (!this._disconnect(this._sound)) {
+            throw new Error("Disconnect failed");
+        }
 
         this._sourceNode.disconnect(this._volumeNode);
         this._sourceNode.removeEventListener("ended", this._onEnded);
@@ -503,7 +505,9 @@ class _WebAudioStaticSoundInstance extends _StaticSoundInstance implements IWebA
         this._sourceNode.addEventListener("ended", this._onEnded, { once: true });
         this._sourceNode.connect(this._volumeNode);
 
-        this._connect(this._sound);
+        if (!this._connect(this._sound)) {
+            throw new Error("Connect failed");
+        }
     }
 
     private _onEngineStateChanged = () => {

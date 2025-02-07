@@ -373,7 +373,9 @@ class _WebAudioStreamingSoundInstance extends _StreamingSoundInstance implements
         this._sourceNode = new MediaElementAudioSourceNode(this._sound.audioContext, { mediaElement: mediaElement });
         this._sourceNode.connect(this._volumeNode);
 
-        this._connect(this._sound);
+        if (!this._connect(this._sound)) {
+            throw new Error("Connect failed");
+        }
 
         this._mediaElement = mediaElement;
     }

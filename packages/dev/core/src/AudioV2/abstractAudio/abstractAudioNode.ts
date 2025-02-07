@@ -63,14 +63,18 @@ export abstract class AbstractAudioNode {
     public dispose(): void {
         if (this._downstreamNodes) {
             for (const node of Array.from(this._downstreamNodes)) {
-                this._disconnect(node);
+                if (!this._disconnect(node)) {
+                    throw new Error("Disconnect failed");
+                }
             }
             this._downstreamNodes.clear();
         }
 
         if (this._upstreamNodes) {
             for (const node of Array.from(this._upstreamNodes)) {
-                node._disconnect(this);
+                if (!node._disconnect(this)) {
+                    throw new Error("Disconnect failed");
+                }
             }
             this._upstreamNodes.clear();
         }
