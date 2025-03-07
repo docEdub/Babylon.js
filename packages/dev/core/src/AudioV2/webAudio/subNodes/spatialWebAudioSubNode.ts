@@ -17,11 +17,6 @@ function r2d(radians: number): number {
 }
 
 /** @internal */
-export async function _CreateSpatialAudioSubNodeAsync(engine: _WebAudioEngine): Promise<_SpatialAudioSubNode> {
-    return new _SpatialWebAudioSubNode(engine);
-}
-
-/** @internal */
 export class _SpatialWebAudioSubNode extends _SpatialAudioSubNode {
     private _lastPosition: Vector3 = Vector3.Zero();
     private _lastRotation: Vector3 = Vector3.Zero();

@@ -11,7 +11,7 @@ import { _HasAudioAnalyzerOptions } from "../../abstractAudio/subProperties/abst
 import type { IWebAudioInNode, IWebAudioSuperNode } from "../webAudioNode";
 import type { _VolumeWebAudioSubNode } from "./volumeWebAudioSubNode";
 import { _CreateVolumeAudioSubNodeAsync } from "./volumeWebAudioSubNode";
-import { _CreateAudioAnalyzerSubNodeAsync } from "./webAudioAnalyzerSubNode";
+import { _CreateAudioAnalyzerSubNodeAsync } from "./webAudioSubNode";
 
 /**
  * Options for creating a WebAudioBaseSubGraph.

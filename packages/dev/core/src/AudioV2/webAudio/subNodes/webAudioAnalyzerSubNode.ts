@@ -5,11 +5,6 @@ import type { _WebAudioEngine } from "../webAudioEngine";
 import type { IWebAudioInNode } from "../webAudioNode";
 
 /** @internal */
-export async function _CreateAudioAnalyzerSubNodeAsync(engine: _WebAudioEngine): Promise<_AudioAnalyzerSubNode> {
-    return new _WebAudioAnalyzerSubNode(engine);
-}
-
-/** @internal */
 export class _WebAudioAnalyzerSubNode extends _AudioAnalyzerSubNode implements IWebAudioInNode {
     private readonly _analyzerNode: AnalyserNode;
     private _byteFrequencyData: Nullable<Uint8Array> = null;
