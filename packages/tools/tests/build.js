@@ -5,6 +5,7 @@ const path = require("path");
 const { execSync } = require("child_process");
 
 const files = fs.readdirSync(path.join(__dirname, "src"));
-files.forEach((file) => {
-    execSync(`webpack --env entry=${path.basename(file, ".ts")}`, { stdio: "inherit" });
-});
+// files.forEach((file) => {
+//     execSync(`webpack --env entry=${path.basename(file, ".ts")}`, { stdio: "inherit" });
+// });
+execSync(`webpack --env entry=${path.basename(files[0], ".ts")}`, { stdio: "inherit" });
