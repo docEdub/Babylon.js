@@ -12,7 +12,7 @@ import type { AbstractSpatialAudioListener } from "../abstractAudio/subPropertie
 import { _HasSpatialAudioListenerOptions } from "../abstractAudio/subProperties/abstractSpatialAudioListener";
 import type { _SpatialAudioListener } from "../abstractAudio/subProperties/spatialAudioListener";
 import { _CreateSpatialAudioListener } from "./subProperties/spatialWebAudioListener";
-import { _WebAudioMainOut } from "./webAudioMainOut";
+import type { _WebAudioMainOut } from "./webAudioMainOut";
 
 /**
  * Options for creating a v2 audio engine that uses the WebAudio API.
@@ -187,6 +187,15 @@ export class _WebAudioEngine extends AudioEngineV2 {
     }
 
     /** @internal */
+    public async createMainOut(): Promise<_WebAudioMainOut> {
+        const module = await import("./webAudioMainOut");
+
+        const mainOut = new module._WebAudioMainOut(this);
+
+        return mainOut;
+    }
+
+    /** @internal */
     public async createSoundAsync(
         name: string,
         source: ArrayBuffer | AudioBuffer | StaticSoundBuffer | string | string[],
@@ -307,7 +316,7 @@ export class _WebAudioEngine extends AudioEngineV2 {
     private _initAudioContext: () => Promise<void> = async () => {
         this.audioContext.addEventListener("statechange", this._onAudioContextStateChange);
 
-        this._mainOut = new _WebAudioMainOut(this);
+        this._mainOut = await this.createMainOut();
         this._mainOut.volume = this._volume;
 
         await this.createMainBusAsync("default");
