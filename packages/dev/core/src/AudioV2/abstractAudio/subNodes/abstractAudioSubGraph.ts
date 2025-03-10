@@ -20,7 +20,7 @@ import type { AudioSubNode } from "./audioSubNode";
  */
 export abstract class _AbstractAudioSubGraph {
     private _createSubNodePromises: { [key: string]: Promise<_AbstractAudioSubNode> } = {};
-    private _subNodes: { [key: string]: AbstractNamedAudioNode } = {};
+    private _subNodes: { [key: string]: _AbstractAudioSubNode } = {};
 
     /**
      * Executes the given callback with the named sub node, creating the sub node if needed.
@@ -34,16 +34,18 @@ export abstract class _AbstractAudioSubGraph {
      * @internal
      */
     public callOnSubNode<T extends _AbstractAudioSubNode>(name: AudioSubNode, callback: (node: T) => void): void {
-        const node = this.getSubNode(name);
-        if (node) {
-            callback(node as T);
-            return;
-        }
+        this._createSubNodePromisesResolved().then(() => {
+            const node = this.getSubNode(name);
+            if (node) {
+                callback(node as T);
+                return;
+            }
 
-        const promise = this._createSubNodePromises[name] ?? this.createAndAddSubNode(name);
+            const promise = this._createSubNodePromises[name] ?? this.createAndAddSubNode(name);
 
-        promise.then((node) => {
-            callback(node as T);
+            promise.then((node) => {
+                callback(node as T);
+            });
         });
     }
 
@@ -55,7 +57,13 @@ export abstract class _AbstractAudioSubGraph {
      *
      * @internal
      */
-    public createAndAddSubNode(name: AudioSubNode): Promise<_AbstractAudioSubNode> {
+    public async createAndAddSubNode(name: AudioSubNode): Promise<_AbstractAudioSubNode> {
+        // Prevent creating the same sub node multiple times.
+        await this._createSubNodePromisesResolved();
+        if (this._subNodes[name]) {
+            return this._subNodes[name];
+        }
+
         const promise = this._createSubNode(name);
 
         if (!promise) {
@@ -136,7 +144,7 @@ export abstract class _AbstractAudioSubGraph {
         return Promise.all(Object.values(this._createSubNodePromises));
     }
 
-    private _addSubNode(node: AbstractNamedAudioNode): void {
+    private _addSubNode(node: _AbstractAudioSubNode): void {
         this._subNodes[node.name] = node;
 
         node.onDisposeObservable.addOnce(this._onSubNodeDisposed);
