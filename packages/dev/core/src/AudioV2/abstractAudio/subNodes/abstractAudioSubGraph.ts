@@ -56,24 +56,21 @@ export abstract class _AbstractAudioSubGraph {
      * @internal
      */
     public createAndAddSubNode(name: AudioSubNode): Promise<_AbstractAudioSubNode> {
-        const promise = this._createSubNode(name);
-
-        if (!promise) {
-            return Promise.reject(`Failed to create subnode "${name}"`);
-        }
-
         this._createSubNodePromises[name] = new Promise((resolve, reject) => {
-            promise
-                .then((node) => {
-                    this._addSubNode(node);
-                    resolve(node);
-                })
-                .catch((error) => {
-                    reject(error);
-                });
+            const promise = this._createSubNode(name);
+
+            if (!promise) {
+                reject(new Error(`Failed to create subnode "${name}"`));
+                return;
+            }
+
+            promise.then((node) => {
+                this._addSubNode(node);
+                resolve(node);
+            });
         });
 
-        return promise;
+        return this._createSubNodePromises[name];
     }
 
     /**
