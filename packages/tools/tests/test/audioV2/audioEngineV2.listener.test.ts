@@ -1,25 +1,26 @@
-import { expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
-import { evaluateCreateAudioTest, runAudioTestScript, testAudio } from "./utils/audioEngineV2.utils";
+import { AudioTest, startAudioTest } from "./utils/audioEngineV2.utils";
 
-testAudio("test 1", async ({ page }) => {
-    const audioTest = await page.evaluate(evaluateCreateAudioTest, {});
+test("test 1", async ({ page }) => {
+    let audioTest = await startAudioTest(page);
 
-    await runAudioTestScript(page, audioTest, async () => {
-        const sound = await BABYLON.CreateSoundAsync("test", audioTest.soundsUrl + "square-1-khz-0.1-amp-for-10-seconds.flac");
-        sound.play();
+    audioTest = await page.evaluate(
+        async ({ audioTest }): Promise<AudioTest> => {
+            const sound = await BABYLON.CreateSoundAsync("test", audioTest.soundsUrl + "square-1-khz-0.1-amp-for-10-seconds.flac");
+            sound.play();
+            await new Promise((resolve) => {
+                setTimeout(() => {
+                    resolve(true);
+                }, 3000);
+            });
+            sound.stop();
 
-        await new Promise((resolve) => {
-            setTimeout(() => {
-                resolve(true);
-            }, 3000);
-        });
-
-        sound.stop();
-
-        audioTest.result = true;
-        return audioTest;
-    });
+            audioTest.result = true;
+            return audioTest;
+        },
+        { audioTest }
+    );
 
     expect(audioTest.result).toBe(true);
 });
