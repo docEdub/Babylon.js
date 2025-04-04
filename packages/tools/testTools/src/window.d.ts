@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
+import type { AudioEngineV2 } from "core/audioV2/audioEngineV2";
 import type { Engine } from "core/Engines/engine";
 import type { Scene } from "core/scene";
 import type { WebGPUEngine } from "core/Engines/webgpuEngine";
