@@ -12,6 +12,11 @@ interface StacktracedObject {
 }
 
 declare global {
+    let audioContext: AudioContext;
+    let audioEngine: BABYLON.AudioEngineV2;
+    let audioTestData: AudioTestData;
+    let wait: (seconds: number) => Promise<void>;
+
     // extend the window interface for the tests
     interface Window {
         BABYLON: typeof import("core/index");

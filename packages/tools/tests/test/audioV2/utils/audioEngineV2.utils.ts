@@ -1,41 +1,25 @@
 import { getGlobalConfig } from "@tools/test-tools";
-import { Page } from "@playwright/test";
 
-declare global {
-    interface Window {
-        audioEngine: BABYLON.AudioEngineV2;
-    }
-}
-
-export interface IAudioTestOptions {
-    engineOptions?: BABYLON.IWebAudioEngineOptions;
-}
-
-export class AudioTest {
+export class AudioTestData {
     public result: boolean;
     public soundsUrl = getGlobalConfig().assetsUrl + "/sound/testing/audioV2/";
 }
 
-export const startAudioTest = async (page: Page, options: IAudioTestOptions = {}): Promise<AudioTest> => {
-    await page.goto(getGlobalConfig().baseUrl + `/empty.html`, {
-        timeout: 0,
-    });
+export const CreateAudioEngine = async (options: Partial<BABYLON.IWebAudioEngineOptions> = {}): Promise<void> => {
+    options.audioContext = audioContext;
+    audioEngine = await BABYLON.CreateAudioEngineAsync(options);
+};
 
-    await page.waitForFunction(() => {
-        return window.BABYLON;
-    });
+export const CreateSound = (url: string, options: Partial<BABYLON.IStaticSoundOptions> = {}): any => {
+    return audioEngine.createSoundAsync("", audioTestData.soundsUrl + url, options);
+};
 
-    page.setDefaultTimeout(0);
-
-    const audioTest = new AudioTest();
-
-    // @ts-ignore
-    await page.evaluate(
-        async ({ options }: { options: IAudioTestOptions }) => {
-            await BABYLON.CreateAudioEngineAsync(options.engineOptions);
-        },
-        { options }
-    );
-
-    return audioTest;
+export const evaluateAudioV2TestUtils = async () => {
+    wait = async (seconds: number): Promise<void> => {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                resolve();
+            }, seconds * 1000);
+        });
+    };
 };

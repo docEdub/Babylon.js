@@ -34,5 +34,6 @@
         "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
     "editor.formatOnSave": true,
-    "jest.runMode": "on-demand"
+    "jest.runMode": "on-demand",
+    "typescript.tsdk": "node_modules/typescript/lib"
 }

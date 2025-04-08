@@ -1,26 +1,54 @@
 import { expect, test } from "@playwright/test";
+import { getGlobalConfig } from "@tools/test-tools";
 
-import { AudioTest, startAudioTest } from "./utils/audioEngineV2.utils";
+import { AudioTestData } from "@tools/test-tools";
+import { evaluateAudioV2TestUtils } from "./utils/audioEngineV2.utils";
 
-test("test 1", async ({ page }) => {
-    let audioTest = await startAudioTest(page);
+test.beforeEach(async ({ page }) => {
+    await page.goto(getGlobalConfig().baseUrl + `/empty.html`, {
+        timeout: 0,
+    });
 
-    audioTest = await page.evaluate(
-        async ({ audioTest }): Promise<AudioTest> => {
-            const sound = await BABYLON.CreateSoundAsync("test", audioTest.soundsUrl + "square-1-khz-0.1-amp-for-10-seconds.flac");
-            sound.play();
-            await new Promise((resolve) => {
-                setTimeout(() => {
-                    resolve(true);
-                }, 3000);
-            });
-            sound.stop();
+    await page.waitForFunction(() => {
+        return window.BABYLON;
+    });
 
-            audioTest.result = true;
-            return audioTest;
+    page.setDefaultTimeout(0);
+
+    await page.evaluate(
+        ({ testData }: { testData: AudioTestData }) => {
+            audioTestData = testData;
         },
-        { audioTest }
+        { testData: new AudioTestData() }
     );
 
-    expect(audioTest.result).toBe(true);
+    await page.evaluate(() => {
+        audioContext = new AudioContext();
+    });
+
+    await page.evaluate(evaluateAudioV2TestUtils);
+});
+
+test.afterEach(async ({ page }) => {
+    await page.evaluate(() => {
+        audioContext.close();
+    });
+
+    await page.close();
+});
+
+test("test 1", async ({ page }) => {
+    await page.evaluate(
+        async ({ config }) => {
+            await BABYLON.CreateAudioEngineAsync();
+            const sound = await BABYLON.CreateSoundAsync("", config.soundsUrl + "square-1-khz-0.1-amp-for-10-seconds.flac");
+
+            sound.play();
+            await wait(3);
+            sound.stop();
+        },
+        { config: new AudioTestData() }
+    );
+
+    expect(true).toBe(true);
 });
