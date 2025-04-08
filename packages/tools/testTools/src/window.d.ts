@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import type { AudioEngineV2 } from "core/audioV2/audioEngineV2";
 import type { Engine } from "core/Engines/engine";
 import type { Scene } from "core/scene";
 import type { WebGPUEngine } from "core/Engines/webgpuEngine";
@@ -12,11 +11,6 @@ interface StacktracedObject {
 }
 
 declare global {
-    let audioContext: AudioContext;
-    let audioEngine: BABYLON.AudioEngineV2;
-    let audioTestData: AudioTestData;
-    let wait: (seconds: number) => Promise<void>;
-
     // extend the window interface for the tests
     interface Window {
         BABYLON: typeof import("core/index");
