@@ -38,3 +38,5 @@ jobs:
 
             - name: Run Audio v2 Playwright Tests
               run: npm run test:audioV2 -- --max-failures 10 --retries 0
+              env:
+                  BROWSER: "chromium"
