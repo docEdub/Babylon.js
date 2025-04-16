@@ -1,0 +1,37 @@
+name: Run Audio v2 Playwright Tests
+
+on:
+    push:
+        branches:
+            - main-staging
+    pull_request:
+        branches:
+            - main-staging
+
+jobs:
+    run-audio-v2-tests:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v3
+
+            - name: Set up Node.js
+              uses: actions/setup-node@v3
+              with:
+                  node-version: "16"
+
+            - name: Install dependencies
+              run: npm install
+
+            - name: Install Playwright browsers
+              run: npx playwright install
+
+            - name: Build dev version
+              run: npm run build:dev
+
+            - name: Start dev server
+              run: npm start &
+
+            - name: Run Audio v2 Playwright Tests
+              run: npm run test:audio-v2
