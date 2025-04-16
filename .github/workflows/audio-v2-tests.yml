@@ -37,4 +37,4 @@ jobs:
               run: npm start &
 
             - name: Run Audio v2 Playwright Tests
-              run: npm run test:audioV2 -- --browser chromium --max-failures 10 --retries 0
+              run: npm run test:audioV2 -- --max-failures 10 --retries 0
