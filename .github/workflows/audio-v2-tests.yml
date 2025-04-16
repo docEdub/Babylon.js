@@ -28,7 +28,7 @@ jobs:
               run: npx playwright install-deps
 
             - name: Install Playwright browsers
-              run: npx playwright install
+              run: npx playwright install chromium
 
             - name: Build dev version
               run: npm run build:dev
@@ -37,4 +37,4 @@ jobs:
               run: npm start &
 
             - name: Run Audio v2 Playwright Tests
-              run: npm run test:audioV2
+              run: npm run test:audioV2 -- --browser chromium --max-failures 10 --retries 0
