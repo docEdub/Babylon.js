@@ -19,19 +19,26 @@ jobs:
             - name: Set up Node.js
               uses: actions/setup-node@v3
               with:
-                  node-version: "16"
+                  node-version: "22.4.1"
 
             - name: Install dependencies
               run: npm install
 
+            - name: Install Playwright dependencies
+              run: npx playwright install-deps
+
             - name: Install Playwright browsers
-              run: npx playwright install
+              run: npx playwright install chromium
 
             - name: Build dev version
               run: npm run build:dev
 
             - name: Start dev server
-              run: npm start &
+              run: |
+                  npm start &
+                  npx wait-on http://localhost:1337
 
             - name: Run Audio v2 Playwright Tests
-              run: npm run test:audio-v2
+              run: npm run test:audioV2 -- --max-failures 10 --retries 0
+              env:
+                  BROWSER: "chromium"
