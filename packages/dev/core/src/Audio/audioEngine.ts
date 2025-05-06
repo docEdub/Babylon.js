@@ -6,6 +6,7 @@ import { Logger } from "../Misc/logger";
 import { AbstractEngine } from "../Engines/abstractEngine";
 import type { IAudioEngine } from "./Interfaces/IAudioEngine";
 import { IsWindowObjectExist } from "../Misc/domManagement";
+import { _WebAudioEngine } from "../AudioV2/webAudio/webAudioEngine";
 
 // Sets the default audio engine to Babylon.js
 AbstractEngine.AudioEngineFactory = (
@@ -27,6 +28,7 @@ export class AudioEngine implements IAudioEngine {
     private _muteButton: Nullable<HTMLButtonElement> = null;
     private _hostElement: Nullable<HTMLElement>;
     private _audioDestination: Nullable<AudioDestinationNode | MediaStreamAudioDestinationNode> = null;
+    private _audioEngineV2: Nullable<_WebAudioEngine> = null;
 
     /**
      * Gets whether the current host supports Web Audio and thus could create AudioContexts.
@@ -217,6 +219,11 @@ export class AudioEngine implements IAudioEngine {
                     // Do not wait for the promise to unlock.
                     this._triggerRunningState();
                 }
+
+                this._audioEngineV2 = new _WebAudioEngine({ audioContext: this._audioContext });
+                this._audioEngineV2._initAsync({ resumeOnInteraction: false, resumeOnPause: false }).then(() => {
+                    this._audioEngineV2?.mainOut._inNode.connect(this.masterGain);
+                });
             }
         } catch (e) {
             this.canUseWebAudio = false;
