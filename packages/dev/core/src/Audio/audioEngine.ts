@@ -28,7 +28,6 @@ export class AudioEngine implements IAudioEngine {
     private _muteButton: Nullable<HTMLButtonElement> = null;
     private _hostElement: Nullable<HTMLElement>;
     private _audioDestination: Nullable<AudioDestinationNode | MediaStreamAudioDestinationNode> = null;
-    private _audioEngineV2: Nullable<_WebAudioEngine> = null;
 
     /**
      * Gets whether the current host supports Web Audio and thus could create AudioContexts.
@@ -78,6 +77,9 @@ export class AudioEngine implements IAudioEngine {
      * Event raised when audio has been locked on the browser.
      */
     public onAudioLockedObservable = new Observable<IAudioEngine>();
+
+    /** @internal */
+    public _audioEngineV2: Nullable<_WebAudioEngine> = null;
 
     /**
      * Gets the current AudioContext if available.
