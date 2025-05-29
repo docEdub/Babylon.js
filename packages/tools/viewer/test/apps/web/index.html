@@ -397,6 +397,14 @@
                 const viewer = viewerElement.viewerDetails.viewer;
                 viewer.updateShadows({ quality: value });
             };
+
+            // For testing, show the inspector automatically when the viewer is ready.
+            // TODO: Remove this.
+            (async () => {
+                await customElements.whenDefined("babylon-viewer");
+                const { Inspector, ShellService } = await import("inspector-v2");
+                Inspector.Show(viewerDetails.scene, {});
+            })();
         </script>
     </body>
 </html>
