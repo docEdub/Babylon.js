@@ -3,6 +3,7 @@ import { AbstractNamedAudioNode, AudioNodeType } from "./abstractAudioNode";
 import type { PrimaryAudioBus } from "./audioBus";
 import type { AudioEngineV2 } from "./audioEngineV2";
 import type { _AbstractAudioSubGraph } from "./subNodes/abstractAudioSubGraph";
+import type { IVolumeAudioOptions } from "./subNodes/volumeAudioSubNode";
 import { _GetVolumeAudioProperty, _GetVolumeAudioSubNode } from "./subNodes/volumeAudioSubNode";
 import type { AbstractAudioAnalyzer, IAudioAnalyzerOptions } from "./subProperties/abstractAudioAnalyzer";
 import type { AbstractSpatialAudio, ISpatialAudioOptions } from "./subProperties/abstractSpatialAudio";
@@ -12,7 +13,7 @@ import { _AudioAnalyzer } from "./subProperties/audioAnalyzer";
 /**
  * Options for creating a sound source.
  */
-export interface ISoundSourceOptions extends IAudioAnalyzerOptions, ISpatialAudioOptions, IStereoAudioOptions {
+export interface ISoundSourceOptions extends IAudioAnalyzerOptions, ISpatialAudioOptions, IStereoAudioOptions, IVolumeAudioOptions {
     /**
      * The output bus for the sound source. Defaults to `null`.
      * - If not set or `null`, and `outBusAutoDefault` is `true`, then the sound source is automatically connected to the audio engine's default main bus.
