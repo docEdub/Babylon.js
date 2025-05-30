@@ -4,20 +4,20 @@ import type { Observer } from "core/index";
 import type { ServiceDefinition } from "../../../modularity/serviceDefinition";
 import type { IAudioExplorerService } from "./audioExplorerService";
 
-import { SoundWaveCircleRegular } from "@fluentui/react-icons";
+import { EngineRegular } from "@fluentui/react-icons";
 
 import { AudioExplorerServiceIdentity } from "./audioExplorerService";
 
-export const SoundExplorerServiceDefinition: ServiceDefinition<[], [IAudioExplorerService]> = {
-    friendlyName: "Sounds",
+export const AudioEngineExplorerServiceDefinition: ServiceDefinition<[], [IAudioExplorerService]> = {
+    friendlyName: "Audio Engines",
     consumes: [AudioExplorerServiceIdentity],
     factory: (audioExplorerService) => {
         const sectionRegistration = audioExplorerService.addSection({
-            displayName: "Sounds",
+            displayName: "Audio Engines",
             order: 2,
-            getRootEntities: (audioEngines) => audioEngines.flatMap((audioEngine) => Array.from(audioEngine.sounds)),
-            getEntityDisplayName: (sound) => sound.name,
-            entityIcon: () => <SoundWaveCircleRegular />,
+            getRootEntities: (audioEngines) => audioEngines,
+            getEntityDisplayName: (audioEngine) => audioEngine.name,
+            entityIcon: () => <EngineRegular />,
             watch: (audioEngines, onAdded, onRemoved) => {
                 const observers: Observer<any>[] = [];
 

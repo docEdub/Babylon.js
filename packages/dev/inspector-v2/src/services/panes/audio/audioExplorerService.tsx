@@ -39,7 +39,7 @@ export type AudioExplorerSection<T extends EntityBase> = Readonly<{
     /**
      *
      */
-    getRootEntities: (audioEngine: AudioEngineV2) => readonly T[];
+    getRootEntities: (audioEngines: AudioEngineV2[]) => readonly T[];
     /**
      *
      */
@@ -64,7 +64,7 @@ export type AudioExplorerSection<T extends EntityBase> = Readonly<{
     /**
      *
      */
-    watch: (audioEngine: AudioEngineV2, onAdded: (entity: T) => void, onRemoved: (entity: T) => void) => IDisposable;
+    watch: (audioEngines: AudioEngineV2[], onAdded: (entity: T) => void, onRemoved: (entity: T) => void) => IDisposable;
 }>;
 
 export type AudioExplorerEntityCommand<T extends EntityBase> = Readonly<{
@@ -79,7 +79,7 @@ export type AudioExplorerEntityCommand<T extends EntityBase> = Readonly<{
     /**
      *
      */
-    execute: (audioEngine: AudioEngineV2, entity: T) => void;
+    execute: (audioEngines: AudioEngineV2[], entity: T) => void;
     /**
      *
      */
@@ -145,7 +145,7 @@ export const AudioExplorerServiceDefinition: ServiceDefinition<[IAudioExplorerSe
         const commandsCollection = new ObservableCollection<AudioExplorerEntityCommand<EntityBase>>();
 
         // eslint-disable-next-line @typescript-eslint/naming-convention, jsdoc/require-jsdoc
-        const AudioExplorer: FunctionComponent<{ audioEngine: AudioEngineV2 }> = ({ audioEngine }) => {
+        const AudioExplorer: FunctionComponent<{ audioEngines: AudioEngineV2[] }> = ({ audioEngines }) => {
             const classes = useStyles();
 
             const sections = useOrderedObservableCollection(sectionsCollection);
@@ -162,7 +162,7 @@ export const AudioExplorerServiceDefinition: ServiceDefinition<[IAudioExplorerSe
 
             useEffect(() => {
                 setAudioVersion((version) => version + 1);
-            }, [audioEngine]);
+            }, [audioEngines]);
 
             useEffect(() => {
                 const onAudioItemAdded = () => {
@@ -181,7 +181,7 @@ export const AudioExplorerServiceDefinition: ServiceDefinition<[IAudioExplorerSe
                     }
                 };
 
-                const watchTokens = sections.map((section) => section.watch(audioEngine, onAudioItemAdded, onAudioItemRemoved));
+                const watchTokens = sections.map((section) => section.watch(audioEngines, onAudioItemAdded, onAudioItemRemoved));
 
                 return () => {
                     for (const token of watchTokens) {
@@ -197,13 +197,13 @@ export const AudioExplorerServiceDefinition: ServiceDefinition<[IAudioExplorerSe
                     visibleItems.push({
                         type: "section",
                         sectionName: section.displayName,
-                        hasChildren: section.getRootEntities(audioEngine).length > 0,
+                        hasChildren: section.getRootEntities(audioEngines).length > 0,
                     });
 
                     if (openItems.has(section.displayName)) {
                         let depth = 1;
                         TraverseGraph(
-                            section.getRootEntities(audioEngine),
+                            section.getRootEntities(audioEngines),
                             (entity) => {
                                 if (openItems.has(entity.uniqueId) && section.getEntityChildren) {
                                     return section.getEntityChildren(entity);
@@ -230,7 +230,7 @@ export const AudioExplorerServiceDefinition: ServiceDefinition<[IAudioExplorerSe
                 }
 
                 return visibleItems;
-            }, [audioEngine, audioVersion, sections, openItems, itemsFilter]);
+            }, [audioEngines, audioVersion, sections, openItems, itemsFilter]);
 
             const onOpenChange = useCallback(
                 (event: TreeOpenChangeEvent, data: TreeOpenChangeData) => {
@@ -289,7 +289,7 @@ export const AudioExplorerServiceDefinition: ServiceDefinition<[IAudioExplorerSe
                                                             <Button
                                                                 icon={<command.icon entity={item.entity} />}
                                                                 appearance="subtle"
-                                                                onClick={() => command.execute(audioEngine, item.entity)}
+                                                                onClick={() => command.execute(audioEngines, item.entity)}
                                                             />
                                                         </Tooltip>
                                                     ))}
@@ -315,8 +315,8 @@ export const AudioExplorerServiceDefinition: ServiceDefinition<[IAudioExplorerSe
             horizontalLocation: "left",
             suppressTeachingMoment: true,
             content: () => {
-                const audioEngine = useObservableState(() => audioContext.currentAudioEngine, audioContext.currentAudioEngineObservable);
-                return <>{audioEngine && <AudioExplorer audioEngine={audioEngine} />}</>;
+                const audioEngines = useObservableState(() => audioContext.currentAudioEngines, audioContext.currentAudioEnginesObservable);
+                return <>{audioEngines && <AudioExplorer audioEngines={audioEngines} />}</>;
             },
         });
 
