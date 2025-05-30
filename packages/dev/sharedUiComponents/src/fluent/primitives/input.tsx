@@ -3,14 +3,18 @@ import { Input as FluentInput, InputProps, makeStyles } from "@fluentui/react-co
 const useInputStyles = makeStyles({
     text: {
         height: "auto",
-        marginRight: "5px",
     },
     float: {
         height: "auto",
-        marginRight: "5px",
         width: "30px",
     },
 });
+
+/**
+ * This is an input text box that stops propagation of change events and sets its width based on the type of input (text or number)
+ * @param props
+ * @returns
+ */
 export const Input: React.FC<InputProps> = (props: InputProps) => {
     const styles = useInputStyles();
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>, data: any) => {

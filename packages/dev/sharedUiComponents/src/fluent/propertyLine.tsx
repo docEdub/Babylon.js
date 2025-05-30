@@ -16,10 +16,17 @@ const usePropertyLineStyle = makeStyles({
     line: {
         width: "100%",
         display: "flex",
+        alignItems: "center", // vertical center
+        justifyContent: "flex-start", // horizontal left
+        height: "40px", // consistent height
+        marginBottom: "8px", // consistent spacing between lines
+        borderBottom: "1px solid #eee", // optional separator
+        fontSize: "14px",
     },
     label: {
         width: "33%",
         textAlign: "left",
+        fontWeight: "bold",
     },
     rightContent: { width: "67%", display: "flex" },
     fillRestOfRightContentWidth: { flex: 1 },
