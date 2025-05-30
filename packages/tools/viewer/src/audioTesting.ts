@@ -27,6 +27,7 @@ export function InitSceneAudioForTesting(scene: Scene): void {
     void (async () => {
         const audioContext = new AudioContext();
         const audioEngine1 = await CreateAudioEngineAsync({ audioContext });
+        await CreateAudioEngineAsync({ audioContext });
 
         audioEngine1.defaultMainBus!.dispose();
 
