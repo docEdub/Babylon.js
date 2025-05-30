@@ -10,7 +10,7 @@ import type { IStaticSoundBufferOptions, StaticSoundBuffer } from "./staticSound
 import type { IStreamingSoundOptions, StreamingSound } from "./streamingSound";
 import type { AbstractSpatialAudioListener, ISpatialAudioListenerOptions } from "./subProperties/abstractSpatialAudioListener";
 
-let AudioEngineId = 0;
+let AudioEngineId = 1;
 
 const Instances: AudioEngineV2[] = [];
 
