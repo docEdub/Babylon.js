@@ -14,7 +14,7 @@ export const SoundExplorerServiceDefinition: ServiceDefinition<[], [IAudioExplor
     factory: (audioExplorerService) => {
         const sectionRegistration = audioExplorerService.addSection({
             displayName: "Sounds",
-            order: 2,
+            order: 3,
             getRootEntities: (audioEngines) => audioEngines.flatMap((audioEngine) => Array.from(audioEngine.sounds)),
             getEntityDisplayName: (sound) => sound.name,
             entityIcon: () => <SoundWaveCircleRegular />,

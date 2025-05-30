@@ -14,6 +14,7 @@ import { useEffect, useRef } from "react";
 import { BuiltInsExtensionFeed } from "./extensibility/builtInsExtensionFeed";
 import { MakeModularTool } from "./modularTool";
 import { AudioContextIdentity } from "./services/audioContext";
+import { AudioBusExplorerServiceDefinition } from "./services/panes/audio/audioBusExplorerService";
 import { AudioEngineExplorerServiceDefinition } from "./services/panes/audio/audioEngineExplorerService";
 import { AudioExplorerServiceDefinition } from "./services/panes/audio/audioExplorerService";
 import { SoundExplorerServiceDefinition } from "./services/panes/audio/soundExplorerService";
@@ -211,6 +212,7 @@ function _ShowInspector(scene: Nullable<Scene>, options: Partial<IInspectorOptio
             // Audio explorer tab and related services.
             AudioExplorerServiceDefinition,
             AudioEngineExplorerServiceDefinition,
+            AudioBusExplorerServiceDefinition,
             SoundExplorerServiceDefinition,
 
             // Properties pane tab and related services.

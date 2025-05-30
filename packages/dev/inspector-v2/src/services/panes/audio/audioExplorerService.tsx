@@ -55,6 +55,11 @@ export type AudioExplorerSection<T extends EntityBase> = Readonly<{
     /**
      *
      */
+    isChild?: (entity: T) => boolean;
+
+    /**
+     *
+     */
     entityIcon?: ComponentType<{
         /**
          *
@@ -216,7 +221,7 @@ export const AudioExplorerServiceDefinition: ServiceDefinition<[IAudioExplorerSe
                                     type: "audioNode",
                                     entity,
                                     depth,
-                                    parent: section.getEntityParent ? section.getEntityParent(entity).uniqueId : section.displayName,
+                                    parent: section.getEntityParent && section.isChild && section.isChild(entity) ? section.getEntityParent(entity).uniqueId : section.displayName,
                                     hasChildren: !!section.getEntityChildren && section.getEntityChildren(entity).length > 0,
                                     title: section.getEntityDisplayName(entity),
                                     icon: section.entityIcon,

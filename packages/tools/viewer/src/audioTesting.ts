@@ -1,4 +1,4 @@
-import { CreateAudioEngineAsync, CreateSoundAsync, CreateSoundSourceAsync } from "core/AudioV2";
+import { CreateAudioBusAsync, CreateAudioEngineAsync, CreateSoundAsync, CreateSoundSourceAsync } from "core/AudioV2";
 import { StandardMaterial } from "core/Materials";
 import { Color3 } from "core/Maths/math.color";
 import { MeshBuilder } from "core/Meshes";
@@ -19,6 +19,8 @@ export function InitSceneAudioForTesting(scene: Scene): void {
     void (async () => {
         const audioEngine = await CreateAudioEngineAsync();
 
+        const audioBus1 = await CreateAudioBusAsync("audioBus1");
+
         const noiseBuffer = new AudioBuffer({ length: 48000, numberOfChannels: 1, sampleRate: 48000 });
         const noiseData = noiseBuffer.getChannelData(0);
         for (let i = 0; i < noiseData.length; i++) {
@@ -26,6 +28,7 @@ export function InitSceneAudioForTesting(scene: Scene): void {
         }
 
         const noise = await CreateSoundAsync("noise", noiseBuffer, {
+            outBus: audioBus1,
             spatialEnabled: true,
         });
 
