@@ -12,13 +12,13 @@ import { BoundSwitch } from "../../../../components/boundSwitch";
 export const MeshGeneralProperties: FunctionComponent<{ entity: AbstractMesh }> = ({ entity: mesh }) => {
     return (
         <>
-            <PropertyLine label="Is enabled" description="Determines whether a mesh is enabled within the scene">
+            <PropertyLine label="Is Enabled" description="Determines whether a mesh is enabled within the scene">
                 <BoundSwitch accessor={() => mesh.isEnabled(false)} mutator={(value) => mesh.setEnabled(value)} observable={mesh.onEnabledStateChangedObservable} />
             </PropertyLine>
-            <PropertyLine label="Is visible" description="Determines whether a mesh is visible">
+            <PropertyLine label="Is Visible" description="Determines whether a mesh is visible">
                 <Switch checked={mesh.isVisible} onChange={(ev) => (mesh.isVisible = ev.target.checked)} />
             </PropertyLine>
-            <PropertyLine label="Fake dropdown ">
+            <PropertyLine label="Fake Dropdown ">
                 <Dropdown
                     options={[
                         { value: 1, label: "One" },
