@@ -1,4 +1,12 @@
-import { CreateAudioBusAsync, CreateAudioEngineAsync, CreateSoundAsync, CreateSoundSourceAsync } from "core/AudioV2";
+import {
+    CreateAudioBusAsync,
+    CreateAudioEngineAsync,
+    CreateMainAudioBusAsync,
+    CreateMicrophoneSoundSourceAsync,
+    CreateSoundAsync,
+    CreateSoundSourceAsync,
+    CreateStreamingSoundAsync,
+} from "core/AudioV2";
 import { StandardMaterial } from "core/Materials";
 import { Color3 } from "core/Maths/math.color";
 import { MeshBuilder } from "core/Meshes";
@@ -17,9 +25,24 @@ export function InitSceneAudioForTesting(scene: Scene): void {
     audioSphere1.material = material;
 
     void (async () => {
-        const audioEngine = await CreateAudioEngineAsync();
+        const audioContext = new AudioContext();
+        const audioEngine1 = await CreateAudioEngineAsync({ audioContext });
 
-        const audioBus1 = await CreateAudioBusAsync("audioBus1");
+        audioEngine1.defaultMainBus!.dispose();
+
+        const mainAmbientBus = await CreateMainAudioBusAsync("Main ambient");
+        const mainSpatialBus = await CreateMainAudioBusAsync("Main spatial");
+        const mainLiveInputBus = await CreateMainAudioBusAsync("Main live input", { volume: 0 });
+
+        const musicBus = await CreateAudioBusAsync("Music", { outBus: mainAmbientBus });
+        const sfxBus = await CreateAudioBusAsync("Sfx", { outBus: mainSpatialBus });
+        const tonesBus = await CreateAudioBusAsync("Tones", { outBus: mainAmbientBus });
+
+        const sinesBus = await CreateAudioBusAsync("Sines", { outBus: tonesBus });
+        const squaresBus = await CreateAudioBusAsync("Sines", { outBus: tonesBus });
+
+        const music = await CreateStreamingSoundAsync("music", "https://amf-ms.github.io/AudioAssets/cc-music/electronic/Gianluca-Sgalambro--Revelations.mp3");
+        music.outBus = musicBus;
 
         const noiseBuffer = new AudioBuffer({ length: 48000, numberOfChannels: 1, sampleRate: 48000 });
         const noiseData = noiseBuffer.getChannelData(0);
@@ -27,14 +50,46 @@ export function InitSceneAudioForTesting(scene: Scene): void {
             noiseData[i] = Math.random() * 2 - 1; // Fill with random noise
         }
 
-        const noise = await CreateSoundAsync("noise", noiseBuffer, {
-            outBus: audioBus1,
-            spatialEnabled: true,
-        });
+        const noise = await CreateSoundAsync("noise", noiseBuffer, { spatialEnabled: true });
+        noise.outBus = sfxBus;
 
         noise.spatial.attach(audioSphere1);
 
-        await audioEngine.unlockAsync();
-        noise.play({ loop: true, volume: 0.01 });
+        const sine440Node = new OscillatorNode(audioContext, { type: "sine", frequency: 440 });
+        const sine660Node = new OscillatorNode(audioContext, { type: "sine", frequency: 660 });
+        const sine880Node = new OscillatorNode(audioContext, { type: "sine", frequency: 660 });
+
+        const square110Node = new OscillatorNode(audioContext, { type: "square", frequency: 110 });
+        const square220Node = new OscillatorNode(audioContext, { type: "square", frequency: 220 });
+
+        const sine440Source = await CreateSoundSourceAsync("sine-440", sine440Node, { spatialEnabled: true, volume: 0.005 });
+        sine440Source.outBus = sinesBus;
+
+        const sine660Source = await CreateSoundSourceAsync("sine-660", sine660Node, { spatialEnabled: true, volume: 0.005 });
+        sine660Source.outBus = sinesBus;
+
+        const sine880Source = await CreateSoundSourceAsync("sine-880", sine880Node, { spatialEnabled: true, volume: 0.005 });
+        sine880Source.outBus = sinesBus;
+
+        const square110Source = await CreateSoundSourceAsync("square-110", square110Node, { spatialEnabled: true, volume: 0.005 });
+        square110Source.outBus = squaresBus;
+
+        const square220Source = await CreateSoundSourceAsync("square-220", square220Node, { spatialEnabled: true, volume: 0.005 });
+        square220Source.outBus = squaresBus;
+
+        void CreateMicrophoneSoundSourceAsync("microphone", { outBus: mainLiveInputBus });
+
+        await audioEngine1.unlockAsync();
+
+        music.play({ loop: true, volume: 0.1 });
+        noise.play({ loop: true, volume: 0.003 });
+
+        setTimeout(() => {
+            sine440Node.start();
+            sine660Node.start();
+            sine880Node.start();
+            square110Node.start();
+            square220Node.start();
+        }, 1000);
     })();
 }
