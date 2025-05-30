@@ -6,15 +6,15 @@ import type { IExtensionFeed, ExtensionMetadata, IExtensionMetadataQuery, Extens
 
 const CreationToolsExtensionMetadata = {
     name: "Asset Creation",
-    author: "Babylon",
     description: "Adds new features to enable creating Babylon assets such as node materials, flow graphs, and more.",
     keywords: ["creation"],
-    version: "0.0.1",
-    license: "Apache",
 } as const;
 
 const Extensions: readonly ExtensionMetadata[] = [CreationToolsExtensionMetadata];
 
+/**
+ * @internal
+ */
 export class BuiltInsExtensionFeed implements IExtensionFeed {
     public readonly name = "Built-ins";
 
@@ -28,20 +28,8 @@ export class BuiltInsExtensionFeed implements IExtensionFeed {
         };
     }
 
-    public async getExtensionMetadataAsync(name: string, version?: string): Promise<ExtensionMetadata | undefined> {
-        return Extensions.find((extension) => extension.name === name && (!version || extension.version === version));
-    }
-
-    public async saveExtensionToClientAsync(name: string, version: string): Promise<void> {
-        // No-op
-    }
-
-    public async removeExtensionFromClientAsync(name: string, version: string): Promise<void> {
-        // No-op
-    }
-
-    public async getExtensionModuleAsync(name: string, version: string): Promise<ExtensionModule | undefined> {
-        if (name === CreationToolsExtensionMetadata.name && version === CreationToolsExtensionMetadata.version) {
+    public async getExtensionModuleAsync(name: string): Promise<ExtensionModule | undefined> {
+        if (name === CreationToolsExtensionMetadata.name) {
             return await import("../services/creationToolsService");
         }
         return undefined;

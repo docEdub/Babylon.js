@@ -4,7 +4,7 @@ import type { IDisposable } from "core/index";
 import type { ComponentType, FunctionComponent } from "react";
 import type { IExtensionFeed } from "./extensibility/extensionFeed";
 import type { IExtension } from "./extensibility/extensionManager";
-import type { WeaklyTypedServiceDefinition } from "./modularity/serviceCatalog";
+import type { WeaklyTypedServiceDefinition } from "./modularity/serviceContainer";
 import type { IRootComponentService, ShellServiceOptions } from "./services/shellService";
 
 import { Button, Dialog, DialogActions, DialogBody, DialogContent, DialogSurface, DialogTitle, FluentProvider, makeStyles, Spinner } from "@fluentui/react-components";
@@ -17,7 +17,7 @@ import { Deferred } from "core/Misc/deferred";
 
 import { ExtensionManagerContext } from "./contexts/extensionManagerContext";
 import { ExtensionManager } from "./extensibility/extensionManager";
-import { ServiceCatalog } from "./modularity/serviceCatalog";
+import { ServiceContainer } from "./modularity/serviceContainer";
 import { ExtensionListServiceDefinition } from "./services/extensionsListService";
 import { MakeShellServiceDefinition, RootComponentServiceIdentity } from "./services/shellService";
 import { ThemeSelectorServiceDefinition } from "./services/themeSelectorService";
@@ -84,10 +84,13 @@ export function MakeModularTool(options: ModularToolOptions): IDisposable {
         // This is the main async initialization.
         useEffect(() => {
             const initializeExtensionManagerAsync = async () => {
-                const serviceCatalog = new ServiceCatalog();
+                const serviceContainer = new ServiceContainer("ModularToolContainer");
+
+                // Register the shell service (top level toolbar/side pane UI layout).
+                await serviceContainer.addServiceAsync(MakeShellServiceDefinition(options));
 
                 // Register a service that simply consumes the IRootComponentService and sets the root component as state so it can be rendered.
-                await serviceCatalog.registerServiceAsync<[], [IRootComponentService]>({
+                await serviceContainer.addServiceAsync<[], [IRootComponentService]>({
                     friendlyName: "Root Component Bootstrapper",
                     consumes: [RootComponentServiceIdentity],
                     factory: (rootComponentService) => {
@@ -99,47 +102,26 @@ export function MakeModularTool(options: ModularToolOptions): IDisposable {
                     },
                 });
 
-                // Register the shell service (top level toolbar/side pane UI layout).
-                await serviceCatalog.registerServicesAsync(MakeShellServiceDefinition(options));
-
                 // Register the extension list service (for browsing/installing extensions) if extension feeds are provided.
                 if (extensionFeeds.length > 0) {
-                    await serviceCatalog.registerServicesAsync(ExtensionListServiceDefinition);
+                    await serviceContainer.addServiceAsync(ExtensionListServiceDefinition);
                 }
 
                 // Register the theme selector service (for selecting the theme) if theming is configured.
                 if (isThemeable) {
-                    await serviceCatalog.registerServicesAsync(ThemeSelectorServiceDefinition);
+                    await serviceContainer.addServiceAsync(ThemeSelectorServiceDefinition);
                 }
 
                 // Register all external services (that make up a unique tool).
-                await serviceCatalog.registerServicesAsync(...serviceDefinitions);
-
-                // Dynamically load entire modules for shared dependencies since we can't know what parts a dynamic extension might use.
-                // TODO: Try to replace this with import maps.
-                // TODO: Re-enable this when we want to support dynamic extensions.
-                const externalDependencies = new Map<string, unknown>([
-                    // // eslint-disable-next-line import/no-internal-modules
-                    // ["@babylonjs/inspector", await import("./index")],
-                    // ["@babylonjs/core", await import("@dev/core")],
-                    // ["@babylonjs/loaders", await import("@dev/loaders")],
-                    // ["@babylonjs/materials", await import("@dev/materials")],
-                    // // ["@babylonjs/viewer", await import("@tools/viewer")],
-                    // ["@fluentui/react-components", await import("@fluentui/react-components")],
-                    // ["@fluentui/react-icons", await import("@fluentui/react-icons")],
-                    // ["react", await import("react")],
-                    // ["react-dom", await import("react-dom")],
-                    // ["react/jsx-runtime", await import("react/jsx-runtime")],
-                ]);
+                await serviceContainer.addServicesAsync(...serviceDefinitions);
 
                 // Create the extension manager, passing along the registry for runtime changes to the registered services.
-                const extensionManager = await ExtensionManager.CreateAsync(serviceCatalog, externalDependencies, extensionFeeds);
+                const extensionManager = await ExtensionManager.CreateAsync(serviceContainer, extensionFeeds);
 
                 // Check query params for required extensions. This lets users share links with sets of extensions.
                 const queryParams = new URLSearchParams(window.location.search);
                 const requiredExtensions = queryParams.getAll("babylon.requiredExtension");
                 const uninstalledExtensions: IExtension[] = [];
-                const disabledExtensions: IExtension[] = [];
                 for (const requiredExtension of requiredExtensions) {
                     // These could possibly be parallelized to speed things up, but it's more complex so let's wait and see if we need it.
                     // eslint-disable-next-line no-await-in-loop
@@ -150,15 +132,12 @@ export function MakeModularTool(options: ModularToolOptions): IDisposable {
                         if (!extension.isInstalled) {
                             uninstalledExtensions.push(extension);
                         }
-                        if (!extension.isEnabled) {
-                            disabledExtensions.push(extension);
-                        }
                     }
                 }
 
                 // Check if any required extensions are uninstalled or disabled. If so, show a dialog to the user.
-                if (uninstalledExtensions.length > 0 || disabledExtensions.length > 0) {
-                    setRequiredExtensions(Array.from(new Set([...uninstalledExtensions, ...disabledExtensions])).map((extension) => extension.metadata.name));
+                if (uninstalledExtensions.length > 0) {
+                    setRequiredExtensions(uninstalledExtensions.map((extension) => extension.metadata.name));
                     const deferred = new Deferred<boolean>();
                     setRequiredExtensionsDeferred(deferred);
                     if (await deferred.promise) {
@@ -166,19 +145,9 @@ export function MakeModularTool(options: ModularToolOptions): IDisposable {
                             // This could possibly be parallelized to speed things up, but it's more complex so let's wait and see if we need it.
                             // eslint-disable-next-line no-await-in-loop
                             await extension.installAsync();
-                            disabledExtensions.push(extension);
-                        }
-
-                        for (const extension of disabledExtensions) {
-                            // This could possibly be parallelized to speed things up, but it's more complex so let's wait and see if we need it.
-                            // eslint-disable-next-line no-await-in-loop
-                            await extension.enableAsync();
                         }
                     }
                 }
-
-                // Instantiate a service container, which will in turn instantiate all the services (in order based on the dependency graph).
-                const serviceContainer = await serviceCatalog.createContainerAsync("ModularToolContainer");
 
                 // Set the contexts.
                 setExtensionManagerContext({ extensionManager });
@@ -186,7 +155,7 @@ export function MakeModularTool(options: ModularToolOptions): IDisposable {
                 return () => {
                     extensionManager.dispose();
                     serviceContainer.dispose();
-                    serviceCatalog.dispose();
+                    serviceContainer.dispose();
                 };
             };
 

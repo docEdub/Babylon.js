@@ -18,7 +18,6 @@ import {
     DialogSurface,
     DialogTitle,
     DialogTrigger,
-    Divider,
     makeStyles,
     Spinner,
     Tab,
@@ -88,8 +87,6 @@ const ExtensionDetails: FunctionComponent<{ extension: IExtension }> = memo((pro
 
     const [canInstall, setCanInstall] = useState(false);
     const [canUninstall, setCanUninstall] = useState(false);
-    const [canEnable, setCanEnable] = useState(false);
-    const [canDisable, setCanDisable] = useState(false);
     const [isStateChanging, setIsStateChanging] = useState(false);
 
     useEffect(() => {
@@ -97,8 +94,6 @@ const ExtensionDetails: FunctionComponent<{ extension: IExtension }> = memo((pro
         const updateState = () => {
             setCanInstall(!extension.isInstalled && !extension.isStateChanging);
             setCanUninstall(extension.isInstalled && !extension.isStateChanging);
-            setCanEnable(extension.isInstalled && !extension.isEnabled && !extension.isStateChanging);
-            setCanDisable(extension.isEnabled && !extension.isStateChanging);
             setIsStateChanging(extension.isStateChanging);
         };
 
@@ -110,19 +105,9 @@ const ExtensionDetails: FunctionComponent<{ extension: IExtension }> = memo((pro
 
     const install = useCallback(async () => await props.extension.installAsync(), [props.extension]);
     const uninstall = useCallback(async () => await props.extension.uninstallAsync(), [props.extension]);
-    const enable = useCallback(async () => await props.extension.enableAsync(), [props.extension]);
-    const disable = useCallback(async () => await props.extension.disableAsync(), [props.extension]);
 
     return (
         <>
-            <div className={classes.extensionIntro}>
-                <Body1>{props.extension.metadata.author}</Body1>
-                <Divider vertical style={{ flexGrow: 0 }} />
-                <Body1>v{props.extension.metadata.version}</Body1>
-                <Divider vertical style={{ flexGrow: 0 }} />
-                <Body1>{props.extension.metadata.license}</Body1>
-            </div>
-
             <div className={classes.extensionDescription}>
                 <Body1>{props.extension.metadata.description}</Body1>
             </div>
@@ -136,16 +121,6 @@ const ExtensionDetails: FunctionComponent<{ extension: IExtension }> = memo((pro
                 {canUninstall && (
                     <Button appearance="primary" size="small" onClick={uninstall}>
                         Uninstall
-                    </Button>
-                )}
-                {canEnable && (
-                    <Button appearance="primary" size="small" onClick={enable}>
-                        Enable
-                    </Button>
-                )}
-                {canDisable && (
-                    <Button appearance="primary" size="small" onClick={disable}>
-                        Disable
                     </Button>
                 )}
                 {isStateChanging && <Spinner className={classes.spinner} size="extra-small" />}
@@ -174,17 +149,19 @@ export const ExtensionListServiceDefinition: ServiceDefinition<[], [IShellServic
                 const [extensions, setExtensions] = useState<IExtension[]>([]);
 
                 useEffect(() => {
-                    const populateExtensionsAsync = async () => {
-                        const query = await extensionManager.queryExtensionsAsync(undefined, undefined, selectedTab === "installed");
-                        const extensions = await query.getExtensionsAsync(0, query.totalCount);
-                        setExtensions(extensions);
-                    };
+                    if (extensionManager) {
+                        const populateExtensionsAsync = async () => {
+                            const query = await extensionManager.queryExtensionsAsync(undefined, undefined, selectedTab === "installed");
+                            const extensions = await query.getExtensionsAsync(0, query.totalCount);
+                            setExtensions(extensions);
+                        };
 
-                    // eslint-disable-next-line github/no-then
-                    populateExtensionsAsync().catch((error) => {
-                        Logger.Warn(`Failed to populate extensions: ${error}`);
-                    });
-                }, [selectedTab]);
+                        // eslint-disable-next-line github/no-then
+                        populateExtensionsAsync().catch((error) => {
+                            Logger.Warn(`Failed to populate extensions: ${error}`);
+                        });
+                    }
+                }, [extensionManager, selectedTab]);
 
                 const teachingMoment = useTeachingMoment();
 
