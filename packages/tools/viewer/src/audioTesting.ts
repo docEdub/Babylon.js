@@ -26,12 +26,13 @@ export function InitSceneAudioForTesting(scene: Scene): void {
 
     void (async () => {
         const audioContext = new AudioContext();
-        const audioEngine1 = await CreateAudioEngineAsync({ audioContext });
         await CreateAudioEngineAsync({ audioContext });
+        await CreateAudioEngineAsync({ audioContext });
+        const audioEngine3 = await CreateAudioEngineAsync({ audioContext });
 
-        audioEngine1.defaultMainBus!.dispose();
+        const mainAmbientBus = audioEngine3.defaultMainBus ?? (await CreateMainAudioBusAsync(""));
+        mainAmbientBus.name = "Main ambient";
 
-        const mainAmbientBus = await CreateMainAudioBusAsync("Main ambient");
         const mainSpatialBus = await CreateMainAudioBusAsync("Main spatial");
         const mainLiveInputBus = await CreateMainAudioBusAsync("Main live input", { volume: 0 });
 
@@ -80,7 +81,7 @@ export function InitSceneAudioForTesting(scene: Scene): void {
 
         void CreateMicrophoneSoundSourceAsync("microphone", { outBus: mainLiveInputBus });
 
-        await audioEngine1.unlockAsync();
+        await audioEngine3.unlockAsync();
 
         music.play({ loop: true, volume: 0.1 });
         noise.play({ loop: true, volume: 0.003 });
