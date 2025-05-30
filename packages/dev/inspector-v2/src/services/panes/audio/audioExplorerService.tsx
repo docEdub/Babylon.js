@@ -22,7 +22,6 @@ import { ShellServiceIdentity } from "../../shellService";
 
 type EntityBase = Readonly<{
     uniqueId: number;
-    parent?: Nullable<EntityBase>;
 }>;
 
 export type AudioExplorerSection<T extends EntityBase> = Readonly<{
@@ -40,7 +39,7 @@ export type AudioExplorerSection<T extends EntityBase> = Readonly<{
     /**
      *
      */
-    getSounds: (audioEngines: Array<AudioEngineV2>) => readonly T[];
+    getRootEntities: (audioEngine: AudioEngineV2) => readonly T[];
     /**
      *
      */
@@ -61,7 +60,7 @@ export type AudioExplorerSection<T extends EntityBase> = Readonly<{
     /**
      *
      */
-    watch: (audioEngines: Array<AudioEngineV2>, onAdded: (entity: T) => void, onRemoved: (entity: T) => void) => IDisposable;
+    watch: (audioEngine: AudioEngineV2, onAdded: (entity: T) => void, onRemoved: (entity: T) => void) => IDisposable;
 }>;
 
 export type AudioExplorerEntityCommand<T extends EntityBase> = Readonly<{
@@ -76,7 +75,7 @@ export type AudioExplorerEntityCommand<T extends EntityBase> = Readonly<{
     /**
      *
      */
-    execute: (audioEngines: Array<AudioEngineV2>, entity: T) => void;
+    execute: (audioEngine: AudioEngineV2, entity: T) => void;
     /**
      *
      */
@@ -108,7 +107,7 @@ type TreeItemData =
           hasChildren: boolean;
       }
     | {
-          type: "entity";
+          type: "audioNode";
           entity: EntityBase;
           depth: number;
           parent: Nullable<TreeItemValue>;
@@ -142,7 +141,7 @@ export const AudioExplorerServiceDefinition: ServiceDefinition<[IAudioExplorerSe
         const commandsCollection = new ObservableCollection<AudioExplorerEntityCommand<EntityBase>>();
 
         // eslint-disable-next-line @typescript-eslint/naming-convention, jsdoc/require-jsdoc
-        const AudioExplorer: FunctionComponent<{ audioEngines: Array<AudioEngineV2> }> = ({ audioEngines }) => {
+        const AudioExplorer: FunctionComponent<{ audioEngine: AudioEngineV2 }> = ({ audioEngine }) => {
             const classes = useStyles();
 
             const sections = useOrderedObservableCollection(sectionsCollection);
@@ -159,7 +158,7 @@ export const AudioExplorerServiceDefinition: ServiceDefinition<[IAudioExplorerSe
 
             useEffect(() => {
                 setAudioVersion((version) => version + 1);
-            }, [audioEngines]);
+            }, [audioEngine]);
 
             useEffect(() => {
                 const onAudioItemAdded = () => {
@@ -178,7 +177,7 @@ export const AudioExplorerServiceDefinition: ServiceDefinition<[IAudioExplorerSe
                     }
                 };
 
-                const watchTokens = sections.map((section) => section.watch(audioEngines, onAudioItemAdded, onAudioItemRemoved));
+                const watchTokens = sections.map((section) => section.watch(audioEngine, onAudioItemAdded, onAudioItemRemoved));
 
                 return () => {
                     for (const token of watchTokens) {
@@ -194,13 +193,13 @@ export const AudioExplorerServiceDefinition: ServiceDefinition<[IAudioExplorerSe
                     visibleItems.push({
                         type: "section",
                         sectionName: section.displayName,
-                        hasChildren: section.getSounds(audioEngines).length > 0,
+                        hasChildren: section.getRootEntities(audioEngine).length > 0,
                     });
 
                     if (openItems.has(section.displayName)) {
                         let depth = 1;
                         TraverseGraph(
-                            section.getSounds(audioEngines),
+                            section.getRootEntities(audioEngine),
                             (entity) => {
                                 if (openItems.has(entity.uniqueId) && section.getEntityChildren) {
                                     return section.getEntityChildren(entity);
@@ -210,10 +209,10 @@ export const AudioExplorerServiceDefinition: ServiceDefinition<[IAudioExplorerSe
                             (entity) => {
                                 depth++;
                                 visibleItems.push({
-                                    type: "entity",
+                                    type: "audioNode",
                                     entity,
                                     depth,
-                                    parent: entity.parent?.uniqueId ?? section.displayName,
+                                    parent: section.displayName,
                                     hasChildren: !!section.getEntityChildren && section.getEntityChildren(entity).length > 0,
                                     title: section.getEntityDisplayName(entity),
                                     icon: section.entityIcon,
@@ -227,7 +226,7 @@ export const AudioExplorerServiceDefinition: ServiceDefinition<[IAudioExplorerSe
                 }
 
                 return visibleItems;
-            }, [audioEngines, audioVersion, sections, openItems, itemsFilter]);
+            }, [audioEngine, audioVersion, sections, openItems, itemsFilter]);
 
             const onOpenChange = useCallback(
                 (event: TreeOpenChangeEvent, data: TreeOpenChangeData) => {
@@ -286,7 +285,7 @@ export const AudioExplorerServiceDefinition: ServiceDefinition<[IAudioExplorerSe
                                                             <Button
                                                                 icon={<command.icon entity={item.entity} />}
                                                                 appearance="subtle"
-                                                                onClick={() => command.execute(audioEngines, item.entity)}
+                                                                onClick={() => command.execute(audioEngine, item.entity)}
                                                             />
                                                         </Tooltip>
                                                     ))}
@@ -312,8 +311,8 @@ export const AudioExplorerServiceDefinition: ServiceDefinition<[IAudioExplorerSe
             horizontalLocation: "left",
             suppressTeachingMoment: true,
             content: () => {
-                const audioEngines = useObservableState(() => audioContext.currentAudioEngines, audioContext.currentAudioEnginesObservable);
-                return <>{audioEngines && <AudioExplorer audioEngines={audioEngines} />}</>;
+                const audioEngine = useObservableState(() => audioContext.currentAudioEngine, audioContext.currentAudioEngineObservable);
+                return <>{audioEngine && <AudioExplorer audioEngine={audioEngine} />}</>;
             },
         });
 
