@@ -41,7 +41,7 @@ export function InitSceneAudioForTesting(scene: Scene): void {
         const tonesBus = await CreateAudioBusAsync("Tones", { outBus: mainAmbientBus });
 
         const sinesBus = await CreateAudioBusAsync("Sines", { outBus: tonesBus });
-        const squaresBus = await CreateAudioBusAsync("Sines", { outBus: tonesBus });
+        const squaresBus = await CreateAudioBusAsync("Squares", { outBus: tonesBus });
 
         const music = await CreateStreamingSoundAsync("music", "https://amf-ms.github.io/AudioAssets/cc-music/electronic/Gianluca-Sgalambro--Revelations.mp3");
         music.outBus = musicBus;
