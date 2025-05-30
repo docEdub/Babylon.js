@@ -16,7 +16,7 @@ type EntityBase = Readonly<{
     uniqueId: number;
 }>;
 
-export const AudioBusExplorerServiceDefinition: ServiceDefinition<[], [IAudioExplorerService]> = {
+export const SoundExplorerServiceDefinition: ServiceDefinition<[], [IAudioExplorerService]> = {
     friendlyName: "Sounds",
     consumes: [AudioExplorerServiceIdentity],
     factory: (audioExplorerService) => {
