@@ -11,6 +11,14 @@ import type { AbstractSpatialAudioListener, ISpatialAudioListenerOptions } from 
 const Instances: AudioEngineV2[] = [];
 
 /**
+ * Gets all created v2 audio engines.
+ * @returns An array of all created v2 audio engines.
+ */
+export function AllAudioEngines(): Array<AudioEngineV2> {
+    return Instances;
+}
+
+/**
  * Gets the most recently created v2 audio engine.
  * @returns The most recently created v2 audio engine.
  */
