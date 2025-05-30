@@ -11,6 +11,7 @@ import { Observable } from "core/Misc/observable";
 import { useEffect, useRef } from "react";
 import { BuiltInsExtensionFeed } from "./extensibility/builtInsExtensionFeed";
 import { MakeModularTool } from "./modularTool";
+import { AudioServiceDefinition } from "./services/panes/audioService";
 import { DebugServiceDefinition } from "./services/panes/debugService";
 import { MaterialExplorerServiceDefinition } from "./services/panes/scene/materialExplorerService";
 import { NodeHierarchyServiceDefinition } from "./services/panes/scene/nodeExplorerService";
@@ -192,6 +193,9 @@ function _ShowInspector(scene: Nullable<Scene>, options: Partial<IInspectorOptio
             PropertiesServiceDefinition,
             CommonPropertiesServiceDefinition,
             MeshPropertiesServiceDefinition,
+
+            // Audio pane tab and related services.
+            AudioServiceDefinition,
 
             // Debug pane tab and related services.
             DebugServiceDefinition,
