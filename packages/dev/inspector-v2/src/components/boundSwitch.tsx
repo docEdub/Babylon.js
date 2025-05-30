@@ -5,7 +5,7 @@ import type { ChangeEvent, FunctionComponent } from "react";
 
 import { useCallback } from "react";
 import { useObservableState } from "../hooks/observableHooks";
-import { Boolean } from "shared-ui-components/fluent/primitives/boolean";
+import { Switch } from "shared-ui-components/fluent/primitives/switch";
 
 export type BoundProps = {
     accessor: () => boolean;
@@ -14,11 +14,11 @@ export type BoundProps = {
 };
 
 /**
- * Maps a primitive boolean component to one which uses an observable to detect changes / re-render
+ * Maps a primitive Switch component to one which uses an observable to detect changes and re-render
  * @param param0
  * @returns
  */
-export const BoundBoolean: FunctionComponent<BoundProps> = ({ accessor, mutator, observable }) => {
+export const BoundSwitch: FunctionComponent<BoundProps> = ({ accessor, mutator, observable }) => {
     const value = useObservableState(accessor, observable);
 
     const onChange = useCallback(
@@ -28,5 +28,5 @@ export const BoundBoolean: FunctionComponent<BoundProps> = ({ accessor, mutator,
         [mutator]
     );
 
-    return <Boolean checked={value} onChange={onChange} />;
+    return <Switch checked={value} onChange={onChange} />;
 };

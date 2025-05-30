@@ -85,6 +85,8 @@ export interface IPropertiesService extends IService<typeof PropertiesServiceIde
     addSectionContent<EntityT>(content: PropertiesServiceSectionContent<EntityT>): IDisposable;
 }
 
+//NOTE styles are commented out for now, want to ensure the property lines are styled properly independent of their container
+
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const useStyles = makeStyles({
     rootDiv: {
@@ -94,16 +96,18 @@ const useStyles = makeStyles({
         flexDirection: "column",
     },
     placeholderDiv: {
-        padding: `${tokens.spacingVerticalM} ${tokens.spacingHorizontalM}`,
+        // padding: `${tokens.spacingVerticalM} ${tokens.spacingHorizontalM}`,
     },
     accordion: {
         overflowY: "auto",
-        paddingBottom: tokens.spacingVerticalM,
+        // paddingBottom: tokens.spacingVerticalM,
+        // paddingTop: tokens.spacingVerticalM,
     },
     panelDiv: {
         display: "flex",
         flexDirection: "column",
-                overflow: "hidden",
+        // rowGap: tokens.spacingVerticalM,
+        overflow: "hidden",
     },
 });
 

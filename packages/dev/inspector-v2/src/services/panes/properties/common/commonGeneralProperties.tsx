@@ -1,7 +1,8 @@
-import type { FunctionComponent } from "react";
+import { type FunctionComponent } from "react";
 import { PropertyLine } from "shared-ui-components/fluent/propertyLine";
 import { Input } from "shared-ui-components/fluent/primitives/input";
 import { copyCommandToClipboard } from "shared-ui-components/copyCommandToClipboard";
+import { Text } from "@fluentui/react-components";
 
 type CommonEntity = {
     id?: number;
@@ -10,22 +11,32 @@ type CommonEntity = {
     getClassName?: () => string;
 };
 
+const PropertyWrapper = (label: string, children: React.ReactNode, val?: string | number) => {
+    return (
+        val !== undefined && (
+            <PropertyLine label={label} onCopy={() => copyCommandToClipboard(val.toString())}>
+                {children}
+            </PropertyLine>
+        )
+    );
+};
+
 export const CommonGeneralProperties: FunctionComponent<{ entity: CommonEntity }> = ({ entity: commonEntity }) => {
     return (
         <>
-            {commonEntity.id !== undefined && <PropertyLine label="ID" children={commonEntity.id} />}
-            {commonEntity.name !== undefined && (
-                <PropertyLine label="Name" onCopy={() => copyCommandToClipboard(commonEntity.name || "")}>
-                    <Input
-                        defaultValue={commonEntity.name}
-                        onChange={(event) => {
-                            commonEntity.name = event.target.value; // TODO update so it rerenders
-                        }}
-                    />
-                </PropertyLine>
+            {PropertyWrapper("ID", <Text>{commonEntity.id}</Text>, commonEntity.id)}
+            {PropertyWrapper(
+                "Name",
+                <Input
+                    defaultValue={commonEntity.name}
+                    onChange={(event) => {
+                        commonEntity.name = event.target.value; // TODO update so it rerenders
+                    }}
+                />,
+                commonEntity.name
             )}
-            {commonEntity.uniqueId !== undefined && <PropertyLine label="UniqueId" children={commonEntity.uniqueId} />}
-            {commonEntity.getClassName !== undefined && <PropertyLine label="Class" children={commonEntity.getClassName()} />}
+            {PropertyWrapper("Unique ID", <Text>{commonEntity.uniqueId}</Text>, commonEntity.uniqueId)}
+            {PropertyWrapper("Class Name", <Text>{commonEntity.getClassName?.()}</Text>, commonEntity.getClassName?.())}
         </>
     );
 };
