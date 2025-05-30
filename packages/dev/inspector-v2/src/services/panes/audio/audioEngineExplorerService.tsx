@@ -4,7 +4,7 @@ import type { Observer } from "core/index";
 import type { ServiceDefinition } from "../../../modularity/serviceDefinition";
 import type { IAudioExplorerService } from "./audioExplorerService";
 
-import { EngineRegular } from "@fluentui/react-icons";
+import { HeadphonesSoundWaveRegular } from "@fluentui/react-icons";
 
 import { AudioExplorerServiceIdentity } from "./audioExplorerService";
 
@@ -17,7 +17,7 @@ export const AudioEngineExplorerServiceDefinition: ServiceDefinition<[], [IAudio
             order: 1,
             getRootEntities: (audioEngines) => audioEngines,
             getEntityDisplayName: (audioEngine) => audioEngine.name,
-            entityIcon: () => <EngineRegular />,
+            entityIcon: () => <HeadphonesSoundWaveRegular />,
             watch: (audioEngines, onAdded, onRemoved) => {
                 const observers: Observer<any>[] = [];
 

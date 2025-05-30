@@ -4,7 +4,7 @@ import { AllAudioEngines, MainAudioBus, type Observer } from "core/index";
 import type { ServiceDefinition } from "../../../modularity/serviceDefinition";
 import type { IAudioExplorerService } from "./audioExplorerService";
 
-import { ArrowEnterUpRegular } from "@fluentui/react-icons";
+import { ArrowTurnLeftUpRegular, VehicleBusRegular } from "@fluentui/react-icons";
 
 import { AudioBus } from "core/AudioV2/abstractAudio/audioBus";
 
@@ -23,7 +23,7 @@ export const AudioBusExplorerServiceDefinition: ServiceDefinition<[], [IAudioExp
             getEntityDisplayName: (bus) => bus.name,
             getEntityParent: (bus) => (bus as AudioBus).outBus!,
             isChild: (bus) => (bus instanceof AudioBus ? bus.outBus !== null : false),
-            entityIcon: () => <ArrowEnterUpRegular />,
+            entityIcon: ({ entity: node }) => (node instanceof MainAudioBus ? <VehicleBusRegular /> : node instanceof AudioBus ? <ArrowTurnLeftUpRegular /> : <></>),
             watch: (audioEngines, onAdded, onRemoved) => {
                 const observers: Observer<any>[] = [];
 
