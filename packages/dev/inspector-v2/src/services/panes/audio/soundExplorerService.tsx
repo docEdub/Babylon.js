@@ -17,6 +17,7 @@ export const SoundExplorerServiceDefinition: ServiceDefinition<[], [IAudioExplor
             order: 2,
             getRootEntities: (audioEngine) => Array.from(audioEngine.sounds),
             getEntityDisplayName: (sound) => sound.name,
+            getEntityParent: (sound) => sound.engine,
             entityIcon: () => <SoundWaveCircleRegular />,
             watch: (audioEngines, onAdded, onRemoved) => {
                 const observers: Observer<any>[] = [];
