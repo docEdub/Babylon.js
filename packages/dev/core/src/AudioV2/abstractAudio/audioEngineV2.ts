@@ -10,6 +10,8 @@ import type { IStaticSoundBufferOptions, StaticSoundBuffer } from "./staticSound
 import type { IStreamingSoundOptions, StreamingSound } from "./streamingSound";
 import type { AbstractSpatialAudioListener, ISpatialAudioListenerOptions } from "./subProperties/abstractSpatialAudioListener";
 
+let AudioEngineId = 0;
+
 const Instances: AudioEngineV2[] = [];
 
 /**
@@ -58,6 +60,8 @@ export type AudioEngineV2State = "closed" | "interrupted" | "running" | "suspend
  * A v2 audio engine based on the WebAudio API can be created with the {@link CreateAudioEngineAsync} function.
  */
 export abstract class AudioEngineV2 {
+    private _name: string;
+
     /** Not owned, but all items should be in `_buses` container, too, which is owned. */
     private readonly _mainBuses = new Set<MainAudioBus>();
 
@@ -75,6 +79,8 @@ export abstract class AudioEngineV2 {
     public readonly uniqueId: number = UniqueIdGenerator.UniqueId;
 
     protected constructor(options: Partial<IAudioEngineV2Options>) {
+        this._name = `AudioEngine #${AudioEngineId++}`;
+
         Instances.push(this);
 
         if (typeof options.parameterRampDuration === "number") {
@@ -115,6 +121,17 @@ export abstract class AudioEngineV2 {
      * - This is the last node in the audio graph before the audio is sent to the speakers.
      */
     public abstract readonly mainOut: AbstractAudioNode;
+
+    /**
+     * The name of the audio engine.
+     */
+    public get name(): string {
+        return this._name;
+    }
+
+    public set name(value: string) {
+        this._name = value;
+    }
 
     /**
      * The smoothing duration to use when changing audio parameters, in seconds. Defaults to `0.01` (10 milliseconds).
