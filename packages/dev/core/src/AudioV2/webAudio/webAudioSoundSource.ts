@@ -18,10 +18,12 @@ export class _WebAudioSoundSource extends AbstractSoundSource {
     private _stereo: Nullable<_StereoAudio> = null;
 
     protected _subGraph: _WebAudioBusAndSoundSubGraph;
-    protected _webAudioNode: AudioNode;
 
     /** @internal */
     public _audioContext: AudioContext | OfflineAudioContext;
+
+    /** @internal */
+    public _webAudioNode: AudioNode;
 
     /** @internal */
     public override readonly engine: _WebAudioEngine;

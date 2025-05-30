@@ -16,7 +16,6 @@ import { MakeModularTool } from "./modularTool";
 import { AudioContextIdentity } from "./services/audioContext";
 import { AudioBusExplorerServiceDefinition } from "./services/panes/audio/audioBusExplorerService";
 import { AudioExplorerServiceDefinition } from "./services/panes/audio/audioExplorerService";
-import { SoundExplorerServiceDefinition } from "./services/panes/audio/soundExplorerService";
 import { DebugServiceDefinition } from "./services/panes/debugService";
 import { CommonPropertiesServiceDefinition } from "./services/panes/properties/common/commonPropertiesService";
 import { MeshPropertiesServiceDefinition } from "./services/panes/properties/mesh/meshPropertiesService";
@@ -211,7 +210,6 @@ function _ShowInspector(scene: Nullable<Scene>, options: Partial<IInspectorOptio
             // Audio explorer tab and related services.
             AudioExplorerServiceDefinition,
             AudioBusExplorerServiceDefinition,
-            SoundExplorerServiceDefinition,
 
             // Properties pane tab and related services.
             PropertiesServiceDefinition,
