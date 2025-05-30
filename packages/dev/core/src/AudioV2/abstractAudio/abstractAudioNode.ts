@@ -1,4 +1,5 @@
 import { Observable } from "../../Misc/observable";
+import { UniqueIdGenerator } from "../../Misc/uniqueIdGenerator";
 import type { AudioEngineV2 } from "./audioEngineV2";
 
 export const enum AudioNodeType {
@@ -168,6 +169,11 @@ export abstract class AbstractNamedAudioNode extends AbstractAudioNode {
      * Observable for when the audio node is renamed.
      */
     public readonly onNameChangedObservable = new Observable<{ newName: string; oldName: string; node: AbstractNamedAudioNode }>();
+
+    /**
+     * A unique identifier for the audio node.
+     */
+    public readonly uniqueId: number = UniqueIdGenerator.UniqueId;
 
     protected constructor(name: string, engine: AudioEngineV2, nodeType: AudioNodeType) {
         super(engine, nodeType);

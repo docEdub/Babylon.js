@@ -1,3 +1,4 @@
+import { UniqueIdGenerator } from "../../Misc/uniqueIdGenerator";
 import type { Nullable } from "../../types";
 import type { AbstractAudioBus } from "./abstractAudioBus";
 import type { AbstractAudioNode } from "./abstractAudioNode";
@@ -67,6 +68,11 @@ export abstract class AudioEngineV2 {
     private _defaultMainBus: Nullable<MainAudioBus> = null;
 
     private _parameterRampDuration: number = 0.01;
+
+    /**
+     * A unique identifier for the audio engine.
+     */
+    public readonly uniqueId: number = UniqueIdGenerator.UniqueId;
 
     protected constructor(options: Partial<IAudioEngineV2Options>) {
         Instances.push(this);
