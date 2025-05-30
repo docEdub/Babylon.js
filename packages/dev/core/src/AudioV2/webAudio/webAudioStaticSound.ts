@@ -2,7 +2,7 @@ import type { Nullable } from "../../types";
 import type { AbstractAudioNode } from "../abstractAudio/abstractAudioNode";
 import type { IStaticSoundOptions, IStaticSoundPlayOptions, IStaticSoundStopOptions, IStaticSoundStoredOptions } from "../abstractAudio/staticSound";
 import { StaticSound } from "../abstractAudio/staticSound";
-import type { IStaticSoundBufferOptions } from "../abstractAudio/staticSoundBuffer";
+import type { IStaticSoundBufferCloneOptions, IStaticSoundBufferOptions } from "../abstractAudio/staticSoundBuffer";
 import { StaticSoundBuffer } from "../abstractAudio/staticSoundBuffer";
 import type { IStaticSoundInstanceOptions } from "../abstractAudio/staticSoundInstance";
 import { _StaticSoundInstance } from "../abstractAudio/staticSoundInstance";
@@ -236,6 +236,27 @@ export class _WebAudioStaticSoundBuffer extends StaticSoundBuffer {
     /** @internal */
     public get sampleRate(): number {
         return this._audioBuffer.sampleRate;
+    }
+
+    /** @internal */
+    public override clone(options: Nullable<Partial<IStaticSoundBufferCloneOptions>> = null): StaticSoundBuffer {
+        const audioBuffer = new AudioBuffer({
+            length: this._audioBuffer.length,
+            numberOfChannels: this._audioBuffer.numberOfChannels,
+            sampleRate: this._audioBuffer.sampleRate,
+        });
+
+        for (let i = 0; i < this._audioBuffer.numberOfChannels; i++) {
+            audioBuffer.copyToChannel(this._audioBuffer.getChannelData(i), i);
+        }
+        const buffer = new _WebAudioStaticSoundBuffer(this.engine);
+        buffer._audioBuffer = audioBuffer;
+
+        if (options?.name) {
+            buffer.name = options.name;
+        }
+
+        return buffer;
     }
 
     private async _initFromArrayBufferAsync(arrayBuffer: ArrayBuffer): Promise<void> {
