@@ -36,7 +36,7 @@ export function InitSceneAudioForTesting(scene: Scene): void {
         const mainSpatialBus = await CreateMainAudioBusAsync("Main spatial");
         const mainLiveInputBus = await CreateMainAudioBusAsync("Main live input", { volume: 0 });
 
-        const musicBus = await CreateAudioBusAsync("Music", { outBus: mainAmbientBus });
+        const streamingBus = await CreateAudioBusAsync("Streaming", { outBus: mainAmbientBus });
         const sfxBus = await CreateAudioBusAsync("Sfx", { outBus: mainSpatialBus });
         const tonesBus = await CreateAudioBusAsync("Tones", { outBus: mainAmbientBus });
 
@@ -44,7 +44,7 @@ export function InitSceneAudioForTesting(scene: Scene): void {
         const squaresBus = await CreateAudioBusAsync("Squares", { outBus: tonesBus });
 
         const music = await CreateStreamingSoundAsync("music", "https://amf-ms.github.io/AudioAssets/cc-music/electronic/Gianluca-Sgalambro--Revelations.mp3");
-        music.outBus = musicBus;
+        music.outBus = streamingBus;
 
         const noiseBuffer = new AudioBuffer({ length: 48000, numberOfChannels: 1, sampleRate: 48000 });
         const noiseData = noiseBuffer.getChannelData(0);
