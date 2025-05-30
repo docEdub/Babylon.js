@@ -89,7 +89,7 @@ export class _WebAudioStaticSound extends StaticSound implements IWebAudioSuperN
             this.play();
         }
 
-        this.engine._addNode(this);
+        this.engine._addSound(this);
     }
 
     /** @internal */
@@ -131,7 +131,7 @@ export class _WebAudioStaticSound extends StaticSound implements IWebAudioSuperN
 
         this._subGraph.dispose();
 
-        this.engine._removeNode(this);
+        this.engine._removeSound(this);
     }
 
     /** @internal */

@@ -1,5 +1,6 @@
 import type { Nullable } from "../../types";
-import type { AbstractAudioNode, AbstractNamedAudioNode } from "./abstractAudioNode";
+import type { AbstractAudioBus } from "./abstractAudioBus";
+import type { AbstractAudioNode } from "./abstractAudioNode";
 import type { AbstractSoundSource, ISoundSourceOptions } from "./abstractSoundSource";
 import type { AudioBus, IAudioBusOptions } from "./audioBus";
 import type { IMainAudioBusOptions, MainAudioBus } from "./mainAudioBus";
@@ -56,11 +57,12 @@ export type AudioEngineV2State = "closed" | "interrupted" | "running" | "suspend
  * A v2 audio engine based on the WebAudio API can be created with the {@link CreateAudioEngineAsync} function.
  */
 export abstract class AudioEngineV2 {
-    /** Not owned, but all items should be in `_nodes` container, too, which is owned. */
+    /** Not owned, but all items should be in `_buses` container, too, which is owned. */
     private readonly _mainBuses = new Set<MainAudioBus>();
 
     /** Owned top-level sound and bus nodes. */
-    private readonly _nodes = new Set<AbstractNamedAudioNode>();
+    private readonly _buses = new Set<AbstractAudioBus>();
+    private readonly _sounds = new Set<AbstractSoundSource>();
 
     private _defaultMainBus: Nullable<MainAudioBus> = null;
 
@@ -109,6 +111,24 @@ export abstract class AudioEngineV2 {
     public abstract readonly mainOut: AbstractAudioNode;
 
     /**
+     * The smoothing duration to use when changing audio parameters, in seconds. Defaults to `0.01` (10 milliseconds).
+     */
+    public get parameterRampDuration(): number {
+        return this._parameterRampDuration;
+    }
+
+    public set parameterRampDuration(value: number) {
+        this._parameterRampDuration = Math.max(0, value);
+    }
+
+    /**
+     * The sound sources belonging to this audio engine.
+     */
+    public get sounds(): Readonly<Iterable<AbstractSoundSource>> {
+        return this._sounds;
+    }
+
+    /**
      * The current state of the audio engine.
      *
      * Possible values are:
@@ -123,17 +143,6 @@ export abstract class AudioEngineV2 {
      * The output volume of the audio engine.
      */
     public abstract volume: number;
-
-    /**
-     * The smoothing duration to use when changing audio parameters, in seconds. Defaults to `0.01` (10 milliseconds).
-     */
-    public get parameterRampDuration(): number {
-        return this._parameterRampDuration;
-    }
-
-    public set parameterRampDuration(value: number) {
-        this._parameterRampDuration = Math.max(0, value);
-    }
 
     /**
      * Creates a new audio bus.
@@ -211,13 +220,19 @@ export abstract class AudioEngineV2 {
             Instances.splice(Instances.indexOf(this), 1);
         }
 
-        const nodeIt = this._nodes.values();
-        for (let next = nodeIt.next(); !next.done; next = nodeIt.next()) {
+        const busIt = this._buses.values();
+        for (let next = busIt.next(); !next.done; next = busIt.next()) {
+            next.value.dispose();
+        }
+
+        const soundIt = this._sounds.values();
+        for (let next = soundIt.next(); !next.done; next = soundIt.next()) {
             next.value.dispose();
         }
 
         this._mainBuses.clear();
-        this._nodes.clear();
+        this._buses.clear();
+        this._sounds.clear();
 
         this._defaultMainBus = null;
     }
@@ -254,22 +269,30 @@ export abstract class AudioEngineV2 {
     protected _addMainBus(mainBus: MainAudioBus): void {
         this._mainBuses.add(mainBus);
 
-        this._addNode(mainBus);
+        this._addBus(mainBus);
     }
 
     protected _removeMainBus(mainBus: MainAudioBus): void {
         this._mainBuses.delete(mainBus);
         this._defaultMainBus = null;
 
-        this._removeNode(mainBus);
+        this._removeBus(mainBus);
     }
 
-    protected _addNode(node: AbstractNamedAudioNode): void {
-        this._nodes.add(node);
+    protected _addBus(bus: AbstractAudioBus): void {
+        this._buses.add(bus);
     }
 
-    protected _removeNode(node: AbstractNamedAudioNode): void {
-        this._nodes.delete(node);
+    protected _removeBus(bus: AbstractAudioBus): void {
+        this._buses.delete(bus);
+    }
+
+    protected _addSound(sound: AbstractSoundSource): void {
+        this._sounds.add(sound);
+    }
+
+    protected _removeSound(sound: AbstractSoundSource): void {
+        this._sounds.delete(sound);
     }
 }
 

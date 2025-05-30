@@ -52,7 +52,7 @@ export class _WebAudioBus extends AudioBus implements IWebAudioSuperNode {
             this._initSpatialProperty();
         }
 
-        this.engine._addNode(this);
+        this.engine._addBus(this);
     }
 
     /** @internal */
@@ -62,7 +62,7 @@ export class _WebAudioBus extends AudioBus implements IWebAudioSuperNode {
         this._spatial = null;
         this._stereo = null;
 
-        this.engine._removeNode(this);
+        this.engine._removeBus(this);
     }
 
     /** @internal */
