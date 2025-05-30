@@ -1,25 +1,28 @@
 // eslint-disable-next-line import/no-internal-modules
-import type { IDisposable, IInspectorOptions, Nullable, Scene } from "core/index";
+import type { AudioEngineV2, IDisposable, IInspectorOptions, Nullable, Scene } from "core/index";
 import type { ServiceDefinition } from "./modularity/serviceDefinition";
 import type { ModularToolOptions } from "./modularTool";
+import type { IAudioContext } from "./services/audioContext";
 import type { ISceneContext } from "./services/sceneContext";
 import type { IShellService } from "./services/shellService";
 
 import { makeStyles } from "@fluentui/react-components";
+import { AllAudioEngines } from "core/AudioV2/abstractAudio/audioEngineV2";
 import { EngineStore } from "core/Engines/engineStore";
 import { Observable } from "core/Misc/observable";
 import { useEffect, useRef } from "react";
 import { BuiltInsExtensionFeed } from "./extensibility/builtInsExtensionFeed";
 import { MakeModularTool } from "./modularTool";
-import { AudioServiceDefinition } from "./services/panes/audioService";
+import { AudioContextIdentity } from "./services/audioContext";
+import { AudioExplorerServiceDefinition } from "./services/panes/audio/audioExplorerService";
 import { DebugServiceDefinition } from "./services/panes/debugService";
+import { CommonPropertiesServiceDefinition } from "./services/panes/properties/common/commonPropertiesService";
+import { MeshPropertiesServiceDefinition } from "./services/panes/properties/mesh/meshPropertiesService";
+import { PropertiesServiceDefinition } from "./services/panes/properties/propertiesService";
 import { MaterialExplorerServiceDefinition } from "./services/panes/scene/materialExplorerService";
 import { NodeHierarchyServiceDefinition } from "./services/panes/scene/nodeExplorerService";
 import { SceneExplorerServiceDefinition } from "./services/panes/scene/sceneExplorerService";
 import { TextureHierarchyServiceDefinition } from "./services/panes/scene/texturesExplorerService";
-import { CommonPropertiesServiceDefinition } from "./services/panes/properties/common/commonPropertiesService";
-import { MeshPropertiesServiceDefinition } from "./services/panes/properties/mesh/meshPropertiesService";
-import { PropertiesServiceDefinition } from "./services/panes/properties/propertiesService";
 import { SettingsServiceDefinition } from "./services/panes/settingsService";
 import { StatsServiceDefinition } from "./services/panes/statsService";
 import { ToolsServiceDefinition } from "./services/panes/toolsService";
@@ -146,6 +149,17 @@ function _ShowInspector(scene: Nullable<Scene>, options: Partial<IInspectorOptio
         },
     };
 
+    const audioContextServiceDefinition: ServiceDefinition<[IAudioContext], []> = {
+        friendlyName: "Inspector Audio Context",
+        produces: [AudioContextIdentity],
+        factory: () => {
+            return {
+                currentAudioEngines: AllAudioEngines(),
+                currentAudioEnginesObservable: new Observable<Nullable<Array<AudioEngineV2>>>(),
+            };
+        },
+    };
+
     if (options.handleResize) {
         const observer = scene.onBeforeRenderObservable.add(() => scene.getEngine().resize());
         disposeActions.push(() => observer.remove());
@@ -189,13 +203,16 @@ function _ShowInspector(scene: Nullable<Scene>, options: Partial<IInspectorOptio
             MaterialExplorerServiceDefinition,
             TextureHierarchyServiceDefinition,
 
+            // Provides access to the audio engines in a generic way (other tools might provide them in a different way).
+            audioContextServiceDefinition,
+
+            // Audio explorer tab and related services.
+            AudioExplorerServiceDefinition,
+
             // Properties pane tab and related services.
             PropertiesServiceDefinition,
             CommonPropertiesServiceDefinition,
             MeshPropertiesServiceDefinition,
-
-            // Audio pane tab and related services.
-            AudioServiceDefinition,
 
             // Debug pane tab and related services.
             DebugServiceDefinition,
