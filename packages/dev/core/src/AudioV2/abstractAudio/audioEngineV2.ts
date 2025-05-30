@@ -89,6 +89,13 @@ export abstract class AudioEngineV2 {
     }
 
     /**
+     * The buses belonging to this audio engine.
+     */
+    public get buses(): Readonly<Iterable<AbstractAudioBus>> {
+        return this._buses;
+    }
+
+    /**
      * The elapsed time since the audio engine was started, in seconds.
      */
     public abstract readonly currentTime: number;
