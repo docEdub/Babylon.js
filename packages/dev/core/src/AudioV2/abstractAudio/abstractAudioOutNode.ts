@@ -1,5 +1,5 @@
 import type { Nullable } from "../../types";
-import type { IAudioParameterRampOptions } from "../audioParameter";
+import { AudioParameterRampShape } from "../audioParameter";
 import type { AudioNodeType } from "./abstractAudioNode";
 import { AbstractNamedAudioNode } from "./abstractAudioNode";
 import type { AudioEngineV2 } from "./audioEngineV2";
@@ -61,18 +61,23 @@ export abstract class AbstractAudioOutNode extends AbstractNamedAudioNode {
         this._subGraph.dispose();
     }
 
-    /**
-     * Sets the audio output volume with optional ramping.
-     * @param value The value to set the volume to.
-     * @param options Options for ramping the volume over time.
-     */
-    public setVolume(value: number, options: Nullable<Partial<IAudioParameterRampOptions>> = null): void {
+    public fadeIn(duration: number, rampShape: AudioParameterRampShape = AudioParameterRampShape.Linear): void {
         // The volume subnode is created on initialization and should always exist.
         const node = _GetVolumeAudioSubNode(this._subGraph);
         if (!node) {
             throw new Error("No volume subnode");
         }
 
-        node.setVolume(value, options);
+        node.fadeIn(duration, rampShape);
+    }
+
+    public fadeOut(duration: number, rampShape: AudioParameterRampShape = AudioParameterRampShape.Linear): void {
+        // The volume subnode is created on initialization and should always exist.
+        const node = _GetVolumeAudioSubNode(this._subGraph);
+        if (!node) {
+            throw new Error("No volume subnode");
+        }
+
+        node.fadeOut(duration, rampShape);
     }
 }

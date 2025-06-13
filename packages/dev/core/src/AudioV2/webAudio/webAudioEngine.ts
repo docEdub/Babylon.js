@@ -12,7 +12,6 @@ import type { IStreamingSoundOptions, StreamingSound } from "../abstractAudio/st
 import type { AbstractSpatialAudioListener } from "../abstractAudio/subProperties/abstractSpatialAudioListener";
 import { _HasSpatialAudioListenerOptions } from "../abstractAudio/subProperties/abstractSpatialAudioListener";
 import type { _SpatialAudioListener } from "../abstractAudio/subProperties/spatialAudioListener";
-import { AudioParamRampShape, type IAudioParameterRampOptions } from "../audioParameter";
 import { _CreateSpatialAudioListener } from "./subProperties/spatialWebAudioListener";
 import { _WebAudioMainOut } from "./webAudioMainOut";
 import { _WebAudioUnmuteUI } from "./webAudioUnmuteUI";
@@ -70,57 +69,59 @@ const FormatMimeTypes: { [key: string]: string } = {
     webm: 'audio/webm; codecs="vorbis"',
 };
 
-const CurveLength = 1000;
+const TmpParamValues: number[] = [0, 0];
 
-// let NormalizedExponentialInCurve: Nullable<Float32Array> = null;
+// const CurveLength = 1000;
 
-let NormalizedLogarithmicInCurve: Nullable<Float32Array> = null;
-let NormalizedLogarithmicOutCurve: Nullable<Float32Array> = null;
+// // let NormalizedExponentialInCurve: Nullable<Float32Array> = null;
 
-let TempCurve: Float32Array | null = null;
+// let NormalizedLogarithmicInCurve: Nullable<Float32Array> = null;
+// let NormalizedLogarithmicOutCurve: Nullable<Float32Array> = null;
 
-// y = 0 -> 1
-// function GetNormalizedExponentialInCurve(): Float32Array {}
+// let TempCurve: Float32Array | null = null;
 
-// y = 0 -> 1
-function GetNormalizedLogarithmicInCurve(): Float32Array {
-    if (!NormalizedLogarithmicInCurve) {
-        NormalizedLogarithmicInCurve = new Float32Array(CurveLength);
+// // y = 0 -> 1
+// // function GetNormalizedExponentialInCurve(): Float32Array {}
 
-        for (let i = 0; i < CurveLength; i++) {
-            const x = i / CurveLength - 1;
-            NormalizedLogarithmicInCurve[i] = 2 * (1 - Math.pow(0.5, 2 * x));
-        }
-    }
+// // y = 0 -> 1
+// function GetNormalizedLogarithmicInCurve(): Float32Array {
+//     if (!NormalizedLogarithmicInCurve) {
+//         NormalizedLogarithmicInCurve = new Float32Array(CurveLength);
 
-    return NormalizedLogarithmicInCurve;
-}
+//         for (let i = 0; i < CurveLength; i++) {
+//             const x = i / CurveLength - 1;
+//             NormalizedLogarithmicInCurve[i] = 2 * (1 - Math.pow(0.5, 2 * x));
+//         }
+//     }
 
-// y = 1 -> 0
-function GetNormalizedLogarithmicOutCurve(): Float32Array {
-    if (!NormalizedLogarithmicOutCurve) {
-        NormalizedLogarithmicOutCurve = new Float32Array(CurveLength);
+//     return NormalizedLogarithmicInCurve;
+// }
 
-        for (let i = 0; i < CurveLength; i++) {
-            const x = (CurveLength - 1 - i) / (CurveLength - 1);
-            NormalizedLogarithmicOutCurve[i] = 2 * (1 - Math.pow(0.5, 2 * x));
-        }
-    }
+// // y = 1 -> 0
+// function GetNormalizedLogarithmicOutCurve(): Float32Array {
+//     if (!NormalizedLogarithmicOutCurve) {
+//         NormalizedLogarithmicOutCurve = new Float32Array(CurveLength);
 
-    return NormalizedLogarithmicOutCurve;
-}
+//         for (let i = 0; i < CurveLength; i++) {
+//             const x = (CurveLength - 1 - i) / (CurveLength - 1);
+//             NormalizedLogarithmicOutCurve[i] = 2 * (1 - Math.pow(0.5, 2 * x));
+//         }
+//     }
 
-function GetScaledCurve(normalizedCurve: Float32Array, min: number, max: number): Float32Array {
-    if (!TempCurve) {
-        TempCurve = new Float32Array(CurveLength);
-    }
+//     return NormalizedLogarithmicOutCurve;
+// }
 
-    for (let i = 0; i < normalizedCurve.length; i++) {
-        TempCurve[i] = min + (max - min) * normalizedCurve[i];
-    }
+// function GetScaledCurve(normalizedCurve: Float32Array, min: number, max: number): Float32Array {
+//     if (!TempCurve) {
+//         TempCurve = new Float32Array(CurveLength);
+//     }
 
-    return TempCurve;
-}
+//     for (let i = 0; i < normalizedCurve.length; i++) {
+//         TempCurve[i] = min + (max - min) * normalizedCurve[i];
+//     }
+
+//     return TempCurve;
+// }
 
 /** @internal */
 export class _WebAudioEngine extends AudioEngineV2 {
@@ -421,39 +422,13 @@ export class _WebAudioEngine extends AudioEngineV2 {
     }
 
     /** @internal */
-    public _setAudioParam(audioParam: AudioParam, value: number, options: Nullable<Partial<IAudioParameterRampOptions>> = null) {
-        if (audioParam.value === value) {
-            return;
-        }
-
-        const isUp = value > audioParam.value;
-
+    public _setAudioParam(audioParam: AudioParam, value: number) {
         const startTime = this.currentTime;
-        const duration = typeof options?.duration === "number" ? options.duration : this.parameterRampDuration;
+        audioParam.cancelScheduledValues(startTime);
 
-        const linearCurve: number[] = [audioParam.value, value];
-
-        const exponentialCurve: number[] = [];
-        const logarithmicCurve: number[] = [];
-
-        const shape = options && options.shape !== undefined ? options.shape : AudioParamRampShape.Logarithmic;
-        const shapeCurve =
-            options?.shapeCurve && typeof options.shapeCurve[Symbol.iterator] === "function"
-                ? options.shapeCurve
-                : shape === AudioParamRampShape.Linear
-                  ? linearCurve
-                  : shape === AudioParamRampShape.Exponential
-                    ? exponentialCurve
-                    : shape === AudioParamRampShape.Logarithmic
-                      ? logarithmicCurve
-                      : null;
-
-        if (shapeCurve) {
-            audioParam.cancelScheduledValues(startTime);
-            audioParam.setValueCurveAtTime(shapeCurve, startTime, duration);
-        } else {
-            audioParam.setValueAtTime(value, startTime);
-        }
+        TmpParamValues[0] = audioParam.value;
+        TmpParamValues[1] = value;
+        audioParam.setValueCurveAtTime(TmpParamValues, startTime, this.parameterRampDuration);
     }
 
     private _initAudioContextAsync: () => Promise<void> = async () => {

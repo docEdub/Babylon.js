@@ -1,6 +1,6 @@
 import type { Nullable } from "../../../types";
 import { _VolumeAudioSubNode } from "../../abstractAudio/subNodes/volumeAudioSubNode";
-import type { IAudioParameterRampOptions } from "../../audioParameter";
+import type { AudioParameterRampShape } from "../../audioParameter";
 import type { _WebAudioEngine } from "../webAudioEngine";
 import type { IWebAudioInNode, IWebAudioSubNode } from "../webAudioNode";
 
@@ -12,19 +12,18 @@ export async function _CreateVolumeAudioSubNodeAsync(engine: _WebAudioEngine): P
 
 /** @internal */
 export class _VolumeWebAudioSubNode extends _VolumeAudioSubNode implements IWebAudioSubNode {
+    private _fadeNode: Nullable<GainNode> = null;
     private _volume: number = 1;
+    private readonly _volumeNode: GainNode;
 
     /** @internal */
     public override readonly engine: _WebAudioEngine;
 
     /** @internal */
-    public readonly node: GainNode;
-
-    /** @internal */
     public constructor(engine: _WebAudioEngine) {
         super(engine);
 
-        this.node = new GainNode(engine._audioContext);
+        this._volumeNode = new GainNode(engine._audioContext);
     }
 
     /** @internal */
@@ -35,22 +34,46 @@ export class _VolumeWebAudioSubNode extends _VolumeAudioSubNode implements IWebA
     /** @internal */
     public set volume(value: number) {
         this._volume = value;
-        this.engine._setAudioParam(this.node.gain, value);
+        this.engine._setAudioParam(this._volumeNode.gain, value);
     }
 
     /** @internal */
     public get _inNode(): AudioNode {
-        return this.node;
+        return this._volumeNode;
     }
 
     /** @internal */
     public get _outNode(): AudioNode {
-        return this.node;
+        return this._fadeNode ?? this._volumeNode;
     }
 
     /** @internal */
-    public override setVolume(value: number, options: Nullable<Partial<IAudioParameterRampOptions>> = null): void {
-        this.engine._setAudioParam(this.node.gain, value, options);
+    public fadeIn(duration: number, rampShape: AudioParameterRampShape): void {
+        this._initFadeNode();
+
+        const fadeNode = this._fadeNode!;
+
+        fadeNode.gain.value = 0;
+
+        fadeNode.gain.cancelScheduledValues(0);
+        fadeNode.gain.setValueCurveAtTime([0, 1], 0, duration);
+    }
+
+    /** @internal */
+    public fadeOut(duration: number, rampShape: AudioParameterRampShape): void {
+        this._initFadeNode();
+
+        const fadeNode = this._fadeNode!;
+
+        fadeNode.gain.value = 0;
+
+        fadeNode.gain.cancelScheduledValues(0);
+        fadeNode.gain.setValueCurveAtTime([1, 0], 0, duration);
+    }
+
+    /** @internal */
+    public getClassName(): string {
+        return "_VolumeWebAudioSubNode";
     }
 
     protected override _connect(node: IWebAudioInNode): boolean {
@@ -62,7 +85,7 @@ export class _VolumeWebAudioSubNode extends _VolumeAudioSubNode implements IWebA
 
         // If the wrapped node is not available now, it will be connected later by the subgraph.
         if (node._inNode) {
-            this.node.connect(node._inNode);
+            this._volumeNode.connect(node._inNode);
         }
 
         return true;
@@ -76,14 +99,29 @@ export class _VolumeWebAudioSubNode extends _VolumeAudioSubNode implements IWebA
         }
 
         if (node._inNode) {
-            this.node.disconnect(node._inNode);
+            this._volumeNode.disconnect(node._inNode);
         }
 
         return true;
     }
 
-    /** @internal */
-    public getClassName(): string {
-        return "_VolumeWebAudioSubNode";
+    private _initFadeNode(): void {
+        if (this._fadeNode) {
+            return;
+        }
+
+        this._fadeNode = new GainNode(this.engine._audioContext);
+        this._volumeNode.connect(this._fadeNode);
+
+        if (this._downstreamNodes) {
+            const it = this._downstreamNodes.values();
+            for (let next = it.next(); !next.done; next = it.next()) {
+                const inNode = (next.value as IWebAudioInNode)._inNode;
+                if (inNode) {
+                    this._volumeNode.disconnect(inNode);
+                    this._fadeNode.connect(inNode);
+                }
+            }
+        }
     }
 }

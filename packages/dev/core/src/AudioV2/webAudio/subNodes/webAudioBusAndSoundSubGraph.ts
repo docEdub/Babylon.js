@@ -131,7 +131,7 @@ export abstract class _WebAudioBusAndSoundSubGraph extends _WebAudioBaseSubGraph
                 inSubNode = volumeNode as _VolumeWebAudioSubNode;
             }
 
-            inNode = inSubNode?.node ?? null;
+            inNode = inSubNode?._inNode ?? null;
         }
 
         if (this._inputNode !== inNode) {

@@ -20,8 +20,10 @@ export interface IWebAudioBaseSubGraphOptions extends IAudioAnalyzerOptions, IVo
 
 /** @internal */
 export abstract class _WebAudioBaseSubGraph extends _AbstractAudioSubGraph {
+    private _inputNode: Nullable<AudioNode> = null;
+    private _outputNode: Nullable<AudioNode> = null;
+
     protected _owner: IWebAudioSuperNode;
-    protected _outputNode: Nullable<AudioNode> = null;
 
     /** @internal */
     public constructor(owner: IWebAudioSuperNode) {
@@ -62,7 +64,8 @@ export abstract class _WebAudioBaseSubGraph extends _AbstractAudioSubGraph {
             throw new Error("Not a WebAudio subnode.");
         }
 
-        this._outputNode = (volumeNode as _VolumeWebAudioSubNode).node;
+        this._inputNode = (volumeNode as _VolumeWebAudioSubNode)._inNode;
+        this._outputNode = (volumeNode as _VolumeWebAudioSubNode)._outNode;
 
         // Connect the new wrapped WebAudio node to the wrapped downstream WebAudio nodes.
         // The wrapper nodes are unaware of this change.
@@ -81,7 +84,7 @@ export abstract class _WebAudioBaseSubGraph extends _AbstractAudioSubGraph {
 
     /** @internal */
     public get _inNode(): Nullable<AudioNode> {
-        return this._outputNode;
+        return this._inputNode;
     }
 
     /** @internal */

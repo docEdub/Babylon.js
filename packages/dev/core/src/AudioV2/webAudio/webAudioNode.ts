@@ -18,7 +18,10 @@ export interface IWebAudioOutNode extends AbstractAudioNode {
 /** @internal */
 export interface IWebAudioSubNode extends _AbstractAudioSubNode {
     /** @internal */
-    node: AudioNode;
+    _inNode: Nullable<AudioNode>;
+
+    /** @internal */
+    _outNode: Nullable<AudioNode>;
 }
 
 /** @internal */
