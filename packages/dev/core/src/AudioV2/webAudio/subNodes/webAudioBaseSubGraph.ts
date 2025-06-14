@@ -86,6 +86,33 @@ export abstract class _WebAudioBaseSubGraph extends _AbstractAudioSubGraph {
     protected abstract readonly _downstreamNodes: Nullable<Set<AbstractAudioNode>>;
 
     /** @internal */
+    public get volume(): number {
+        const volumeNode = _GetVolumeAudioSubNode(this);
+        if (!volumeNode) {
+            throw new Error("No volume subnode.");
+        }
+
+        const faderNode = _GetFaderAudioSubNode(this);
+        if (faderNode) {
+            return faderNode.volume * volumeNode.volume;
+        }
+
+        return volumeNode.volume;
+    }
+
+    /** @internal */
+    public set volume(value: number) {
+        _GetFaderAudioSubNode(this)?.cancelFade();
+
+        const volumeNode = _GetVolumeAudioSubNode(this);
+        if (!volumeNode) {
+            throw new Error("No volume subnode.");
+        }
+
+        volumeNode.volume = value;
+    }
+
+    /** @internal */
     public get _inNode(): Nullable<AudioNode> {
         return this._inputNode;
     }
@@ -93,6 +120,14 @@ export abstract class _WebAudioBaseSubGraph extends _AbstractAudioSubGraph {
     /** @internal */
     public get _outNode(): Nullable<AudioNode> {
         return this._outputNode;
+    }
+
+    /** @internal */
+    public cancelFade(): void {
+        const faderNode = _GetFaderAudioSubNode(this);
+        if (faderNode) {
+            faderNode.cancelFade();
+        }
     }
 
     /** @internal */

@@ -24,6 +24,8 @@ export abstract class _AbstractAudioSubGraph {
     private _isDisposed = false;
     private _subNodes: { [key: string]: _AbstractAudioSubNode } = {};
 
+    public abstract volume: number;
+
     /**
      * Executes the given callback with the named sub node, creating the sub node if needed.
      *
@@ -90,6 +92,7 @@ export abstract class _AbstractAudioSubGraph {
         this._createSubNodePromises = {};
     }
 
+    public abstract cancelFade(): void;
     public abstract fadeInAsync(duration: number, curve: AudioParameterCurveShape): Promise<void>;
     public abstract fadeOutAsync(duration: number, curve: AudioParameterCurveShape): Promise<void>;
 

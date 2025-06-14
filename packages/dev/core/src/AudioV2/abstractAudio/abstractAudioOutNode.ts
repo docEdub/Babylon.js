@@ -5,7 +5,6 @@ import { AbstractNamedAudioNode } from "./abstractAudioNode";
 import type { AudioEngineV2 } from "./audioEngineV2";
 import type { _AbstractAudioSubGraph } from "./subNodes/abstractAudioSubGraph";
 import type { IVolumeAudioOptions } from "./subNodes/volumeAudioSubNode";
-import { _GetVolumeAudioProperty, _GetVolumeAudioSubNode } from "./subNodes/volumeAudioSubNode";
 import type { AbstractAudioAnalyzer, IAudioAnalyzerOptions } from "./subProperties/abstractAudioAnalyzer";
 import { _AudioAnalyzer } from "./subProperties/audioAnalyzer";
 
@@ -34,19 +33,12 @@ export abstract class AbstractAudioOutNode extends AbstractNamedAudioNode {
     /**
      * The audio output volume.
      */
-
     public get volume(): number {
-        return _GetVolumeAudioProperty(this._subGraph, "volume");
+        return this._subGraph.volume;
     }
 
     public set volume(value: number) {
-        // The volume subnode is created on initialization and should always exist.
-        const node = _GetVolumeAudioSubNode(this._subGraph);
-        if (!node) {
-            throw new Error("No volume subnode");
-        }
-
-        node.volume = value;
+        this._subGraph.volume = value;
     }
 
     /**
@@ -62,20 +54,29 @@ export abstract class AbstractAudioOutNode extends AbstractNamedAudioNode {
     }
 
     /**
-     * Fades the volume in.
+     * Cancels any ongoing fade operation.
+     */
+    public cancelFade(): void {
+        this._subGraph.volume = this.volume;
+    }
+
+    /**
+     * Fades in the audio output volume.
      * @param duration the time in seconds to fade in the audio.
      * @param curve the curve shape to use for the fade. Defaults to linear.
      */
     public fadeIn(duration: number, curve: AudioParameterCurveShape = AudioParameterCurveShape.LINEAR): void {
+        this.cancelFade();
         void this._subGraph.fadeInAsync(duration, curve);
     }
 
     /**
-     * Fades the volume out.
+     * Fades out the audio output volume.
      * @param duration the time in seconds to fade out the audio.
      * @param curve the curve shape to use for the fade. Defaults to linear.
      */
     public fadeOut(duration: number, curve: AudioParameterCurveShape = AudioParameterCurveShape.LINEAR): void {
+        this.cancelFade();
         void this._subGraph.fadeOutAsync(duration, curve);
     }
 }

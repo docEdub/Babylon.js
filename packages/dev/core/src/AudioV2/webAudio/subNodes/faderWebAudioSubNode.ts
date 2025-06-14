@@ -47,13 +47,13 @@ export class _FaderWebAudioSubNode extends _FaderAudioSubNode implements IWebAud
     /** @internal */
     public fadeIn(duration: number, curve: AudioParameterCurveShape): void {
         this.cancelFade();
-        this.node.gain.setValueCurveAtTime([0, 1], 0, duration);
+        this.node.gain.setValueCurveAtTime([0, 1], this.engine.currentTime, duration);
     }
 
     /** @internal */
     public fadeOut(duration: number, curve: AudioParameterCurveShape): void {
         this.cancelFade();
-        this.node.gain.setValueCurveAtTime([1, 0], 0, duration);
+        this.node.gain.setValueCurveAtTime([1, 0], this.engine.currentTime, duration);
     }
 
     /** @internal */

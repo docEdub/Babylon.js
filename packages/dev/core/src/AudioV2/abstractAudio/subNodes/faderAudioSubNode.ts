@@ -11,6 +11,8 @@ export abstract class _FaderAudioSubNode extends _AbstractAudioSubNode {
         super(AudioSubNode.FADER, engine);
     }
 
+    public abstract readonly volume: number;
+
     public abstract cancelFade(): void;
     public abstract fadeIn(duration: number, curve: AudioParameterCurveShape): void;
     public abstract fadeOut(duration: number, curve: AudioParameterCurveShape): void;

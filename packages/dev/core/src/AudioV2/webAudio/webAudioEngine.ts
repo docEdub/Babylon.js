@@ -423,12 +423,11 @@ export class _WebAudioEngine extends AudioEngineV2 {
 
     /** @internal */
     public _setAudioParam(audioParam: AudioParam, value: number) {
-        const startTime = this.currentTime;
-        audioParam.cancelScheduledValues(startTime);
+        audioParam.cancelScheduledValues(0);
 
         TmpParamValues[0] = audioParam.value;
         TmpParamValues[1] = value;
-        audioParam.setValueCurveAtTime(TmpParamValues, startTime, this.parameterRampDuration);
+        audioParam.setValueCurveAtTime(TmpParamValues, this.currentTime, this.parameterRampDuration);
     }
 
     private _initAudioContextAsync: () => Promise<void> = async () => {
