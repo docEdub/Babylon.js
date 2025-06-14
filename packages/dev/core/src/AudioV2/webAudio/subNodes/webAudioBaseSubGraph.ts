@@ -4,11 +4,14 @@ import { _AbstractAudioSubGraph } from "../../abstractAudio/subNodes/abstractAud
 import type { _AbstractAudioSubNode } from "../../abstractAudio/subNodes/abstractAudioSubNode";
 import { _GetAudioAnalyzerSubNode } from "../../abstractAudio/subNodes/audioAnalyzerSubNode";
 import { AudioSubNode } from "../../abstractAudio/subNodes/audioSubNode";
+import { _GetFaderAudioSubNode, type _FaderAudioSubNode } from "../../abstractAudio/subNodes/faderAudioSubNode";
 import type { IVolumeAudioOptions } from "../../abstractAudio/subNodes/volumeAudioSubNode";
 import { _GetVolumeAudioSubNode } from "../../abstractAudio/subNodes/volumeAudioSubNode";
 import type { IAudioAnalyzerOptions } from "../../abstractAudio/subProperties/abstractAudioAnalyzer";
 import { _HasAudioAnalyzerOptions } from "../../abstractAudio/subProperties/abstractAudioAnalyzer";
+import type { AudioParameterCurveShape } from "../../audioParameter";
 import type { IWebAudioInNode, IWebAudioSuperNode } from "../webAudioNode";
+import { _CreateFaderAudioSubNodeAsync } from "./faderWebAudioSubNode";
 import type { _VolumeWebAudioSubNode } from "./volumeWebAudioSubNode";
 import { _CreateVolumeAudioSubNodeAsync } from "./volumeWebAudioSubNode";
 import { _CreateAudioAnalyzerSubNodeAsync } from "./webAudioAnalyzerSubNode";
@@ -20,9 +23,9 @@ export interface IWebAudioBaseSubGraphOptions extends IAudioAnalyzerOptions, IVo
 
 /** @internal */
 export abstract class _WebAudioBaseSubGraph extends _AbstractAudioSubGraph {
-    private _inputNode: Nullable<AudioNode> = null;
     private _outputNode: Nullable<AudioNode> = null;
 
+    protected _inputNode: Nullable<AudioNode> = null;
     protected _owner: IWebAudioSuperNode;
 
     /** @internal */
@@ -92,12 +95,26 @@ export abstract class _WebAudioBaseSubGraph extends _AbstractAudioSubGraph {
         return this._outputNode;
     }
 
+    /** @internal */
+    public async fadeInAsync(duration: number, curve: AudioParameterCurveShape): Promise<void> {
+        const faderNode = await this._getFaderSubNodeAsync();
+        faderNode.fadeIn(duration, curve);
+    }
+
+    /** @internal */
+    public async fadeOutAsync(duration: number, curve: AudioParameterCurveShape): Promise<void> {
+        const faderNode = await this._getFaderSubNodeAsync();
+        faderNode.fadeOut(duration, curve);
+    }
+
     // Function is async, but throws synchronously. Avoiding breaking changes.
     // eslint-disable-next-line @typescript-eslint/promise-function-async
     protected _createSubNode(name: string): Promise<_AbstractAudioSubNode> {
         switch (name) {
             case AudioSubNode.ANALYZER:
                 return _CreateAudioAnalyzerSubNodeAsync(this._owner.engine);
+            case AudioSubNode.FADER:
+                return _CreateFaderAudioSubNodeAsync(this._owner.engine);
             case AudioSubNode.VOLUME:
                 return _CreateVolumeAudioSubNodeAsync(this._owner.engine);
             default:
@@ -107,10 +124,42 @@ export abstract class _WebAudioBaseSubGraph extends _AbstractAudioSubGraph {
 
     protected _onSubNodesChanged(): void {
         const analyzerNode = _GetAudioAnalyzerSubNode(this);
+        const faderNode = _GetFaderAudioSubNode(this);
         const volumeNode = _GetVolumeAudioSubNode(this);
 
-        if (analyzerNode && volumeNode) {
-            volumeNode.connect(analyzerNode);
+        analyzerNode?.disconnectAll();
+
+        if (analyzerNode) {
+            analyzerNode.disconnectAll();
+
+            if (faderNode) {
+                analyzerNode.connect(faderNode);
+            } else if (volumeNode) {
+                analyzerNode.connect(volumeNode);
+            }
         }
+
+        if (faderNode) {
+            faderNode.disconnectAll();
+
+            if (volumeNode) {
+                faderNode.connect(volumeNode);
+            }
+        }
+    }
+
+    private async _getFaderSubNodeAsync(): Promise<_FaderAudioSubNode> {
+        let faderNode = _GetFaderAudioSubNode(this);
+
+        if (!faderNode) {
+            await this.createAndAddSubNodeAsync(AudioSubNode.FADER);
+            faderNode = _GetFaderAudioSubNode(this);
+        }
+
+        if (!faderNode) {
+            throw new Error("No fader subnode.");
+        }
+
+        return faderNode;
     }
 }

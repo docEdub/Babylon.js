@@ -1,6 +1,5 @@
 import type { Nullable } from "../../../types";
 import { _VolumeAudioSubNode } from "../../abstractAudio/subNodes/volumeAudioSubNode";
-import type { AudioParameterRampShape } from "../../audioParameter";
 import type { _WebAudioEngine } from "../webAudioEngine";
 import type { IWebAudioInNode, IWebAudioSubNode } from "../webAudioNode";
 
@@ -48,30 +47,6 @@ export class _VolumeWebAudioSubNode extends _VolumeAudioSubNode implements IWebA
     }
 
     /** @internal */
-    public fadeIn(duration: number, rampShape: AudioParameterRampShape): void {
-        this._initFadeNode();
-
-        const fadeNode = this._fadeNode!;
-
-        fadeNode.gain.value = 0;
-
-        fadeNode.gain.cancelScheduledValues(0);
-        fadeNode.gain.setValueCurveAtTime([0, 1], 0, duration);
-    }
-
-    /** @internal */
-    public fadeOut(duration: number, rampShape: AudioParameterRampShape): void {
-        this._initFadeNode();
-
-        const fadeNode = this._fadeNode!;
-
-        fadeNode.gain.value = 0;
-
-        fadeNode.gain.cancelScheduledValues(0);
-        fadeNode.gain.setValueCurveAtTime([1, 0], 0, duration);
-    }
-
-    /** @internal */
     public getClassName(): string {
         return "_VolumeWebAudioSubNode";
     }
@@ -103,25 +78,5 @@ export class _VolumeWebAudioSubNode extends _VolumeAudioSubNode implements IWebA
         }
 
         return true;
-    }
-
-    private _initFadeNode(): void {
-        if (this._fadeNode) {
-            return;
-        }
-
-        this._fadeNode = new GainNode(this.engine._audioContext);
-        this._volumeNode.connect(this._fadeNode);
-
-        if (this._downstreamNodes) {
-            const it = this._downstreamNodes.values();
-            for (let next = it.next(); !next.done; next = it.next()) {
-                const inNode = (next.value as IWebAudioInNode)._inNode;
-                if (inNode) {
-                    this._volumeNode.disconnect(inNode);
-                    this._fadeNode.connect(inNode);
-                }
-            }
-        }
     }
 }

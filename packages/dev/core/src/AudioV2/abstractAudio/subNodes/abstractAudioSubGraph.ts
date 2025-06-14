@@ -1,4 +1,5 @@
 import type { Nullable } from "../../../types";
+import type { AudioParameterCurveShape } from "../../audioParameter";
 import type { AbstractAudioNode, AbstractNamedAudioNode } from "../abstractAudioNode";
 import type { _AbstractAudioSubNode } from "./abstractAudioSubNode";
 import type { AudioSubNode } from "./audioSubNode";
@@ -88,6 +89,9 @@ export abstract class _AbstractAudioSubGraph {
         this._subNodes = {};
         this._createSubNodePromises = {};
     }
+
+    public abstract fadeInAsync(duration: number, curve: AudioParameterCurveShape): Promise<void>;
+    public abstract fadeOutAsync(duration: number, curve: AudioParameterCurveShape): Promise<void>;
 
     /**
      * Gets a previously created sub node.

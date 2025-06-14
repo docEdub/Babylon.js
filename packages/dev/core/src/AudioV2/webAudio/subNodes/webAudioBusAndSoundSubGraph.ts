@@ -2,6 +2,7 @@ import type { Nullable } from "../../../types";
 import type { AbstractAudioNode } from "../../abstractAudio/abstractAudioNode";
 import type { _AbstractAudioSubNode } from "../../abstractAudio/subNodes/abstractAudioSubNode";
 import { AudioSubNode } from "../../abstractAudio/subNodes/audioSubNode";
+import { _GetFaderAudioSubNode } from "../../abstractAudio/subNodes/faderAudioSubNode";
 import { _GetSpatialAudioSubNode } from "../../abstractAudio/subNodes/spatialAudioSubNode";
 import { _GetStereoAudioSubNode } from "../../abstractAudio/subNodes/stereoAudioSubNode";
 import type { IVolumeAudioOptions } from "../../abstractAudio/subNodes/volumeAudioSubNode";
@@ -11,6 +12,7 @@ import { _HasSpatialAudioOptions } from "../../abstractAudio/subProperties/abstr
 import type { IStereoAudioOptions } from "../../abstractAudio/subProperties/abstractStereoAudio";
 import { _HasStereoAudioOptions } from "../../abstractAudio/subProperties/abstractStereoAudio";
 import type { IWebAudioOutNode, IWebAudioSubNode } from "../webAudioNode";
+import type { _FaderWebAudioSubNode } from "./faderWebAudioSubNode";
 import type { _SpatialWebAudioSubNode } from "./spatialWebAudioSubNode";
 import { _CreateSpatialAudioSubNodeAsync } from "./spatialWebAudioSubNode";
 import type { _StereoWebAudioSubNode } from "./stereoWebAudioSubNode";
@@ -25,8 +27,6 @@ export interface IWebAudioBusAndSoundSubGraphOptions extends ISpatialAudioOption
 export abstract class _WebAudioBusAndSoundSubGraph extends _WebAudioBaseSubGraph {
     private _rootNode: Nullable<GainNode> = null;
     protected abstract readonly _upstreamNodes: Nullable<Set<AbstractAudioNode>>;
-
-    protected _inputNode: Nullable<AudioNode> = null;
 
     /** @internal */
     public override async initAsync(options: Partial<IWebAudioBusAndSoundSubGraphOptions>): Promise<void> {
@@ -77,10 +77,14 @@ export abstract class _WebAudioBusAndSoundSubGraph extends _WebAudioBaseSubGraph
     protected override _onSubNodesChanged(): void {
         super._onSubNodesChanged();
 
+        const faderNode = _GetFaderAudioSubNode(this);
         const spatialNode = _GetSpatialAudioSubNode(this);
         const stereoNode = _GetStereoAudioSubNode(this);
         const volumeNode = _GetVolumeAudioSubNode(this);
 
+        if (faderNode && faderNode.getClassName() !== "_FaderWebAudioSubNode") {
+            throw new Error("Not a WebAudio subnode.");
+        }
         if (spatialNode && spatialNode.getClassName() !== "_SpatialWebAudioSubNode") {
             throw new Error("Not a WebAudio subnode.");
         }
@@ -91,19 +95,24 @@ export abstract class _WebAudioBusAndSoundSubGraph extends _WebAudioBaseSubGraph
             throw new Error("Not a WebAudio subnode.");
         }
 
+        let nextNode: Nullable<_AbstractAudioSubNode> = faderNode;
+        if (!nextNode) {
+            nextNode = volumeNode;
+        }
+
         if (spatialNode) {
             spatialNode.disconnectAll();
 
-            if (volumeNode) {
-                spatialNode.connect(volumeNode);
+            if (nextNode) {
+                spatialNode.connect(nextNode);
             }
         }
 
         if (stereoNode) {
             stereoNode.disconnectAll();
 
-            if (volumeNode) {
-                stereoNode.connect(volumeNode);
+            if (nextNode) {
+                stereoNode.connect(nextNode);
             }
         }
 
@@ -127,6 +136,8 @@ export abstract class _WebAudioBusAndSoundSubGraph extends _WebAudioBaseSubGraph
                 inSubNode = spatialNode as _SpatialWebAudioSubNode;
             } else if (stereoNode) {
                 inSubNode = stereoNode as _StereoWebAudioSubNode;
+            } else if (faderNode) {
+                inSubNode = faderNode as _FaderWebAudioSubNode;
             } else if (volumeNode) {
                 inSubNode = volumeNode as _VolumeWebAudioSubNode;
             }

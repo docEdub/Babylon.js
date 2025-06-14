@@ -1,5 +1,5 @@
 import type { Nullable } from "../../types";
-import { AudioParameterRampShape } from "../audioParameter";
+import { AudioParameterCurveShape } from "../audioParameter";
 import type { AudioNodeType } from "./abstractAudioNode";
 import { AbstractNamedAudioNode } from "./abstractAudioNode";
 import type { AudioEngineV2 } from "./audioEngineV2";
@@ -61,23 +61,21 @@ export abstract class AbstractAudioOutNode extends AbstractNamedAudioNode {
         this._subGraph.dispose();
     }
 
-    public fadeIn(duration: number, rampShape: AudioParameterRampShape = AudioParameterRampShape.Linear): void {
-        // The volume subnode is created on initialization and should always exist.
-        const node = _GetVolumeAudioSubNode(this._subGraph);
-        if (!node) {
-            throw new Error("No volume subnode");
-        }
-
-        node.fadeIn(duration, rampShape);
+    /**
+     * Fades the volume in.
+     * @param duration the time in seconds to fade in the audio.
+     * @param curve the curve shape to use for the fade. Defaults to linear.
+     */
+    public fadeIn(duration: number, curve: AudioParameterCurveShape = AudioParameterCurveShape.LINEAR): void {
+        void this._subGraph.fadeInAsync(duration, curve);
     }
 
-    public fadeOut(duration: number, rampShape: AudioParameterRampShape = AudioParameterRampShape.Linear): void {
-        // The volume subnode is created on initialization and should always exist.
-        const node = _GetVolumeAudioSubNode(this._subGraph);
-        if (!node) {
-            throw new Error("No volume subnode");
-        }
-
-        node.fadeOut(duration, rampShape);
+    /**
+     * Fades the volume out.
+     * @param duration the time in seconds to fade out the audio.
+     * @param curve the curve shape to use for the fade. Defaults to linear.
+     */
+    public fadeOut(duration: number, curve: AudioParameterCurveShape = AudioParameterCurveShape.LINEAR): void {
+        void this._subGraph.fadeOutAsync(duration, curve);
     }
 }

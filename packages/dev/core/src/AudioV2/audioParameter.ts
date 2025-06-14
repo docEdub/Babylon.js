@@ -1,21 +1,21 @@
 /**
  * The shape of the audio ramp used to set an audio parameter's value, such as a sound's volume.
  */
-export const enum AudioParameterRampShape {
+export const enum AudioParameterCurveShape {
     /**
      * The ramp is instantaneous.
      */
-    None,
+    NONE,
     /**
      * The ramp is linear.
      */
-    Linear,
+    LINEAR,
     /**
      * The ramp is exponential.
      */
-    Exponential,
+    EXPONENTIAL,
     /**
      * The ramp is logarithmic.
      */
-    Logarithmic,
+    LOGARITHMIC,
 }
