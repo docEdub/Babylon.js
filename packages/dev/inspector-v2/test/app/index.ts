@@ -1,4 +1,4 @@
-import { MeshBuilder, type ArcRotateCamera, type Nullable } from "core/index";
+import { MeshBuilder, StandardMaterial, type ArcRotateCamera, type Nullable } from "core/index";
 
 import HavokPhysics from "@babylonjs/havok";
 
@@ -60,12 +60,35 @@ async function createPhysics() {
     createCamera();
     await createPhysics();
 
-    const sphereWithMetadata = MeshBuilder.CreateSphere("sphereWithMetadata", { diameter: 1 }, scene);
-    sphereWithMetadata.metadata = {
-        test: "This is a test",
-        description: "Metadata to show in the inspector.",
+    const materialMeta = new StandardMaterial("material.meta", scene);
+    materialMeta.metadata = {
+        test: "test string",
+        description: "Material JSON metadata.",
+        someNumber: 73,
+    };
+
+    const defaultMeta = MeshBuilder.CreateSphere("default.metadata", { diameter: 1 }, scene);
+    defaultMeta.material = materialMeta;
+
+    const undefinedMeta = defaultMeta.clone("undefined.metadata");
+    undefinedMeta.material = materialMeta;
+    undefinedMeta.metadata = undefined;
+
+    const jsonMeta = defaultMeta.clone("json.metadata");
+    jsonMeta.metadata = {
+        test: "test string",
+        description: "JSON metadata.",
         someNumber: 42,
     };
+
+    const nullMeta = defaultMeta.clone("null.metadata");
+    nullMeta.metadata = null;
+
+    const stringMeta = defaultMeta.clone("string.metadata");
+    stringMeta.metadata = "String metadata.";
+
+    const objectMeta = defaultMeta.clone("object.metadata");
+    objectMeta.metadata = jsonMeta;
 
     engine.runRenderLoop(() => {
         scene.render();
