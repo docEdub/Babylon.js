@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { FunctionComponent } from "react";
 import type { PrimitiveProps } from "./primitive";
 import type { Nullable } from "core/types";
+import type { Node } from "core/index";
 
 const useDropdownStyles = makeStyles({
     dropdownOption: {
@@ -12,7 +13,7 @@ const useDropdownStyles = makeStyles({
     optionsLine: {},
 });
 
-type DropdownOptionValue = string | number;
+type DropdownOptionValue = string | number | Node;
 export type AcceptedDropdownValue = Nullable<DropdownOptionValue> | undefined;
 export type DropdownOption = {
     /**
