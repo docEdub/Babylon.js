@@ -1,4 +1,4 @@
-import type { ArcRotateCamera, Nullable } from "core/index";
+import { MeshBuilder, type ArcRotateCamera, type Nullable } from "core/index";
 
 import HavokPhysics from "@babylonjs/havok";
 
@@ -59,6 +59,13 @@ async function createPhysics() {
     assetContainer.addAllToScene();
     createCamera();
     await createPhysics();
+
+    const sphereWithMetadata = MeshBuilder.CreateSphere("sphereWithMetadata", { diameter: 1 }, scene);
+    sphereWithMetadata.metadata = {
+        test: "This is a test",
+        description: "Metadata to show in the inspector.",
+        someNumber: 42,
+    };
 
     engine.runRenderLoop(() => {
         scene.render();
