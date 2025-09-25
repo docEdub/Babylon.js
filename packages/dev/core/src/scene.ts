@@ -2765,10 +2765,13 @@ export class Scene implements IAnimatable, IClipPlanesHolder, IAssetContainer {
      */
     public createSceneUniformBuffer(name?: string, trackUBOsInFrame?: boolean): UniformBuffer {
         const sceneUbo = new UniformBuffer(this._engine, undefined, false, name ?? "scene", undefined, trackUBOsInFrame);
-        sceneUbo.addUniform("viewProjection", 16);
         sceneUbo.addUniform("view", 16);
         sceneUbo.addUniform("projection", 16);
         sceneUbo.addUniform("vEyePosition", 4);
+        sceneUbo.addUniform("viewProjection", 16);
+        if (this._multiviewSceneUbo) {
+            sceneUbo.addUniform("viewProjectionR", 16);
+        }
 
         return sceneUbo;
     }
