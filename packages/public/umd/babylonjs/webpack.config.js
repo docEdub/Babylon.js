@@ -4,7 +4,7 @@ const commonConfigGenerator = webpackTools.commonUMDWebpackConfiguration;
 
 module.exports = (env) => {
     const commonConfig = commonConfigGenerator({
-        mode: env.production ? "production" : "development",
+        mode: "development",
         devPackageName: "core",
         namespace: "BABYLON",
         outputPath: path.resolve(__dirname),
