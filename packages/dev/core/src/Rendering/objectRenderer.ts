@@ -469,6 +469,10 @@ export class ObjectRenderer {
             this._currentFrameId = this._engine.frameId;
         }
 
+        if (this._scene._multiviewSceneUbo && !this._sceneUBOs[0].getUniformNames().includes("viewProjectionR")) {
+            this._sceneUBOs.length = 0;
+        }
+
         if (this._currentSceneUBOIndex >= this._sceneUBOs.length) {
             this._createSceneUBO();
         }
