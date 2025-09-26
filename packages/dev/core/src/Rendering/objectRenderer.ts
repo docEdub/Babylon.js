@@ -603,7 +603,18 @@ export class ObjectRenderer {
 
         if (camera) {
             if (!this.dontSetTransformationMatrix) {
-                this._scene.setTransformMatrix(camera.getViewMatrix(), camera.getProjectionMatrix(true));
+                if (camera._renderingMultiview) {
+                    const leftCamera = camera.rigCameras[0];
+                    const rightCamera = camera.rigCameras[1];
+                    this._scene.setTransformMatrix(
+                        leftCamera.getViewMatrix(),
+                        leftCamera.getProjectionMatrix(true),
+                        rightCamera.getViewMatrix(),
+                        rightCamera.getProjectionMatrix(true)
+                    );
+                } else {
+                    this._scene.setTransformMatrix(camera.getViewMatrix(), camera.getProjectionMatrix(true));
+                }
             }
             this._scene.activeCamera = camera;
             this._engine.setViewport(camera.rigParent ? camera.rigParent.viewport : camera.viewport, viewportWidth, viewportHeight);
@@ -633,7 +644,13 @@ export class ObjectRenderer {
         scene.activeCamera = this._currentSceneCamera;
         if (this._currentSceneCamera) {
             if (this.activeCamera && this.activeCamera !== scene.activeCamera) {
-                scene.setTransformMatrix(this._currentSceneCamera.getViewMatrix(), this._currentSceneCamera.getProjectionMatrix(true));
+                if (this._currentSceneCamera._renderingMultiview) {
+                    const leftCamera = this._currentSceneCamera.rigCameras[0];
+                    const rightCamera = this._currentSceneCamera.rigCameras[1];
+                    scene.setTransformMatrix(leftCamera.getViewMatrix(), leftCamera.getProjectionMatrix(true), rightCamera.getViewMatrix(), rightCamera.getProjectionMatrix(true));
+                } else {
+                    scene.setTransformMatrix(this._currentSceneCamera.getViewMatrix(), this._currentSceneCamera.getProjectionMatrix(true));
+                }
             }
             this._engine.setViewport(this._currentSceneCamera.viewport);
         }
