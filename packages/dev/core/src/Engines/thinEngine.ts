@@ -55,6 +55,8 @@ import { resetCachedPipeline } from "core/Materials/effect.functions";
 import { HasStencilAspect, IsDepthTexture } from "core/Materials/Textures/textureHelper.functions";
 import { AlphaState } from "../States/alphaCullingState";
 
+import { LogWebGLBindFramebuffer } from "../loggingTools";
+
 /**
  * Keeps track of all the buffer info used in engine.
  */
@@ -1189,6 +1191,7 @@ export class ThinEngine extends AbstractEngine {
     public _bindUnboundFramebuffer(framebuffer: Nullable<WebGLFramebuffer>) {
         if (this._currentFramebuffer !== framebuffer) {
             this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, framebuffer);
+            LogWebGLBindFramebuffer(this._gl, this._gl.FRAMEBUFFER, framebuffer);
             this._currentFramebuffer = framebuffer;
         }
     }
@@ -1246,6 +1249,7 @@ export class ThinEngine extends AbstractEngine {
      * Resolves the MSAA texture of the (single) render target into its non-MSAA version.
      * Note that if "texture" is not a MSAA render target, no resolve is performed.
      * @param texture  The render target texture containing the MSAA textures to resolve
+     * @todo Find out if this function is getting called when WebXR multiview is on.
      */
     public resolveFramebuffer(texture: RenderTargetWrapper): void {
         const rtWrapper = texture as WebGLRenderTargetWrapper;
@@ -1260,7 +1264,9 @@ export class ThinEngine extends AbstractEngine {
         bufferBits |= rtWrapper._generateStencilBuffer && rtWrapper.resolveMSAAStencil ? gl.STENCIL_BUFFER_BIT : 0;
 
         gl.bindFramebuffer(gl.READ_FRAMEBUFFER, rtWrapper._MSAAFramebuffer);
+        LogWebGLBindFramebuffer(this._gl, this._gl.READ_FRAMEBUFFER, rtWrapper._MSAAFramebuffer);
         gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, rtWrapper._framebuffer);
+        LogWebGLBindFramebuffer(this._gl, this._gl.DRAW_FRAMEBUFFER, rtWrapper._framebuffer);
         gl.blitFramebuffer(0, 0, texture.width, texture.height, 0, 0, texture.width, texture.height, bufferBits, gl.NEAREST);
     }
 
@@ -4210,6 +4216,7 @@ export class ThinEngine extends AbstractEngine {
 
         const fb = gl.createFramebuffer();
         gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+        LogWebGLBindFramebuffer(gl, gl.FRAMEBUFFER, fb);
         gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
         const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
 
@@ -4226,6 +4233,7 @@ export class ThinEngine extends AbstractEngine {
         if (successful) {
             //in practice it's sufficient to just read from the backbuffer rather than handle potentially issues reading from the texture
             gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+            LogWebGLBindFramebuffer(gl, gl.FRAMEBUFFER, null);
             const readFormat = gl.RGBA;
             const readType = gl.UNSIGNED_BYTE;
             const buffer = new Uint8Array(4);
@@ -4237,6 +4245,7 @@ export class ThinEngine extends AbstractEngine {
         gl.deleteTexture(texture);
         gl.deleteFramebuffer(fb);
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        LogWebGLBindFramebuffer(gl, gl.FRAMEBUFFER, null);
 
         //clear accumulated errors
         // eslint-disable-next-line no-empty

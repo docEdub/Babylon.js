@@ -104,6 +104,7 @@ import { _RetryWithInterval } from "./Misc/timingTools";
 import type { ObjectRenderer } from "./Rendering/objectRenderer";
 import type { BoundingBoxRenderer } from "./Rendering/boundingBoxRenderer";
 import type { BoundingBox } from "./Culling/boundingBox";
+import { LogRenderDone, LogRenderStart } from "./loggingTools";
 
 /**
  * Define an interface for all classes that will hold resources
@@ -5233,6 +5234,7 @@ export class Scene implements IAnimatable, IClipPlanesHolder, IAssetContainer {
             }
         }
 
+        LogRenderStart();
         this.onBeforeRenderObservable.notifyObservers(this);
 
         // We must keep these steps because the procedural texture component relies on them.
@@ -5426,6 +5428,7 @@ export class Scene implements IAnimatable, IClipPlanesHolder, IAssetContainer {
             this.customRenderFunction(updateCameras, ignoreAnimations);
         } else {
             // Before render
+            LogRenderStart();
             this.onBeforeRenderObservable.notifyObservers(this);
 
             // Customs render targets
@@ -5493,6 +5496,7 @@ export class Scene implements IAnimatable, IClipPlanesHolder, IAssetContainer {
         }
 
         this.onAfterRenderObservable.notifyObservers(this);
+        LogRenderDone();
 
         // Cleaning
         if (this._toBeDisposed.length) {

@@ -11,6 +11,7 @@ import { Frustum } from "../../Maths/math.frustum";
 import type { WebGLRenderTargetWrapper } from "../WebGL/webGLRenderTargetWrapper";
 import type { RenderTargetWrapper } from "../renderTargetWrapper";
 import type { AbstractEngine } from "../abstractEngine";
+import { LogWebGLBindFramebuffer } from "../../loggingTools";
 
 declare module "../../Engines/engine" {
     // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -86,6 +87,7 @@ Engine.prototype.bindMultiviewFramebuffer = function (_multiviewTexture: RenderT
 
     this.bindFramebuffer(multiviewTexture, undefined, undefined, undefined, true);
     gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, multiviewTexture._framebuffer);
+    LogWebGLBindFramebuffer(gl, gl.DRAW_FRAMEBUFFER, multiviewTexture._framebuffer);
     if (multiviewTexture._colorTextureArray && multiviewTexture._depthStencilTextureArray) {
         if (this.getCaps().oculusMultiview) {
             ext.framebufferTextureMultisampleMultiviewOVR(gl.DRAW_FRAMEBUFFER, gl.COLOR_ATTACHMENT0, multiviewTexture._colorTextureArray, 0, multiviewTexture.samples, 0, 2);
@@ -116,6 +118,7 @@ Engine.prototype.bindSpaceWarpFramebuffer = function (_spaceWarpTexture: RenderT
 
     this.bindFramebuffer(spaceWarpTexture, undefined, undefined, undefined, true);
     gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, spaceWarpTexture._framebuffer);
+    LogWebGLBindFramebuffer(gl, gl.DRAW_FRAMEBUFFER, spaceWarpTexture._framebuffer);
     if (spaceWarpTexture._colorTextureArray && spaceWarpTexture._depthStencilTextureArray) {
         ext.framebufferTextureMultiviewOVR(gl.DRAW_FRAMEBUFFER, gl.COLOR_ATTACHMENT0, spaceWarpTexture._colorTextureArray, 0, 0, 2);
         ext.framebufferTextureMultiviewOVR(gl.DRAW_FRAMEBUFFER, gl.DEPTH_ATTACHMENT, spaceWarpTexture._depthStencilTextureArray, 0, 0, 2);

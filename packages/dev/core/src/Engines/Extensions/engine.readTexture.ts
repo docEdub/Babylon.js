@@ -37,6 +37,7 @@ declare module "../../Engines/abstractEngine" {
 
 // back-compat
 import { allocateAndCopyTypedBuffer } from "../../Engines/abstractEngine.functions";
+import { LogWebGLBindFramebuffer } from "../../loggingTools";
 export { allocateAndCopyTypedBuffer };
 
 ThinEngine.prototype._readTexturePixelsSync = function (
@@ -65,6 +66,7 @@ ThinEngine.prototype._readTexturePixelsSync = function (
         this._dummyFramebuffer = dummy;
     }
     gl.bindFramebuffer(gl.FRAMEBUFFER, this._dummyFramebuffer);
+    LogWebGLBindFramebuffer(gl, gl.FRAMEBUFFER, this._dummyFramebuffer);
 
     if (faceIndex > -1) {
         gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X + faceIndex, texture._hardwareTexture?.underlyingResource, level);
@@ -99,6 +101,7 @@ ThinEngine.prototype._readTexturePixelsSync = function (
 
     gl.readPixels(x, y, width, height, gl.RGBA, readType, <DataView>buffer);
     gl.bindFramebuffer(gl.FRAMEBUFFER, this._currentFramebuffer);
+    LogWebGLBindFramebuffer(gl, gl.FRAMEBUFFER, this._currentFramebuffer);
 
     return buffer;
 };

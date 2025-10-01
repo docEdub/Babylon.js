@@ -8,6 +8,7 @@ import type { RenderTargetWrapper } from "../renderTargetWrapper";
 import type { WebGLRenderTargetWrapper } from "../WebGL/webGLRenderTargetWrapper";
 import type { WebGLHardwareTexture } from "../WebGL/webGLHardwareTexture";
 import type { TextureSize } from "../../Materials/Textures/textureCreationOptions";
+import { LogWebGLBindFramebuffer } from "../../loggingTools";
 
 declare module "../../Engines/abstractEngine" {
     // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -539,6 +540,9 @@ ThinEngine.prototype.generateMipMapsMultiFramebuffer = function (texture: Render
     }
 };
 
+/**
+ * @todo Find out if this function is getting called when WebXR multiview is on.
+ */
 ThinEngine.prototype.resolveMultiFramebuffer = function (texture: RenderTargetWrapper): void {
     const rtWrapper = texture as WebGLRenderTargetWrapper;
     const gl = this._gl;
@@ -555,7 +559,9 @@ ThinEngine.prototype.resolveMultiFramebuffer = function (texture: RenderTargetWr
     const count = attachments.length;
 
     gl.bindFramebuffer(gl.READ_FRAMEBUFFER, rtWrapper._MSAAFramebuffer);
+    LogWebGLBindFramebuffer(gl, gl.READ_FRAMEBUFFER, rtWrapper._MSAAFramebuffer);
     gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, rtWrapper._framebuffer);
+    LogWebGLBindFramebuffer(gl, gl.DRAW_FRAMEBUFFER, rtWrapper._framebuffer);
 
     for (let i = 0; i < count; i++) {
         const texture = rtWrapper.textures![i];
@@ -576,4 +582,5 @@ ThinEngine.prototype.resolveMultiFramebuffer = function (texture: RenderTargetWr
 
     gl.drawBuffers(attachments);
     gl.bindFramebuffer(this._gl.FRAMEBUFFER, rtWrapper._MSAAFramebuffer);
+    LogWebGLBindFramebuffer(this._gl, this._gl.FRAMEBUFFER, rtWrapper._MSAAFramebuffer);
 };

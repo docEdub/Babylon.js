@@ -12,6 +12,7 @@ import { UniversalCamera } from "../Cameras/universalCamera";
 import { Quaternion, Vector3 } from "../Maths/math.vector";
 import type { ThinEngine } from "../Engines/thinEngine";
 import { AbstractEngine } from "core/Engines/abstractEngine";
+import { DisableLogging, EnableLogging } from "../loggingTools";
 
 /**
  * Options for setting up XR spectator camera.
@@ -320,6 +321,13 @@ export class WebXRExperienceHelper implements IDisposable {
         if (this.state === val) {
             return;
         }
+
+        if (WebXRState.IN_XR === val) {
+            EnableLogging();
+        } else {
+            DisableLogging();
+        }
+
         this.state = val;
         this.onStateChangedObservable.notifyObservers(this.state);
     }
