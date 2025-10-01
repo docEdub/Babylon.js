@@ -78,6 +78,7 @@ Engine.prototype.createMultiviewRenderTargetTexture = function (width: number, h
     return rtWrapper;
 };
 
+// TODO: AMF: Step through this function in WebXR immersive mode to make sure it's working as expected since Spector.js is not showing these calls (maybe because it doesn't know about the OVR extension).
 Engine.prototype.bindMultiviewFramebuffer = function (_multiviewTexture: RenderTargetWrapper) {
     const multiviewTexture = _multiviewTexture as WebGLRenderTargetWrapper;
 
@@ -218,7 +219,11 @@ Scene.prototype._updateMultiviewUbo = function (viewR?: Matrix, projectionR?: Ma
 
     if (this._multiviewSceneUbo) {
         this._multiviewSceneUbo.updateMatrix("viewProjection", this.getTransformMatrix());
-        this._multiviewSceneUbo.updateMatrix("viewProjectionR", this._transformMatrixR);
+        if (this.activeCamera?._multiviewTexture?.getViewCount() === 2) {
+            this._multiviewSceneUbo.updateMatrix("viewProjectionR", this._transformMatrixR);
+        } else {
+            this._multiviewSceneUbo.updateMatrix("viewProjectionR", this.getTransformMatrix());
+        }
         this._multiviewSceneUbo.updateMatrix("view", this._viewMatrix);
         this._multiviewSceneUbo.updateMatrix("projection", this._projectionMatrix);
     }
