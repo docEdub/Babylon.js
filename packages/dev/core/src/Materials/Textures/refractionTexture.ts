@@ -1,12 +1,12 @@
 import type { Scene } from "../../scene";
 import { Plane } from "../../Maths/math.plane";
-import { RenderTargetTexture } from "../../Materials/Textures/renderTargetTexture";
+import { MultiviewRenderTarget } from "./MultiviewRenderTarget";
 /**
  * Creates a refraction texture used by refraction channel of the standard material.
  * It is like a mirror but to see through a material.
  * @see https://doc.babylonjs.com/features/featuresDeepDive/materials/using/reflectionTexture#refractiontexture
  */
-export class RefractionTexture extends RenderTargetTexture {
+export class RefractionTexture extends MultiviewRenderTarget {
     /**
      * Define the reflection plane we want to use. The refractionPlane is usually set to the constructed refractor.
      * It is possible to directly set the refractionPlane by directly using a Plane(a, b, c, d) where a, b and c give the plane normal vector (a, b, c) and d is a scalar displacement from the refractionPlane to the origin. However in all but the very simplest of situations it is more straight forward to set it to the refractor as stated in the doc.
@@ -29,7 +29,7 @@ export class RefractionTexture extends RenderTargetTexture {
      * @param generateMipMaps Define if we need to generate mips level for the refraction
      */
     constructor(name: string, size: number, scene?: Scene, generateMipMaps?: boolean) {
-        super(name, size, scene, generateMipMaps, true);
+        super(scene, size);
 
         this.onBeforeRenderObservable.add(() => {
             this.getScene()!.clipPlane = this.refractionPlane;
