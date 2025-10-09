@@ -6738,8 +6738,8 @@ export class Matrix implements Tensor<Tuple<Tuple<number, 4>, 4>, Matrix>, IMatr
             return result;
         }
 
-        this.multiplyToArray(other, result._m, 0);
-        result.markAsUpdated();
+        result.copyFrom(this);
+        result.multiplyInPlace(other);
         return result;
     }
 
