@@ -45,48 +45,60 @@ This document outlines the steps required to migrate the Babylon.js project from
 
 ## Phase 1: Research & Preparation
 
-### 1.1 Check Plugin Compatibility
+### 1.1 Check Plugin Compatibility ✅
 
-- [ ] **Check `@typescript-eslint/*` compatibility**
+- [x] **Check `@typescript-eslint/*` compatibility**
 
     - Current: `^8.29.0`
-    - Required: Verify ESLint 9 support (v8+ supports ESLint 9)
-    - Action: Check [typescript-eslint releases](https://github.com/typescript-eslint/typescript-eslint/releases)
+    - Required: v8.0.0+ supports ESLint 9
+    - Action: None needed
 
-- [ ] **Check `eslint-plugin-prettier` compatibility**
+- [x] **Check `eslint-plugin-prettier` compatibility**
 
     - Current: `~5.0.0`
     - Required: v5.0.0+ supports ESLint 9
-    - Action: Verify flat config support
+    - Action: None needed
 
-- [ ] **Check `eslint-plugin-jest` compatibility**
+- [x] **Check `eslint-plugin-jest` compatibility**
 
     - Current: `~28.11.0`
     - Required: v28+ supports ESLint 9
-    - Action: Verify flat config support
+    - Action: None needed
 
-- [ ] **Check `eslint-plugin-jsdoc` compatibility**
+- [x] **Check `eslint-plugin-jsdoc` compatibility**
 
     - Current: `~46.2.6`
     - Required: v48+ fully supports ESLint 9 flat config
-    - Action: May need to upgrade to v48+
+    - Action: Upgrade to ^50.0.0
 
-- [ ] **Check `eslint-plugin-github` compatibility**
+- [x] **Check `eslint-plugin-github` compatibility**
 
     - Current: `5.0.2`
-    - Required: Check if flat config is supported
-    - Action: Review [eslint-plugin-github](https://github.com/github/eslint-plugin-github)
+    - Required: v6.0.0+ supports ESLint 9 flat config via `getFlatConfigs()`
+    - Action: Upgrade to ^6.0.0
 
-- [ ] **Check `eslint-plugin-import` compatibility**
+- [x] **Check `eslint-plugin-import` compatibility**
 
     - Current: `~2.26.0`
-    - Required: v2.29.0+ has experimental flat config support
-    - Alternative: Consider `eslint-plugin-import-x` for better flat config support
-    - Action: Decide between upgrading or replacing
+    - Required: v2.31.0+ has full flat config support via `flatConfigs`
+    - Action: Upgrade to ^2.32.0
 
-- [ ] **Check `eslint-plugin-tsdoc` compatibility**
+- [x] **Check `eslint-plugin-tsdoc` compatibility**
+
     - Current: `~0.2.14`
-    - Action: Verify ESLint 9 support
+    - Required: v0.4.0+ for better ESLint 9 support
+    - Action: Upgrade to ^0.5.0
+
+- [x] **Check `eslint-config-prettier` compatibility**
+
+    - Current: `~9.0.0`
+    - Required: v9.0.0+ supports ESLint 9
+    - Action: None needed (optional upgrade to ^10.0.0 for `/flat` export)
+
+- [x] **Check `eslint-formatter-azure-devops` compatibility**
+    - Current: `^1.2.0`
+    - Required: v1.2.0+ works with ESLint 9 (formatter, not plugin)
+    - Action: None needed
 
 ### 1.2 Test current implementation
 
@@ -779,24 +791,57 @@ ESLint 9 recommends (but doesn't require) including:
 
 ## Reference: Plugin Compatibility
 
-### Known Compatible Plugins (ESLint 9)
+### Plugin Compatibility Report (Completed)
 
-| Plugin                   | Min Version for ESLint 9 | Flat Config Support      |
-| ------------------------ | ------------------------ | ------------------------ |
-| `@typescript-eslint/*`   | v8.0.0+                  | Yes                      |
-| `eslint-plugin-prettier` | v5.0.0+                  | Yes                      |
-| `eslint-plugin-jest`     | v28.0.0+                 | Yes (`flat/recommended`) |
-| `eslint-plugin-jsdoc`    | v48.0.0+                 | Yes                      |
-| `eslint-plugin-import`   | v2.29.0+                 | Partial                  |
-| `eslint-plugin-import-x` | v0.5.0+                  | Yes                      |
+| Plugin                          | Current  | Min for ESLint 9 | Flat Config              | Action                       |
+| ------------------------------- | -------- | ---------------- | ------------------------ | ---------------------------- |
+| `@typescript-eslint/*`          | ^8.29.0  | v8.0.0+          | Yes                      | None                         |
+| `eslint-plugin-prettier`        | ~5.0.0   | v5.0.0+          | Yes                      | None                         |
+| `eslint-plugin-jest`            | ~28.11.0 | v28.0.0+         | Yes (`flat/recommended`) | None                         |
+| `eslint-plugin-jsdoc`           | ~46.2.6  | v48.0.0+         | Yes                      | Upgrade to ^50.0.0           |
+| `eslint-plugin-github`          | 5.0.2    | v6.0.0+          | Yes (`getFlatConfigs()`) | Upgrade to ^6.0.0            |
+| `eslint-plugin-import`          | ~2.26.0  | v2.31.0+         | Yes (`flatConfigs`)      | Upgrade to ^2.32.0           |
+| `eslint-plugin-tsdoc`           | ~0.2.14  | v0.4.0+          | Yes                      | Upgrade to ^0.5.0            |
+| `eslint-formatter-azure-devops` | ^1.2.0   | v1.2.0+          | N/A (formatter)          | None                         |
+| `eslint-config-prettier`        | ~9.0.0   | v9.0.0+          | Yes (`/flat` export)     | Optional: upgrade to ^10.0.0 |
 
-### Plugins Requiring Research
+### Flat Config Import Examples
 
-| Plugin                          | Current Version | Action Needed       |
-| ------------------------------- | --------------- | ------------------- |
-| `eslint-plugin-github`          | 5.0.2           | Check compatibility |
-| `eslint-plugin-tsdoc`           | ~0.2.14         | Check compatibility |
-| `eslint-formatter-azure-devops` | ^1.2.0          | Check compatibility |
+```javascript
+// @typescript-eslint
+import tseslint from "typescript-eslint";
+// Use: tseslint.configs.recommended, tseslint.parser
+
+// eslint-plugin-prettier
+import eslintPluginPrettier from "eslint-plugin-prettier/recommended";
+// Use: eslintPluginPrettier (as config object)
+
+// eslint-plugin-jest
+import eslintPluginJest from "eslint-plugin-jest";
+// Use: eslintPluginJest.configs["flat/recommended"]
+
+// eslint-plugin-jsdoc (v48+)
+import jsdoc from "eslint-plugin-jsdoc";
+// Use: jsdoc.configs["flat/recommended"]
+
+// eslint-plugin-github (v6+)
+import github from "eslint-plugin-github";
+// Use: github.getFlatConfigs().recommended, github.getFlatConfigs().typescript
+
+// eslint-plugin-import (v2.31+)
+import importPlugin from "eslint-plugin-import";
+// Use: importPlugin.flatConfigs.recommended, importPlugin.flatConfigs.typescript
+
+// eslint-config-prettier (v10+)
+import eslintConfigPrettier from "eslint-config-prettier/flat";
+// Use: eslintConfigPrettier (as config object, place last)
+```
+
+### Decision: eslint-plugin-import
+
+**Decision**: Upgrade `eslint-plugin-import` to ^2.32.0
+
+The latest version (2.32.0) has full flat config support via `flatConfigs` export. No need to replace with `eslint-plugin-import-x`.
 
 ---
 
