@@ -88,13 +88,7 @@ This document outlines the steps required to migrate the Babylon.js project from
     - Current: `~0.2.14`
     - Action: Verify ESLint 9 support
 
-### 1.2 Create Backup Branch
-
-- [ ] **Create a dedicated migration branch**
-
-    ```bash
-    git checkout -b chore/eslint-9-migration
-    ```
+### 1.2 Test current implementation
 
 - [ ] **Ensure all tests pass before starting migration**
     ```bash
