@@ -20,6 +20,10 @@ defaultTSDocConfiguration.allTsdocMessageIds.forEach((messageId: string) => {
 });
 
 interface IPlugin {
+    meta: {
+        name: string;
+        version: string;
+    };
     rules: { [x: string]: eslint.Rule.RuleModule };
 }
 
@@ -222,6 +226,10 @@ function shouldUsePathMapping(projectRoot: string, importPath: string, filename:
 }
 
 const plugin: IPlugin = {
+    meta: {
+        name: "eslint-plugin-babylonjs",
+        version: "1.0.0",
+    },
     rules: {
         // NOTE: The actual ESLint rule name will be "tsdoc/syntax".  It is calculated by deleting "eslint-plugin-"
         // from the NPM package name, and then appending this string.
