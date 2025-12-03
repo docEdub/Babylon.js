@@ -248,6 +248,7 @@ const plugin: IPlugin = {
                     recommended: false,
                     url: "https://tsdoc.org/pages/packages/eslint-plugin-tsdoc",
                 },
+                schema: [],
             },
             create: (context: eslint.Rule.RuleContext) => {
                 const sourceFilePath: string = context.filename;
@@ -359,6 +360,18 @@ const plugin: IPlugin = {
                     recommended: false,
                     url: "https://tsdoc.org/pages/packages/eslint-plugin-tsdoc",
                 },
+                schema: [
+                    {
+                        type: "object",
+                        properties: {
+                            contexts: {
+                                type: "array",
+                                items: { type: "string" },
+                            },
+                        },
+                        additionalProperties: false,
+                    },
+                ],
             },
             create: (context: eslint.Rule.RuleContext) => {
                 const sourceCode: eslint.SourceCode = context.sourceCode;
@@ -424,6 +437,7 @@ const plugin: IPlugin = {
                     recommended: false,
                     url: "https://tsdoc.org/pages/packages/eslint-plugin-tsdoc",
                 },
+                schema: [],
             },
             create: (context: eslint.Rule.RuleContext) => {
                 const sourceFilePath: string = context.filename;
@@ -486,6 +500,7 @@ const plugin: IPlugin = {
                 messages: {
                     usePathMapping: 'Use path mapping "{{suggestion}}" instead of relative import "{{importPath}}".',
                 },
+                schema: [],
             },
             create(context) {
                 const filename = context.filename;
@@ -529,6 +544,7 @@ const plugin: IPlugin = {
                     missingSave:
                         "Unless this is a temporary context, context.save() must be called before this._applyStates(context). Remember to also call context.restore() at the appropriate location to restore the canvas state.",
                 },
+                schema: [],
             },
             create(context) {
                 return {
