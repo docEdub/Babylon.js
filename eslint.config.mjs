@@ -10,7 +10,7 @@ import eslintPluginGithub from "eslint-plugin-github";
 import eslintPluginImport from "eslint-plugin-import";
 import babylonjsPlugin from "./packages/tools/eslintBabylonPlugin/dist/index.js";
 
-// Allowed abbreviations for naming conventions (copied from .eslintrc.js)
+// Allowed abbreviations for naming conventions
 const abbreviations = [
     "[XYZ][A-Z][a-z]",
     "HTML",
@@ -151,7 +151,6 @@ export default tseslint.config(
             // Config files at root
             "*.config.js",
             "*.config.ts",
-            ".eslintrc.js",
 
             // Node modules
             "node_modules/**",
