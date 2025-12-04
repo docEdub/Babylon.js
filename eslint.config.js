@@ -192,8 +192,33 @@ export default tseslint.config(
             "arrow-body-style": "off",
             "prefer-arrow-callback": "off",
         },
-    }
+    },
 
-    // Placeholder for additional configuration objects
-    // These will be added in subsequent tasks
+    // ===========================================
+    // Plugin registrations and settings
+    // ===========================================
+    {
+        plugins: {
+            babylonjs: babylonjsPlugin,
+            jsdoc: eslintPluginJsdoc,
+            github: eslintPluginGithub,
+            import: eslintPluginImport,
+            jest: eslintPluginJest,
+        },
+        settings: {
+            react: {
+                pragma: "h",
+                createClass: "",
+            },
+            jsdoc: {
+                ignorePrivate: true,
+                ignoreInternal: true,
+            },
+        },
+    },
+
+    // ===========================================
+    // Jest plugin config
+    // ===========================================
+    eslintPluginJest.configs["flat/recommended"]
 );
