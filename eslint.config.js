@@ -223,6 +223,76 @@ export default tseslint.config(
     eslintPluginJest.configs["flat/recommended"],
 
     // ===========================================
+    // Global rules (apply to all matched files)
+    // ===========================================
+    {
+        rules: {
+            // No console except allowed methods
+            "no-console": ["error", { allow: ["time", "timeEnd", "trace"] }],
+            "block-spacing": "error",
+
+            // Import rules
+            "import/no-unresolved": "off",
+            "import/named": "error",
+            "import/no-cycle": [1, { maxDepth: 1, ignoreExternal: true }],
+            "import/no-internal-modules": [
+                "error",
+                {
+                    forbid: ["**/index", "**/"],
+                },
+            ],
+
+            // General rules
+            "no-unused-vars": "off",
+            "no-empty": ["error", { allowEmptyCatch: true }],
+            "space-infix-ops": "error",
+            "template-curly-spacing": "error",
+            "template-tag-spacing": "error",
+
+            // Jest rules
+            "jest/no-standalone-expect": ["error", { additionalTestBlockFunctions: ["afterEach"] }],
+            "jest/valid-expect": "off",
+
+            // Babylon.js custom rules
+            "babylonjs/syntax": "warn",
+            "babylonjs/no-cross-package-relative-imports": "error",
+
+            // JSDoc rules
+            "jsdoc/check-param-names": ["error", { checkRestProperty: false, checkDestructured: false }],
+            "jsdoc/check-property-names": "error",
+            "jsdoc/require-param": [
+                "error",
+                {
+                    checkDestructured: false,
+                    checkDestructuredRoots: false,
+                    checkRestProperty: false,
+                    enableFixer: false,
+                },
+            ],
+            "jsdoc/require-param-name": "error",
+            "jsdoc/require-returns": ["error", { checkGetters: false, checkConstructors: false }],
+            "jsdoc/require-returns-check": "error",
+
+            // Warnings
+            "import/export": "warn",
+            "no-useless-escape": "warn",
+            "no-case-declarations": "warn",
+            "no-prototype-builtins": "warn",
+            "no-loss-of-precision": "warn",
+            "no-fallthrough": "warn",
+            "no-async-promise-executor": "warn",
+
+            // Disabled rules
+            "prefer-spread": "off",
+            "prefer-rest-params": "off",
+
+            // Errors
+            "no-throw-literal": "error",
+            curly: "error",
+        },
+    },
+
+    // ===========================================
     // TypeScript files override
     // ===========================================
     {
@@ -365,8 +435,246 @@ export default tseslint.config(
                 },
             ],
 
-            // Naming conventions (placeholder - full content in Task 15)
-            "@typescript-eslint/naming-convention": ["error", { selector: "default", format: ["strictCamelCase"] }],
+            // Naming conventions
+            "@typescript-eslint/naming-convention": [
+                "error",
+                {
+                    selector: "default",
+                    format: ["strictCamelCase"],
+                },
+                {
+                    selector: "import",
+                    format: ["strictCamelCase", "StrictPascalCase"],
+                },
+                // Allow any casing for destructured variables
+                {
+                    selector: "variable",
+                    format: null,
+                    modifiers: ["destructured"],
+                },
+                {
+                    selector: "variable",
+                    format: ["StrictPascalCase", "UPPER_CASE"],
+                    modifiers: ["global"],
+                    leadingUnderscore: "allow",
+                },
+                {
+                    selector: "variable",
+                    format: ["camelCase"],
+                    leadingUnderscore: "allow",
+                },
+                {
+                    selector: "parameter",
+                    format: ["camelCase"],
+                    leadingUnderscore: "allow",
+                },
+                {
+                    selector: "objectLiteralProperty",
+                    format: ["strictCamelCase", "snake_case", "UPPER_CASE"],
+                    leadingUnderscore: "allow",
+                },
+                {
+                    selector: "enumMember",
+                    format: ["StrictPascalCase", "UPPER_CASE"],
+                },
+                // Public static members of classes
+                {
+                    selector: "memberLike",
+                    modifiers: ["public", "static"],
+                    format: ["StrictPascalCase", "UPPER_CASE"],
+                    leadingUnderscore: "allow",
+                },
+                // Private static members
+                {
+                    selector: "memberLike",
+                    modifiers: ["private", "static"],
+                    format: ["StrictPascalCase", "UPPER_CASE"],
+                    leadingUnderscore: "require",
+                },
+                // Protected static members
+                {
+                    selector: "memberLike",
+                    modifiers: ["protected", "static"],
+                    format: ["StrictPascalCase", "UPPER_CASE"],
+                    leadingUnderscore: "require",
+                },
+                // Public instance members
+                {
+                    selector: "memberLike",
+                    modifiers: ["public"],
+                    format: ["strictCamelCase", "UPPER_CASE"],
+                    leadingUnderscore: "allow",
+                },
+                // Private instance members
+                {
+                    selector: "memberLike",
+                    modifiers: ["private"],
+                    format: ["strictCamelCase"],
+                    leadingUnderscore: "require",
+                },
+                // Protected instance members
+                {
+                    selector: "memberLike",
+                    modifiers: ["protected"],
+                    format: ["strictCamelCase"],
+                    leadingUnderscore: "require",
+                },
+                // Async suffix
+                {
+                    selector: "memberLike",
+                    modifiers: ["async"],
+                    suffix: ["Async"],
+                    format: ["strictCamelCase", "StrictPascalCase"],
+                    leadingUnderscore: "allow",
+                },
+                {
+                    selector: "typeLike",
+                    format: ["StrictPascalCase"],
+                },
+                // Exported const variables
+                {
+                    selector: "variable",
+                    modifiers: ["const", "global", "exported"],
+                    format: ["StrictPascalCase"],
+                    leadingUnderscore: "allow",
+                },
+                {
+                    selector: "function",
+                    modifiers: ["global"],
+                    format: ["StrictPascalCase"],
+                    leadingUnderscore: "allow",
+                },
+                {
+                    selector: "interface",
+                    format: ["StrictPascalCase"],
+                    leadingUnderscore: "allow",
+                    prefix: ["I"],
+                },
+                {
+                    selector: "class",
+                    format: ["StrictPascalCase"],
+                    leadingUnderscore: "allow",
+                },
+                // Abbreviation exceptions
+                {
+                    selector: "default",
+                    format: ["camelCase"],
+                    filter: {
+                        regex: allowedNonStrictAbbreviations,
+                        match: true,
+                    },
+                },
+                {
+                    selector: ["memberLike", "property", "parameter"],
+                    format: ["camelCase", "UPPER_CASE"],
+                    filter: {
+                        regex: allowedNonStrictAbbreviations,
+                        match: true,
+                    },
+                    leadingUnderscore: "allow",
+                },
+                {
+                    selector: ["memberLike", "variable", "property", "class"],
+                    format: ["PascalCase", "UPPER_CASE"],
+                    modifiers: ["static"],
+                    filter: {
+                        regex: allowedNonStrictAbbreviations,
+                        match: true,
+                    },
+                    leadingUnderscore: "allow",
+                },
+                {
+                    selector: "class",
+                    format: ["PascalCase"],
+                    filter: {
+                        regex: allowedNonStrictAbbreviations,
+                        match: true,
+                    },
+                    leadingUnderscore: "allow",
+                },
+                {
+                    selector: "interface",
+                    format: ["PascalCase"],
+                    prefix: ["I"],
+                    filter: {
+                        regex: allowedNonStrictAbbreviations,
+                        match: true,
+                    },
+                    leadingUnderscore: "allow",
+                },
+                {
+                    selector: "import",
+                    format: ["camelCase", "PascalCase"],
+                    filter: {
+                        regex: allowedNonStrictAbbreviations,
+                        match: true,
+                    },
+                },
+                {
+                    selector: "objectLiteralProperty",
+                    format: ["camelCase", "snake_case", "UPPER_CASE"],
+                    leadingUnderscore: "allow",
+                    filter: {
+                        regex: allowedNonStrictAbbreviations,
+                        match: true,
+                    },
+                },
+                // Exception for hooks starting with 'use'
+                {
+                    selector: "variable",
+                    format: ["strictCamelCase"],
+                    modifiers: ["global"],
+                    filter: {
+                        regex: "^use",
+                        match: true,
+                    },
+                },
+                {
+                    selector: "function",
+                    format: ["strictCamelCase"],
+                    modifiers: ["global"],
+                    filter: {
+                        regex: "^use",
+                        match: true,
+                    },
+                },
+                {
+                    selector: "variable",
+                    format: ["PascalCase"],
+                    modifiers: ["global"],
+                    leadingUnderscore: "allow",
+                    filter: {
+                        regex: allowedNonStrictAbbreviations,
+                        match: true,
+                    },
+                },
+                {
+                    selector: "function",
+                    modifiers: ["global"],
+                    format: ["PascalCase"],
+                    leadingUnderscore: "allow",
+                    filter: {
+                        regex: allowedNonStrictAbbreviations,
+                        match: true,
+                    },
+                },
+                {
+                    selector: "enumMember",
+                    format: ["PascalCase", "UPPER_CASE"],
+                    filter: {
+                        regex: allowedNonStrictAbbreviations,
+                        match: true,
+                    },
+                },
+                {
+                    selector: "typeLike",
+                    format: ["PascalCase"],
+                    filter: {
+                        regex: allowedNonStrictAbbreviations,
+                        match: true,
+                    },
+                },
+            ],
         },
     },
 
