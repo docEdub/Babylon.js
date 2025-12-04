@@ -3,6 +3,7 @@ import js from "@eslint/js";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 import eslintPluginPrettier from "eslint-plugin-prettier";
+import eslintConfigPrettier from "eslint-config-prettier";
 import eslintPluginJest from "eslint-plugin-jest";
 import eslintPluginJsdoc from "eslint-plugin-jsdoc";
 import eslintPluginGithub from "eslint-plugin-github";
@@ -156,6 +157,41 @@ export default tseslint.config(
             "node_modules/**",
             "**/node_modules/**",
         ],
+    },
+
+    // ===========================================
+    // Base recommended configurations
+    // ===========================================
+    js.configs.recommended,
+    eslintConfigPrettier,
+
+    // ===========================================
+    // Global language options
+    // ===========================================
+    {
+        languageOptions: {
+            globals: {
+                ...globals.browser,
+                ...globals.node,
+                ...globals.jest,
+            },
+            parser: tseslint.parser,
+            parserOptions: {
+                sourceType: "module",
+                ecmaVersion: 2020,
+                ecmaFeatures: {
+                    jsx: true,
+                },
+            },
+        },
+        plugins: {
+            prettier: eslintPluginPrettier,
+        },
+        rules: {
+            "prettier/prettier": "error",
+            "arrow-body-style": "off",
+            "prefer-arrow-callback": "off",
+        },
     }
 
     // Placeholder for additional configuration objects
