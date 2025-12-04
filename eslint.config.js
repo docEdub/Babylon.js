@@ -368,5 +368,16 @@ export default tseslint.config(
             // Naming conventions (placeholder - full content in Task 15)
             "@typescript-eslint/naming-convention": ["error", { selector: "default", format: ["strictCamelCase"] }],
         },
+    },
+
+    // ===========================================
+    // GUI Controls override
+    // Requires context.save() before _applyStates()
+    // ===========================================
+    {
+        files: ["packages/dev/gui/src/2D/controls/**/*.ts", "packages/dev/gui/src/2D/controls/**/*.tsx"],
+        rules: {
+            "babylonjs/require-context-save-before-apply-states": "error",
+        },
     }
 );
