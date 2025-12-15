@@ -6,6 +6,7 @@ import { PrePassRenderer } from "core/Rendering";
 import "core/Rendering/prePassRendererSceneComponent";
 import "core/Rendering/subSurfaceSceneComponent";
 import { Scene } from "core/scene";
+import { Logger } from "core/Misc/logger";
 
 describe("PBRMaterial", () => {
     let subject: Engine;
@@ -260,10 +261,15 @@ describe("PBRMaterial", () => {
         });
 
         it("should set prepass renderer when scattering enable", () => {
+            const loggerLevels = Logger.LogLevels;
+            Logger.LogLevels = Logger.NoneLogLevel;
+
             material.subSurface.isScatteringEnabled = true;
             material.setPrePassRenderer();
 
             expect(scene.prePassRenderer).toBeDefined();
+
+            Logger.LogLevels = loggerLevels;
         });
 
         it("should not set prepass renderer when refraction disabled", () => {
