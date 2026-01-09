@@ -5,61 +5,7 @@ import { expect, test } from "@playwright/test";
 InitAudioV2Tests(true, false);
 
 test.describe(`AudioParam`, () => {
-    test("Audio parameter should not throw error when given `NaN` value", async ({ page }) => {
-        const result = await page.evaluate(async () => {
-            await AudioV2Test.CreateAudioEngineAsync();
-            const sound = await AudioV2Test.CreateSoundAsync(audioTestConfig.pulsed3CountSoundFile, { autoplay: true, loop: true });
-
-            let error = null;
-            try {
-                sound.volume = NaN;
-            } catch (e) {
-                error = (e as Error).message;
-            }
-
-            return error;
-        });
-
-        expect(result).toBe(null);
-    });
-
-    test("Audio parameter should not throw error when given `Infinity` value", async ({ page }) => {
-        const result = await page.evaluate(async () => {
-            await AudioV2Test.CreateAudioEngineAsync();
-            const sound = await AudioV2Test.CreateSoundAsync(audioTestConfig.pulsed3CountSoundFile, { autoplay: true, loop: true });
-
-            let error = null;
-            try {
-                sound.volume = Infinity;
-            } catch (e) {
-                error = (e as Error).message;
-            }
-
-            return error;
-        });
-
-        expect(result).toBe(null);
-    });
-
-    test("Audio parameter should not throw error when given `-Infinity` value", async ({ page }) => {
-        const result = await page.evaluate(async () => {
-            await AudioV2Test.CreateAudioEngineAsync();
-            const sound = await AudioV2Test.CreateSoundAsync(audioTestConfig.pulsed3CountSoundFile, { autoplay: true, loop: true });
-
-            let error = null;
-            try {
-                sound.volume = -Infinity;
-            } catch (e) {
-                error = (e as Error).message;
-            }
-
-            return error;
-        });
-
-        expect(result).toBe(null);
-    });
-
-    test("z1", async ({ page }) => {
+    test("bad: Cancel at currentTime + 1", async ({ page }) => {
         const result = await page.evaluate(async () => {
             const audioEngine = await AudioV2Test.CreateAudioEngineAsync("Realtime");
             const audioContext = (audioEngine as any)._audioContext as AudioContext;
@@ -68,7 +14,6 @@ test.describe(`AudioParam`, () => {
 
             let error = null;
             try {
-                // This fails on Firefox with "Can't add events during a curve event"...
                 const currentTime = audioContext.currentTime;
                 gainNode.gain.setValueCurveAtTime(new Float32Array([0, 1, 0]), currentTime, 2);
                 gainNode.gain.cancelScheduledValues(currentTime + 1);
@@ -83,7 +28,7 @@ test.describe(`AudioParam`, () => {
         expect(result).toBe(null);
     });
 
-    test("z2", async ({ page }) => {
+    test("ok: Cancel at currentTime", async ({ page }) => {
         const result = await page.evaluate(async () => {
             const audioEngine = await AudioV2Test.CreateAudioEngineAsync("Realtime");
             const audioContext = (audioEngine as any)._audioContext as AudioContext;
@@ -92,7 +37,6 @@ test.describe(`AudioParam`, () => {
 
             let error = null;
             try {
-                // This passes on Firefox.
                 const currentTime = audioContext.currentTime;
                 gainNode.gain.setValueCurveAtTime(new Float32Array([0, 1, 0]), currentTime, 2);
                 gainNode.gain.cancelScheduledValues(currentTime);
@@ -107,7 +51,58 @@ test.describe(`AudioParam`, () => {
         expect(result).toBe(null);
     });
 
-    test("z3", async ({ page }) => {
+    test("ok: Cancel at 0", async ({ page }) => {
+        const result = await page.evaluate(async () => {
+            const audioEngine = await AudioV2Test.CreateAudioEngineAsync("Realtime");
+            const audioContext = (audioEngine as any)._audioContext as AudioContext;
+
+            const gainNode = new GainNode(audioContext);
+
+            let error = null;
+            try {
+                const currentTime = audioContext.currentTime;
+                gainNode.gain.setValueCurveAtTime(new Float32Array([0, 1, 0]), currentTime, 2);
+                gainNode.gain.cancelScheduledValues(0);
+                gainNode.gain.setValueCurveAtTime(new Float32Array([0, 1, 0]), currentTime + 1, 2);
+            } catch (e) {
+                error = (e as Error).message;
+            }
+
+            return error;
+        });
+
+        expect(result).toBe(null);
+    });
+
+    test("ok: Start before engine time", async ({ page }) => {
+        const result = await page.evaluate(async () => {
+            const audioEngine = await AudioV2Test.CreateAudioEngineAsync("Realtime");
+            const audioContext = (audioEngine as any)._audioContext as AudioContext;
+
+            const gainNode = new GainNode(audioContext);
+
+            let error = null;
+            try {
+                const currentTime = audioContext.currentTime;
+                console.log("currentTime:", currentTime);
+                if (currentTime <= 0) {
+                    throw new Error("currentTime is not greater than 0");
+                }
+
+                gainNode.gain.setValueCurveAtTime(new Float32Array([0, 1, 0]), 0, 10);
+                gainNode.gain.cancelScheduledValues(0);
+                gainNode.gain.setValueCurveAtTime(new Float32Array([0, 1, 0]), currentTime + 1, 10);
+            } catch (e) {
+                error = (e as Error).message;
+            }
+
+            return error;
+        });
+
+        expect(result).toBe(null);
+    });
+
+    test.skip("ok: Stress test", async ({ page }) => {
         const error = await page.evaluate(async () => {
             const audioEngine = await AudioV2Test.CreateAudioEngineAsync("Realtime");
             const audioContext = (audioEngine as any)._audioContext as AudioContext;

@@ -145,7 +145,7 @@ export const InitAudioV2Tests = (initBeforeEach = true, initAfterEach = true) =>
         });
     } else {
         test.afterEach(async ({ page }) => {
-            await page.close();
+            // await page.close();
         });
     }
 };
