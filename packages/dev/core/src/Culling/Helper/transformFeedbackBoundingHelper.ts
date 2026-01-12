@@ -184,7 +184,7 @@ export class TransformFeedbackBoundingHelper implements IBoundingInfoHelperPlatf
         }
 
         // Update
-        const arrayBuffer = targetBuffer.getData()! as Float32Array;
+        const arrayBuffer = targetBuffer.getData()! as Float32Array<ArrayBuffer>;
         engine.bindTransformFeedbackBuffer(targetBuffer.getBuffer());
         engine.setRasterizerState(false);
         engine.beginTransformFeedback(true);

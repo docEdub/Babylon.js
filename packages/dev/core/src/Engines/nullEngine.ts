@@ -502,7 +502,7 @@ export class NullEngine extends Engine {
      * @param matrices defines the array of float32 to store
      * @returns true if value was set
      */
-    public override setMatrices(uniform: WebGLUniformLocation, matrices: Float32Array): boolean {
+    public override setMatrices(uniform: WebGLUniformLocation, matrices: Float32Array<ArrayBuffer>): boolean {
         return true;
     }
 

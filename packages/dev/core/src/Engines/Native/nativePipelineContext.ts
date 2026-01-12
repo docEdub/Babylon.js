@@ -482,7 +482,7 @@ export class NativePipelineContext implements IPipelineContext {
      * @param uniformName Name of the variable.
      * @param matrices matrices to be set.
      */
-    public setMatrices(uniformName: string, matrices: Float32Array): void {
+    public setMatrices(uniformName: string, matrices: Float32Array<ArrayBuffer>): void {
         if (!matrices) {
             return;
         }

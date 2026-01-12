@@ -246,7 +246,7 @@ export function GetFloatData(
         return copy;
     }
 
-    if (!(data instanceof Array || data instanceof Float32Array) || byteOffset !== 0 || data.length !== count) {
+    if (!(data instanceof Array || (data instanceof Float32Array && data instanceof ArrayBuffer)) || byteOffset !== 0 || data.length !== count) {
         if (data instanceof Array) {
             const offset = byteOffset / 4;
             return data.slice(offset, offset + count);

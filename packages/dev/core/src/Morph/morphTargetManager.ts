@@ -31,7 +31,7 @@ export class MorphTargetManager implements IDisposable {
     private _targetDataLayoutChangedObservers = new Array<Nullable<Observer<void>>>();
     private _activeTargets = new SmartArray<MorphTarget>(16);
     private _scene: Nullable<Scene>;
-    private _influences: Float32Array;
+    private _influences: Float32Array<ArrayBuffer>;
     private _supportsPositions = false;
     private _supportsNormals = false;
     private _supportsTangents = false;
@@ -56,7 +56,7 @@ export class MorphTargetManager implements IDisposable {
     public _textureHeight = 1;
 
     /** @internal */
-    public _morphTargetTextureIndices: Float32Array;
+    public _morphTargetTextureIndices: Float32Array<ArrayBuffer>;
 
     /** @internal */
     public _parentContainer: Nullable<IAssetContainer> = null;
@@ -288,7 +288,7 @@ export class MorphTargetManager implements IDisposable {
     /**
      * Gets the list of influences (one per target)
      */
-    public get influences(): Float32Array {
+    public get influences(): Float32Array<ArrayBuffer> {
         if (this._influencesAreDirty) {
             this._syncActiveTargets();
         }

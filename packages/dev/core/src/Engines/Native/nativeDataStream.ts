@@ -9,9 +9,9 @@ export type NativeData = Uint32Array;
 
 /** @internal */
 export class NativeDataStream {
-    private readonly _uint32s: Uint32Array;
-    private readonly _int32s: Int32Array;
-    private readonly _float32s: Float32Array;
+    private readonly _uint32s: Uint32Array<ArrayBuffer>;
+    private readonly _int32s: Int32Array<ArrayBuffer>;
+    private readonly _float32s: Float32Array<ArrayBuffer>;
     private readonly _length: number;
     private _position: number;
     private readonly _nativeDataStream: INativeDataStream;
@@ -65,7 +65,7 @@ export class NativeDataStream {
      * Writes a uint32 array to the stream
      * @param values the values to write
      */
-    public writeUint32Array(values: Uint32Array): void {
+    public writeUint32Array(values: Uint32Array<ArrayBuffer>): void {
         this._flushIfNecessary(1 + values.length);
         this._uint32s[this._position++] = values.length;
         this._uint32s.set(values, this._position);
@@ -76,7 +76,7 @@ export class NativeDataStream {
      * Writes an int32 array to the stream
      * @param values the values to write
      */
-    public writeInt32Array(values: Int32Array): void {
+    public writeInt32Array(values: Int32Array<ArrayBuffer>): void {
         this._flushIfNecessary(1 + values.length);
         this._uint32s[this._position++] = values.length;
         this._int32s.set(values, this._position);
