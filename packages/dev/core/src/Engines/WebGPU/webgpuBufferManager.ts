@@ -109,7 +109,7 @@ export class WebGPUBufferManager {
         this.setRawData(buffer, dstByteOffset, src, srcByteOffset, byteLength);
     }
 
-    private _getHalfFloatAsFloatRGBAArrayBuffer(dataLength: number, arrayBuffer: ArrayBuffer, destArray?: Float32Array): Float32Array<ArrayBuffer> {
+    private _getHalfFloatAsFloatRGBAArrayBuffer(dataLength: number, arrayBuffer: ArrayBuffer, destArray?: Float32Array): Float32Array<ArrayBufferLike> {
         if (!destArray) {
             destArray = new Float32Array(dataLength);
         } else {
@@ -133,7 +133,7 @@ export class WebGPUBufferManager {
         bytesPerRowAligned: number,
         type = Constants.TEXTURETYPE_UNSIGNED_BYTE,
         offset = 0,
-        buffer: Nullable<ArrayBufferView<ArrayBuffer>> = null,
+        buffer: Nullable<ArrayBufferView<ArrayBufferLike>> = null,
         destroyBuffer = true,
         noDataConversion = false
     ): Promise<ArrayBufferView> {
@@ -144,12 +144,12 @@ export class WebGPUBufferManager {
             gpuBuffer.mapAsync(WebGPUConstants.MapMode.Read, offset, size).then(
                 () => {
                     const copyArrayBuffer = gpuBuffer.getMappedRange(offset, size);
-                    let data: Nullable<ArrayBufferView<ArrayBuffer>> | Uint8Array<ArrayBuffer> | Float32Array<ArrayBuffer> = buffer;
+                    let data: Nullable<ArrayBufferView<ArrayBufferLike>> | Uint8Array<ArrayBufferLike> | Float32Array<ArrayBufferLike> = buffer;
                     if (noDataConversion) {
                         if (data === null) {
                             data = allocateAndCopyTypedBuffer(type, size, true, copyArrayBuffer);
                         } else {
-                            data = allocateAndCopyTypedBuffer(type, data.buffer, undefined, copyArrayBuffer);
+                            data = allocateAndCopyTypedBuffer(type, data.buffer as ArrayBuffer, undefined, copyArrayBuffer);
                         }
                     } else {
                         if (data === null) {
