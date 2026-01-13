@@ -130,30 +130,29 @@ type _Tuple<T, N extends number, R extends unknown[] = Empty> = R["length"] exte
 export type Tuple<T, N extends number> = _Tuple<T, N>;
 
 /** Alias type for number array or Float32Array */
-export type FloatArray = number[] | Float32Array<ArrayBufferLike>;
+export type FloatArray = number[] | Float32Array;
 /** Alias type for number array or Float32Array or Int32Array or Uint32Array or Uint16Array */
-export type IndicesArray = number[] | Int32Array<ArrayBufferLike> | Uint32Array<ArrayBufferLike> | Uint16Array<ArrayBufferLike>;
+export type IndicesArray = number[] | Int32Array | Uint32Array | Uint16Array;
 
 /**
  * Alias type for all TypedArrays
  */
 export type TypedArray =
-    | Int8Array<ArrayBufferLike>
-    | Uint8Array<ArrayBufferLike>
-    | Uint8ClampedArray<ArrayBufferLike>
-    | Int16Array<ArrayBufferLike>
-    | Uint16Array<ArrayBufferLike>
-    | Int32Array<ArrayBufferLike>
-    | Uint32Array<ArrayBufferLike>
-    | Float32Array<ArrayBufferLike>
-    | Float64Array<ArrayBufferLike>
-    | BigInt64Array<ArrayBufferLike>
-    | BigUint64Array<ArrayBufferLike>;
-
+    | Int8Array
+    | Uint8Array
+    | Uint8ClampedArray
+    | Int16Array
+    | Uint16Array
+    | Int32Array
+    | Uint32Array
+    | Float32Array
+    | Float64Array
+    | BigInt64Array
+    | BigUint64Array;
 /**
  * Alias for types that can be used by a Buffer or VertexBuffer.
  */
-export type DataArray = number[] | ArrayBuffer | ArrayBufferView<ArrayBufferLike>;
+export type DataArray = number[] | ArrayBuffer | ArrayBufferView;
 
 /**
  * Alias type for primitive types
