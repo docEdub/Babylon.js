@@ -65,8 +65,8 @@ export function GenerateNavMeshWorker() {
         // prepare the transferables
         const transferables: Transferable[] = [];
         const message: {
-            navMesh?: Uint8Array<ArrayBufferLike>;
-            tileCache?: Uint8Array<ArrayBufferLike>;
+            navMesh?: Uint8Array;
+            tileCache?: Uint8Array;
         } = { navMesh: undefined, tileCache: undefined };
 
         // If tile cache is present, serialize it and add to the message
