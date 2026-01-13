@@ -78,9 +78,7 @@ export function GetPositionsAndIndices(
  * @param meshOrIndices The mesh from which to extract indices or the indices themselves.
  * @returns Array of indices with reversed winding order.
  */
-export function GetReversedIndices(
-    meshOrIndices: Mesh | Uint32Array | number[]
-): Uint32Array<ArrayBufferLike> | number[] | Int32Array<ArrayBufferLike> | Uint16Array<ArrayBufferLike> | null {
+export function GetReversedIndices(meshOrIndices: Mesh | Uint32Array | number[]): Uint32Array | number[] | Int32Array | Uint16Array | null {
     const indices = meshOrIndices instanceof Mesh ? meshOrIndices.getIndices(false, true) : meshOrIndices;
 
     if (indices) {
