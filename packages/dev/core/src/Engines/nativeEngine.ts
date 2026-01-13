@@ -184,7 +184,7 @@ class CommandBufferEncoder {
         this._commandStream.writeInt32(commandArg);
     }
 
-    public encodeCommandArgAsInt32s(commandArg: Int32Array<ArrayBufferLike>) {
+    public encodeCommandArgAsInt32s(commandArg: Int32Array) {
         this._commandStream.writeInt32Array(commandArg);
     }
 
