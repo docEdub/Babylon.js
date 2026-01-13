@@ -213,7 +213,7 @@ export abstract class EnvCubeTexture extends BaseTexture {
         }
 
         // eslint-disable-next-line no-restricted-syntax
-        const callback = async (buffer: ArrayBuffer): Promise<ArrayBufferView<ArrayBufferLike>[]> => {
+        const callback = async (buffer: ArrayBuffer): Promise<ArrayBufferView[]> => {
             this.lodGenerationOffset = 0.0;
             this.lodGenerationScale = 0.8;
 

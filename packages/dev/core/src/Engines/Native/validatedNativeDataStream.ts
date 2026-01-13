@@ -42,7 +42,7 @@ export class ValidatedNativeDataStream extends NativeDataStream {
         super.writeUint32Array(values);
     }
 
-    public override writeInt32Array(values: Int32Array<ArrayBufferLike>): void {
+    public override writeInt32Array(values: Int32Array): void {
         super.writeUint32(_native.NativeDataStream.VALIDATION_INT_32_ARRAY);
         super.writeInt32Array(values);
     }
