@@ -402,7 +402,7 @@ export class NativePipelineContext implements IPipelineContext {
      * @param uniformName Name of the variable.
      * @param array array to be set.
      */
-    public setFloatArray(uniformName: string, array: Float32Array): void {
+    public setFloatArray(uniformName: string, array: Float32Array<ArrayBuffer>): void {
         this._valueCache[uniformName] = null;
         this._engine.setFloatArray(this._uniforms[uniformName]!, array);
     }
@@ -412,7 +412,7 @@ export class NativePipelineContext implements IPipelineContext {
      * @param uniformName Name of the variable.
      * @param array array to be set.
      */
-    public setFloatArray2(uniformName: string, array: Float32Array): void {
+    public setFloatArray2(uniformName: string, array: Float32Array<ArrayBuffer>): void {
         this._valueCache[uniformName] = null;
         this._engine.setFloatArray2(this._uniforms[uniformName]!, array);
     }
@@ -422,7 +422,7 @@ export class NativePipelineContext implements IPipelineContext {
      * @param uniformName Name of the variable.
      * @param array array to be set.
      */
-    public setFloatArray3(uniformName: string, array: Float32Array): void {
+    public setFloatArray3(uniformName: string, array: Float32Array<ArrayBuffer>): void {
         this._valueCache[uniformName] = null;
         this._engine.setFloatArray3(this._uniforms[uniformName]!, array);
     }
@@ -432,7 +432,7 @@ export class NativePipelineContext implements IPipelineContext {
      * @param uniformName Name of the variable.
      * @param array array to be set.
      */
-    public setFloatArray4(uniformName: string, array: Float32Array): void {
+    public setFloatArray4(uniformName: string, array: Float32Array<ArrayBuffer>): void {
         this._valueCache[uniformName] = null;
         this._engine.setFloatArray4(this._uniforms[uniformName]!, array);
     }
@@ -509,7 +509,7 @@ export class NativePipelineContext implements IPipelineContext {
      * @param uniformName Name of the variable.
      * @param matrix matrix to be set.
      */
-    public setMatrix3x3(uniformName: string, matrix: Float32Array): void {
+    public setMatrix3x3(uniformName: string, matrix: Float32Array<ArrayBuffer>): void {
         this._valueCache[uniformName] = null;
         this._engine.setMatrix3x3(this._uniforms[uniformName]!, matrix);
     }
@@ -519,7 +519,7 @@ export class NativePipelineContext implements IPipelineContext {
      * @param uniformName Name of the variable.
      * @param matrix matrix to be set.
      */
-    public setMatrix2x2(uniformName: string, matrix: Float32Array): void {
+    public setMatrix2x2(uniformName: string, matrix: Float32Array<ArrayBuffer>): void {
         this._valueCache[uniformName] = null;
         this._engine.setMatrix2x2(this._uniforms[uniformName]!, matrix);
     }
