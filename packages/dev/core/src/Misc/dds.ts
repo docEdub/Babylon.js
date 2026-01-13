@@ -203,7 +203,14 @@ export class DDSTools {
         };
     }
 
-    private static _GetHalfFloatAsFloatRGBAArrayBuffer(width: number, height: number, dataOffset: number, dataLength: number, arrayBuffer: ArrayBufferLike, lod: number): Float32Array {
+    private static _GetHalfFloatAsFloatRGBAArrayBuffer(
+        width: number,
+        height: number,
+        dataOffset: number,
+        dataLength: number,
+        arrayBuffer: ArrayBufferLike,
+        lod: number
+    ): Float32Array {
         const destArray = new Float32Array(dataLength);
         const srcData = new Uint16Array(arrayBuffer, dataOffset);
         let index = 0;
@@ -268,7 +275,14 @@ export class DDSTools {
         return new Float32Array(arrayBuffer, dataOffset, dataLength);
     }
 
-    private static _GetFloatAsHalfFloatRGBAArrayBuffer(width: number, height: number, dataOffset: number, dataLength: number, arrayBuffer: ArrayBufferLike, lod: number): Uint16Array {
+    private static _GetFloatAsHalfFloatRGBAArrayBuffer(
+        width: number,
+        height: number,
+        dataOffset: number,
+        dataLength: number,
+        arrayBuffer: ArrayBufferLike,
+        lod: number
+    ): Uint16Array {
         const destArray = new Uint16Array(dataLength);
         const srcData = new Float32Array(arrayBuffer, dataOffset);
         let index = 0;
@@ -311,7 +325,14 @@ export class DDSTools {
         return destArray;
     }
 
-    private static _GetHalfFloatAsUIntRGBAArrayBuffer(width: number, height: number, dataOffset: number, dataLength: number, arrayBuffer: ArrayBufferLike, lod: number): Uint8Array {
+    private static _GetHalfFloatAsUIntRGBAArrayBuffer(
+        width: number,
+        height: number,
+        dataOffset: number,
+        dataLength: number,
+        arrayBuffer: ArrayBufferLike,
+        lod: number
+    ): Uint8Array {
         const destArray = new Uint8Array(dataLength);
         const srcData = new Uint16Array(arrayBuffer, dataOffset);
         let index = 0;
