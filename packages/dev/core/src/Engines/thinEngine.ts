@@ -1375,10 +1375,10 @@ export class ThinEngine extends AbstractEngine {
         return dataBuffer;
     }
 
-    protected _normalizeIndexData(indices: IndicesArray): Uint16Array<ArrayBufferLike> | Uint32Array<ArrayBufferLike> {
+    protected _normalizeIndexData(indices: IndicesArray): Uint16Array | Uint32Array {
         const bytesPerElement = (indices as Exclude<IndicesArray, number[]>).BYTES_PER_ELEMENT;
         if (bytesPerElement === 2) {
-            return indices as Uint16Array<ArrayBufferLike>;
+            return indices as Uint16Array;
         }
 
         // Check 32 bit support

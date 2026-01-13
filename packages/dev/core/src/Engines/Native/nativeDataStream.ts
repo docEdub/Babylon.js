@@ -76,7 +76,7 @@ export class NativeDataStream {
      * Writes an int32 array to the stream
      * @param values the values to write
      */
-    public writeInt32Array(values: Int32Array<ArrayBufferLike>): void {
+    public writeInt32Array(values: Int32Array): void {
         this._flushIfNecessary(1 + values.length);
         this._uint32s[this._position++] = values.length;
         this._int32s.set(values, this._position);
