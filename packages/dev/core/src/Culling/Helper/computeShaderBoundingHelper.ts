@@ -104,7 +104,14 @@ export class ComputeShaderBoundingHelper implements IBoundingInfoHelperPlatform 
         computeShader.setStorageBuffer(name, buffer);
     }
 
-    private _prepareStorage(computeShader: ComputeShader, name: string, id: number, storageUnit: { [key: number]: StorageBuffer }, numInfluencers: number, data: Float32Array) {
+    private _prepareStorage(
+        computeShader: ComputeShader,
+        name: string,
+        id: number,
+        storageUnit: { [key: number]: StorageBuffer },
+        numInfluencers: number,
+        data: Float32Array<ArrayBuffer>
+    ) {
         let buffer: StorageBuffer;
         if (!storageUnit[id]) {
             buffer = new StorageBuffer(this._engine as WebGPUEngine, Float32Array.BYTES_PER_ELEMENT * numInfluencers);

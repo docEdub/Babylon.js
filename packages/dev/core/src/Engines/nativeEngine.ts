@@ -176,7 +176,7 @@ class CommandBufferEncoder {
         this._commandStream.writeUint32(commandArg);
     }
 
-    public encodeCommandArgAsUInt32s(commandArg: Uint32Array) {
+    public encodeCommandArgAsUInt32s(commandArg: Uint32Array<ArrayBuffer>) {
         this._commandStream.writeUint32Array(commandArg);
     }
 
@@ -184,7 +184,7 @@ class CommandBufferEncoder {
         this._commandStream.writeInt32(commandArg);
     }
 
-    public encodeCommandArgAsInt32s(commandArg: Int32Array) {
+    public encodeCommandArgAsInt32s(commandArg: Int32Array<ArrayBufferLike>) {
         this._commandStream.writeInt32Array(commandArg);
     }
 
@@ -1408,7 +1408,7 @@ export class NativeEngine extends Engine {
         return true;
     }
 
-    public setFloatArray(uniform: WebGLUniformLocation, array: Float32Array): boolean {
+    public setFloatArray(uniform: WebGLUniformLocation, array: Float32Array<ArrayBuffer>): boolean {
         if (!uniform) {
             return false;
         }
@@ -1420,7 +1420,7 @@ export class NativeEngine extends Engine {
         return true;
     }
 
-    public setFloatArray2(uniform: WebGLUniformLocation, array: Float32Array): boolean {
+    public setFloatArray2(uniform: WebGLUniformLocation, array: Float32Array<ArrayBuffer>): boolean {
         if (!uniform) {
             return false;
         }
@@ -1432,7 +1432,7 @@ export class NativeEngine extends Engine {
         return true;
     }
 
-    public setFloatArray3(uniform: WebGLUniformLocation, array: Float32Array): boolean {
+    public setFloatArray3(uniform: WebGLUniformLocation, array: Float32Array<ArrayBuffer>): boolean {
         if (!uniform) {
             return false;
         }
@@ -1444,7 +1444,7 @@ export class NativeEngine extends Engine {
         return true;
     }
 
-    public setFloatArray4(uniform: WebGLUniformLocation, array: Float32Array): boolean {
+    public setFloatArray4(uniform: WebGLUniformLocation, array: Float32Array<ArrayBuffer>): boolean {
         if (!uniform) {
             return false;
         }
@@ -1501,7 +1501,7 @@ export class NativeEngine extends Engine {
         return true;
     }
 
-    public override setMatrix3x3(uniform: WebGLUniformLocation, matrix: Float32Array): boolean {
+    public override setMatrix3x3(uniform: WebGLUniformLocation, matrix: Float32Array<ArrayBuffer>): boolean {
         if (!uniform) {
             return false;
         }
@@ -1513,7 +1513,7 @@ export class NativeEngine extends Engine {
         return true;
     }
 
-    public override setMatrix2x2(uniform: WebGLUniformLocation, matrix: Float32Array): boolean {
+    public override setMatrix2x2(uniform: WebGLUniformLocation, matrix: Float32Array<ArrayBuffer>): boolean {
         if (!uniform) {
             return false;
         }
@@ -2715,7 +2715,7 @@ export class NativeEngine extends Engine {
         height: number,
         faceIndex?: number,
         level?: number,
-        buffer?: Nullable<ArrayBufferView>,
+        buffer?: Nullable<ArrayBufferView<ArrayBuffer>>,
         _flushRenderer?: boolean,
         _noDataConversion?: boolean,
         x?: number,

@@ -29,7 +29,7 @@ export class UniformBuffer {
     private _bufferUpdatedLastFrame: boolean;
     private _createBufferOnWrite: boolean;
     private _data: number[];
-    private _bufferData: Float32Array;
+    private _bufferData: Float32Array<ArrayBuffer>;
     private _dynamic: boolean;
     private _uniformLocations: { [key: string]: number };
     private _uniformSizes: { [key: string]: number };

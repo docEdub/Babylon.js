@@ -108,7 +108,14 @@ VertexBuffer.prototype._alignBuffer = function (): void {
         sourceData = new DataView(data.buffer, data.byteOffset, data.byteLength);
     }
 
-    let alignedData: Int8Array | Uint8Array | Int16Array | Uint16Array | Int32Array | Uint32Array | Float32Array;
+    let alignedData:
+        | Int8Array<ArrayBuffer>
+        | Uint8Array<ArrayBuffer>
+        | Int16Array<ArrayBuffer>
+        | Uint16Array<ArrayBuffer>
+        | Int32Array<ArrayBuffer>
+        | Uint32Array<ArrayBuffer>
+        | Float32Array<ArrayBuffer>;
 
     if (this.type === VertexBuffer.BYTE) {
         alignedData = new Int8Array(totalLength);

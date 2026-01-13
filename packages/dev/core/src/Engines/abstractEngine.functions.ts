@@ -133,7 +133,7 @@ export function _GetGlobalDefines(
  * @returns the allocated buffer or sizeOrDstBuffer if the latter is an ArrayBuffer
  */
 // eslint-disable-next-line @typescript-eslint/naming-convention
-export function allocateAndCopyTypedBuffer(type: number, sizeOrDstBuffer: number | ArrayBuffer, sizeInBytes = false, copyBuffer?: ArrayBuffer): ArrayBufferView {
+export function allocateAndCopyTypedBuffer(type: number, sizeOrDstBuffer: number | ArrayBuffer, sizeInBytes = false, copyBuffer?: ArrayBuffer): ArrayBufferView<ArrayBuffer> {
     switch (type) {
         case Constants.TEXTURETYPE_BYTE: {
             const buffer = sizeOrDstBuffer instanceof ArrayBuffer ? new Int8Array(sizeOrDstBuffer) : new Int8Array(sizeOrDstBuffer);

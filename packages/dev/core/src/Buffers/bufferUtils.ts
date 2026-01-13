@@ -246,7 +246,7 @@ export function GetFloatData(
         return copy;
     }
 
-    if (!(data instanceof Array || data instanceof Float32Array) || byteOffset !== 0 || data.length !== count) {
+    if (!(data instanceof Array || (data instanceof Float32Array && data instanceof ArrayBuffer)) || byteOffset !== 0 || data.length !== count) {
         if (data instanceof Array) {
             const offset = byteOffset / 4;
             return data.slice(offset, offset + count);
@@ -330,7 +330,7 @@ export function GetTypedArrayData(
     }
 
     // Handle ArrayBuffer and ArrayBufferView
-    let buffer: ArrayBuffer;
+    let buffer: ArrayBufferLike;
     let adjustedByteOffset = byteOffset;
 
     if (data instanceof ArrayBuffer) {
@@ -351,7 +351,7 @@ export function GetTypedArrayData(
     }
     if (byteStride !== tightlyPackedByteStride) {
         const copy = new constructor(count);
-        EnumerateFloatValues(buffer, adjustedByteOffset, byteStride, size, type, count, false, (values, index) => {
+        EnumerateFloatValues(buffer as ArrayBuffer, adjustedByteOffset, byteStride, size, type, count, false, (values, index) => {
             for (let i = 0; i < size; i++) {
                 copy[index + i] = values[i];
             }
