@@ -26,12 +26,95 @@ async function runCommand(command) {
     });
 }
 
-const getNewVersion = () => {
-    // get @dev/core package.json
-    const rawdata = fs.readFileSync(path.join(baseDirectory, "packages", "public", "umd", "babylonjs", "package.json"), "utf-8");
-    const packageJson = JSON.parse(rawdata);
-    const version = packageJson.version;
-    return version;
+// Parse a semver version string into its components
+const parseVersion = (version) => {
+    const prereleaseMatch = version.match(/^(\d+)\.(\d+)\.(\d+)(?:-([a-zA-Z]+)\.(\d+))?$/);
+    if (!prereleaseMatch) {
+        throw new Error(`Invalid version format: ${version}`);
+    }
+    return {
+        major: parseInt(prereleaseMatch[1], 10),
+        minor: parseInt(prereleaseMatch[2], 10),
+        patch: parseInt(prereleaseMatch[3], 10),
+        prerelease: prereleaseMatch[4] || null,
+        prereleaseNum: prereleaseMatch[5] !== undefined ? parseInt(prereleaseMatch[5], 10) : null,
+    };
+};
+
+// Increment version based on version definition and optional preid
+const incrementVersion = (currentVersion, versionDefinition, preid) => {
+    const parsed = parseVersion(currentVersion);
+
+    // If already a prerelease with the same preid, just bump the prerelease number
+    if (parsed.prerelease && preid && parsed.prerelease === preid) {
+        return `${parsed.major}.${parsed.minor}.${parsed.patch}-${preid}.${parsed.prereleaseNum + 1}`;
+    }
+
+    // Increment based on version definition
+    let { major, minor, patch } = parsed;
+    switch (versionDefinition) {
+        case "major":
+            major++;
+            minor = 0;
+            patch = 0;
+            break;
+        case "minor":
+            minor++;
+            patch = 0;
+            break;
+        case "patch":
+            patch++;
+            break;
+        default:
+            throw new Error(`Unknown version definition: ${versionDefinition}`);
+    }
+
+    // Add prerelease suffix if preid is provided
+    if (preid) {
+        return `${major}.${minor}.${patch}-${preid}.0`;
+    }
+
+    return `${major}.${minor}.${patch}`;
+};
+
+// Update version in all non-private package.json files
+const updateAllPackageVersions = (versionDefinition, preid) => {
+    // Get all package.json files in the packages directory (excluding node_modules)
+    const packageJsonFiles = glob.globSync(path.join(baseDirectory, "packages", "**", "package.json"), {
+        ignore: ["**/node_modules/**"],
+    });
+
+    // Find a non-private package to get the current version
+    let currentVersion = null;
+    for (const file of packageJsonFiles) {
+        const data = fs.readFileSync(file, "utf-8");
+        const packageJson = JSON.parse(data);
+        if (!packageJson.private && packageJson.version) {
+            currentVersion = packageJson.version;
+            break;
+        }
+    }
+
+    if (!currentVersion) {
+        throw new Error("Could not find current version from any non-private package");
+    }
+
+    const newVersion = incrementVersion(currentVersion, versionDefinition, preid);
+    console.log(`Incrementing version from ${currentVersion} to ${newVersion}`);
+
+    // Update all non-private packages
+    for (const file of packageJsonFiles) {
+        const data = fs.readFileSync(file, "utf-8");
+        const packageJson = JSON.parse(data);
+
+        if (!packageJson.private) {
+            packageJson.version = newVersion;
+            fs.writeFileSync(file, JSON.stringify(packageJson, null, 4));
+            console.log(`Updated ${file} to version ${newVersion}`);
+        }
+    }
+
+    return newVersion;
 };
 
 const updateEngineVersion = async (version) => {
@@ -105,14 +188,9 @@ const updatePeerDependencies = async (version) => {
 };
 
 async function runTagsUpdate() {
-    await runCommand(
-        `npx lerna version ${config.versionDefinition} --yes --no-push --conventional-prerelease --force-publish --no-private --no-git-tag-version ${
-            config.preid ? "--preid " + config.preid : ""
-        }`
-    );
-    // update package-json
-    const version = getNewVersion();
-    // // update engine version
+    // Update version in all non-private package.json files
+    const version = updateAllPackageVersions(config.versionDefinition, config.preid);
+    // update engine version
     await updateEngineVersion(version);
     // generate changelog
     await generateChangelog(version);
