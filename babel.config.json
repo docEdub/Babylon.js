@@ -16,7 +16,7 @@
             {
                 "root": ["./packages/dev/core/dist"],
                 "alias": {
-                    "core/*": "@babylonjs/core/*"
+                    "^core/(.+)": "@babylonjs/core/\\1"
                 }
             }
         ]
