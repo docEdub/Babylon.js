@@ -1,0 +1,24 @@
+{
+    "presets": [
+        [
+            "@babel/preset-env",
+            {
+                "debug": true,
+                "targets": {
+                    "esmodules": true
+                }
+            }
+        ]
+    ],
+    "plugins": [
+        [
+            "module-resolver",
+            {
+                "root": ["./packages/dev/core/dist"],
+                "alias": {
+                    "core/*": "@babylonjs/core/*"
+                }
+            }
+        ]
+    ]
+}
