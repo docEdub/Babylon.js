@@ -13,6 +13,7 @@ import { updateEngineVersion } from "./updateEngineVersion.js";
 import { declarationsEs6 } from "./declarationsEs6.js";
 // public API
 import transformer from "./pathTransform.js";
+import { storeTsLib } from "./pathTransform.js";
 import * as webpackTools from "./webpackTools.js";
 import * as fs from "fs";
 import * as path from "path";
@@ -54,6 +55,9 @@ function RunCommand(command: string) {
             case "add-js-to-es6":
             case "ajte":
                 addJsExtensionsToCompiledFilesCommand();
+                break;
+            case "store-tslib":
+                storeTsLib();
                 break;
             case "process-umd-declaration":
             case "pud":

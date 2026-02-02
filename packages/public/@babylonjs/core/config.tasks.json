@@ -8,6 +8,9 @@
             "command": "add-js-to-es6"
         },
         {
+            "command": "store-tslib"
+        },
+        {
             "command": "prepare-es6-build",
             "args": ["-cf", "Engines/constants.js"]
         },
