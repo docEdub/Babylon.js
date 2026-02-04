@@ -305,6 +305,8 @@ interface PhysicsWorldRegion {
     world: any;
     /** The fixed floating origin for this world region (in world coordinates) */
     floatingOrigin: Vector3;
+    /** The gravity for this world region (can be different per region for planetary scenarios) */
+    gravity: number[];
 }
 
 /**
@@ -392,6 +394,7 @@ export class HavokPlugin implements IPhysicsEnginePluginV2 {
         const newRegion: PhysicsWorldRegion = {
             world: newWorld,
             floatingOrigin: worldPosition.clone(),
+            gravity: [...this._currentGravity],
         };
 
         this._worldRegions.push(newRegion);
@@ -433,6 +436,7 @@ export class HavokPlugin implements IPhysicsEnginePluginV2 {
         this._worldRegions.push({
             world: this.world,
             floatingOrigin: Vector3.Zero(),
+            gravity: [...this._currentGravity],
         });
 
         this._queryCollector = this._hknp.HP_QueryCollector_Create(1)[1];
@@ -451,13 +455,42 @@ export class HavokPlugin implements IPhysicsEnginePluginV2 {
      * Sets the gravity of the physics world.
      *
      * @param gravity - The gravity vector to set.
-     *
+     * @param worldPosition - Optional world position to specify which region's gravity to set.
+     *                        If provided, only the region containing this position will be updated.
+     *                        If not provided, all regions will be updated (default behavior).
+     *                        This is useful for planetary scenarios where gravity direction varies by location.
      */
-    public setGravity(gravity: Vector3): void {
-        this._currentGravity = this._bVecToV3(gravity);
-        for (const region of this._worldRegions) {
-            this._hknp.HP_World_SetGravity(region.world, this._currentGravity);
+    public setGravity(gravity: Vector3, worldPosition?: Vector3): void {
+        const gravityArray = this._bVecToV3(gravity);
+
+        if (worldPosition) {
+            // Set gravity for a specific region based on world position
+            const region = this._getOrCreateWorldRegion(worldPosition);
+            region.gravity = gravityArray;
+            this._hknp.HP_World_SetGravity(region.world, gravityArray);
+        } else {
+            // Set gravity for all regions (default behavior)
+            this._currentGravity = gravityArray;
+            for (const region of this._worldRegions) {
+                region.gravity = gravityArray;
+                this._hknp.HP_World_SetGravity(region.world, gravityArray);
+            }
         }
+    }
+
+    /**
+     * Gets the gravity of the physics world or a specific region.
+     *
+     * @param worldPosition - Optional world position to get the gravity for that region.
+     *                        If not provided, returns the default gravity.
+     * @returns The gravity vector.
+     */
+    public getGravity(worldPosition?: Vector3): Vector3 {
+        if (worldPosition) {
+            const region = this._getOrCreateWorldRegion(worldPosition);
+            return new Vector3(region.gravity[0], region.gravity[1], region.gravity[2]);
+        }
+        return new Vector3(this._currentGravity[0], this._currentGravity[1], this._currentGravity[2]);
     }
 
     /**
