@@ -14,6 +14,7 @@ import type { RawLottieAnimation } from "./parsing/rawTypes";
 import { CalculateScaleFactors } from "./rendering/calculateScaleFactor";
 import type { ScaleFactors } from "./rendering/calculateScaleFactor";
 import { BlobWorkerWrapper as Worker } from "./blobWorkerWrapper";
+import { Logger } from "core/Misc/logger";
 
 /**
  * Allows you to play Lottie animations using Babylon.js.
@@ -48,6 +49,8 @@ export class Player {
         if (!("OffscreenCanvas" in window)) {
             throw new Error("OffscreenCanvas not supported - cannot create Player");
         }
+
+        Logger.Warn("Don't commit this test!");
     }
 
     /**
